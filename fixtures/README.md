@@ -118,6 +118,25 @@ emit, write — because that is what a caller actually waits for.
 
 **The assumed bar was 2,000 ms for 10,000 tokens. The real number is 30 ms.**
 
+### The ratified bar: 300 ms
+
+Set on 2026-08-30, from the slowest hardware it has to pass on rather than the
+fastest. Twelve samples on CI, three Node lines:
+
+| | best of 3 | worst single sample |
+| --- | ---: | ---: |
+| Developer laptop, M3 Pro | 30 ms | 41 ms |
+| CI, shared AMD EPYC | 46–83 ms | 301 ms |
+
+300 ms is roughly 3.5× the slowest *best-of-three* ever recorded. It is judged on
+the best of three and never on a single sample: one CI run measured 301 ms where
+the same commit measured 74 ms twice. Gating on any sample would make the build
+flake, and a flaky performance gate gets ignored — which is worse than not having
+one.
+
+`node bench/run.mjs` exits non-zero over the bar. `BENCH_BAR_MS` overrides it for
+an experiment; changing it for real means changing SM-5 in the PRD.
+
 Scaling is linear: twenty times the tokens takes twenty times as long from 10k
 to 200k, so there is no quadratic hiding at a size nobody tested.
 

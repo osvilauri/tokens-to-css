@@ -126,3 +126,39 @@ describe('the naming rule is stated normatively', () => {
     expect(naming).toContain('`--spacing-2xl`')
   })
 })
+
+describe('the performance bar is ratified, not assumed', () => {
+  const bench = readFileSync(new URL('../bench/run.mjs', import.meta.url), 'utf8')
+  const prd = readFileSync(
+    new URL(
+      '../_bmad-output/planning-artifacts/prds/prd-tokens-to-css-2026-08-06/prd.md',
+      import.meta.url,
+    ),
+    'utf8',
+  )
+
+  it('uses the same number in the benchmark and in the PRD', () => {
+    // A bar that lives in two places drifts, and the copy nobody runs is the
+    // one that stays wrong.
+    const inCode = bench.match(/BENCH_BAR_MS \?\? (\d+)/)![1]!
+    expect(inCode).toBe('300')
+    expect(prd.replace(/\s+/g, ' ')).toContain(`under **${inCode} ms**`)
+  })
+
+  it('no longer calls SM-5 an assumption', () => {
+    const metric = prd.slice(prd.indexOf('- **SM-5**'), prd.indexOf('**Counter-metrics'))
+    expect(metric).not.toContain('[ASSUMPTION')
+    expect(metric).toMatch(/Ratified 2026-08-30 from measurement/)
+  })
+
+  it('closed OQ-2 rather than leaving it open', () => {
+    const questions = prd.slice(prd.indexOf('## 11. Open Questions'))
+    expect(questions).toMatch(/~~\*\*OQ-2/)
+    expect(questions).toMatch(/Closed 2026-08-30/)
+  })
+
+  it('records why it is judged on the best of three', () => {
+    expect(bench.replace(/\s+/g, ' ')).toMatch(/never on a single sample/i)
+    expect(bench.replace(/\s+/g, ' ')).toMatch(/flaky performance gate gets ignored/i)
+  })
+})

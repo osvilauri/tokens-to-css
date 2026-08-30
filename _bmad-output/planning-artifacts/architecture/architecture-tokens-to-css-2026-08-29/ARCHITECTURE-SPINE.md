@@ -382,7 +382,7 @@ tokens-to-css/
 
 ## Deferred
 
-- **OQ-2 — the performance bar.** Not decidable by argument. `bench/` ships a 10k-token fixture and a script; the first real measurement on reference hardware either ratifies the PRD's 2s bar or replaces it. Until then SM-5 stays an assumption. **Revisit when:** the emitter passes its first accept fixture end-to-end.
+- ~~**OQ-2 — the performance bar.**~~ **Closed 2026-08-30.** Measured (30 ms on a laptop, 46–83 ms across twelve CI samples) and ratified at 300 ms, enforced in CI as a build failure. The inherited 2,000 ms was replaced, not confirmed. Judged on the best of three, because a shared runner produced one 301 ms sample where the same commit measured 74 ms twice — a flaky performance gate gets ignored, which is worse than none.
 - ~~**OQ-3 — package name and license.**~~ **Closed 2026-08-29:** the package is `tokens-to-css` under MIT; the repository was renamed to match. Nothing in this spine depended on the answer.
 - **Caching of remote Token Sources.** No caching in v1 — every run refetches. Revisit if CI cost or rate-limiting shows up in practice.
 - **Concurrency.** The pipeline is single-document and synchronous in its core; no worker threads, no streaming parse. Revisit only if OQ-2's measurement misses the bar.

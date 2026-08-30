@@ -398,7 +398,7 @@ The developer can install the library as a package dependency in their project.
   - Link-local and cloud-metadata address ranges (e.g. `169.254.0.0/16`, `::1`-scoped metadata endpoints) are refused, including post-redirect, to limit SSRF exposure when a host passes through a user-supplied Token Source.
 - **Security — parsing:** no `eval` and no expression evaluation on token values (FR-17); custom-property identifiers sanitized before emission; no prototype-polluting key assignment during normalization (`__proto__`, `constructor`, `prototype` keys are rejected or safely ignored); no filesystem traversal outside the resolved output path.
 - **Predictability:** emitted custom-property names follow the FR-9 naming rule; identical input yields byte-identical output; declaration order is document order.
-- **Performance:** see SM-5.
+- **Performance:** see SM-5. The bar is measured and enforced, not asserted.
 - **Documentation:** public docs + Fixture Corpus sufficient for SM-3, including the allowlist, the failure codes, and the naming rule.
 
 ## 10. Language / Runtime Targets and Dependency Policy
@@ -412,7 +412,7 @@ The developer can install the library as a package dependency in their project.
 Closed in this revision (2026-08-27): dangling-alias policy → fail-clear (FR-22); name-collision policy → fail-clear (FR-21); composite policy → reject (FR-20); URL security bar → product minimums in §9.
 
 1. **OQ-1 — Fixture Corpus freeze.** Initial contents, directory layout, and golden-file update protocol for the accept/reject corpus. **Owner: architecture** (`bmad-architecture`), due before epics; SM-1 cannot gate until frozen. PRD owns the corpus *contract* (§4.2.0); architecture owns the artifact.
-2. **OQ-2 — SM-5 performance bar.** Confirm 2s / 10k tokens, or replace with a measured bar. **Owner: architecture**, with PM sign-off on the launch bar.
+2. ~~**OQ-2 — SM-5 performance bar.**~~ **Closed 2026-08-30.** Measured at the end of Epic 1 while the pipeline could still change, and ratified in Epic 3: 300 ms for 10,000 tokens, best of three, enforced in CI. The assumed 2,000 ms was replaced rather than confirmed — see §7 (SM-5) and `fixtures/README.md`.
 3. ~~**OQ-3 — Package identity.**~~ **Closed 2026-08-29:** package name `tokens-to-css`, license MIT. `token-css`, `css-tokens` and the Token CSS project's `@tokencss/*` scope were ruled out for collision; `dtcg-css` was rejected because naming the package after one accepted format understates an allowlist that also carries vendor dialects. The GitHub repository was renamed to match.
 
 ## 12. Assumptions Index
@@ -422,7 +422,6 @@ Closed in this revision (2026-08-27): dangling-alias policy → fail-clear (FR-2
 - V1 primary outcome is a single Styles File; multi-file theme/layer splits not required unless later confirmed (§1).
 - “CLI” in early brainstorming meant package-manager install, not a Conversion CLI (FR-16).
 - SM-2 target of 15 minutes is an assumed launch bar (§7).
-- SM-5 bar of 2s per 10k tokens is assumed pending measurement (§7, OQ-2).
 - Overwrite-by-default matches the build-step usage pattern (FR-2).
 - Interop with Style Dictionary is desirable positioning, not an MVP hard dependency (§10).
 
