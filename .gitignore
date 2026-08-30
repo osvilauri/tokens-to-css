@@ -1,0 +1,16 @@
+# Dependencias
+node_modules/
+dist/
+build/
+coverage/
+
+# BMAD: skills generadas por el instalador (regenerables, ~38MB)
+.agents/
+.claude/skills/
+
+# Config personal de BMAD
+*.user.toml
+
+# Sistema
+.DS_Store
+*.log
