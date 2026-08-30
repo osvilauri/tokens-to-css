@@ -10,6 +10,7 @@
 import { FailureCode, TokenCssError } from '../errors.js'
 import type { TokenDoc } from '../model/index.js'
 import { findMultiFileConstruct, looksLikeDtcg, normalizeDtcg } from './dtcg.js'
+import { findMixedDialectNode, looksLikeSdLegacy, normalizeSdLegacy } from './sd-legacy.js'
 import { isPlainObject, type JsonObject } from './walk.js'
 
 /** One allowlisted shape. */
@@ -38,6 +39,12 @@ export const DIALECTS: readonly Dialect[] = [
     matches: looksLikeDtcg,
     normalize: normalizeDtcg,
   },
+  {
+    id: 'sd-legacy',
+    describedAs: 'Style Dictionary legacy documents using value/type without the dollar',
+    matches: looksLikeSdLegacy,
+    normalize: normalizeSdLegacy,
+  },
 ]
 
 /**
@@ -64,6 +71,32 @@ export function normalizeDocument(root: unknown, source: string): TokenDoc {
       `token document uses "$ref" at "${multiFile.join('.')}". Multi-file documents and resolver ` +
         `manifests are not supported — pass a single self-contained file`,
       { code: FailureCode.FORMAT_NOT_ALLOWED, source, tokenPaths: [multiFile.join('.')] },
+    )
+  }
+
+  // Tokens Studio exports wrap their tokens in a set, and the wrapper does not
+  // belong in the emitted name. Until that shape is read properly, such a
+  // document would be picked up as Style Dictionary legacy and converted with
+  // the set name folded into every custom property — a silently wrong
+  // stylesheet, which is worse than a refusal. Replaced by real support in the
+  // Tokens Studio story.
+  if ('$themes' in root || '$metadata' in root) {
+    throw new TokenCssError(
+      `this looks like a Tokens Studio export. That shape is not read yet — reading it as a ` +
+        `plain document would fold the token set name into every custom property`,
+      { code: FailureCode.FORMAT_NOT_ALLOWED, source },
+    )
+  }
+
+  // Also checked before detection, and for the same reason: first-match-wins
+  // would read a node carrying both markers as DTCG and drop its `value`.
+  const mixed = findMixedDialectNode(root)
+  if (mixed) {
+    const where = mixed.length === 0 ? 'the document root' : `"${mixed.join('.')}"`
+    throw new TokenCssError(
+      `${where} carries both "$value" and "value". A token speaks one dialect or the other — ` +
+        `remove whichever one is not meant to be there`,
+      { code: FailureCode.FORMAT_NOT_ALLOWED, source, tokenPaths: [mixed.join('.')] },
     )
   }
 

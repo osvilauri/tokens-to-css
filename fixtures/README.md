@@ -29,8 +29,9 @@ a single-folder change.
 ## The v1 freeze
 
 Nine accept fixtures: three dialects (`dtcg`, `sd-legacy`, `tokens-studio`)
-across three hierarchies (`three-tier`, `cti`, `eightshapes`). One of the nine
-exists so far — `dtcg/three-tier`; the rest arrive with their dialects in Epic 2.
+across three hierarchies (`three-tier`, `cti`, `eightshapes`). Two of the nine
+exist so far — `dtcg/three-tier` and `sd-legacy/three-tier`, whose goldens are
+byte-identical and asserted to be; the rest arrive with their dialects.
 
 **All nine express the same token catalogue.** Dialect and hierarchy are the only
 variables, which is what makes their goldens comparable — two fixtures differing
@@ -46,11 +47,16 @@ The catalogue is deliberately small and deliberately awkward in the right places
 | A three-hop chain (component → semantic → primitive) | Proves each hop emits its own `var()` rather than collapsing |
 | A `$description` at document level and on a token | Proves both are read and ignored |
 
-### A note on `reject/sd-legacy-not-yet`
+### A note on `reject/tokens-studio-not-yet`
 
-Style Dictionary legacy documents are refused *today* and become an accept
-fixture in Epic 2. Moving it is an allowlist addition, not a golden change, so
-it is a minor release — see the rule below.
+Tokens Studio exports are refused *today* and become accept fixtures once that
+shape is read properly. Moving one is an allowlist addition, not a golden
+change, so it is a minor release — see the rule below.
+
+The refusal is deliberate rather than incidental. Such a document would
+otherwise be read as Style Dictionary legacy and convert perfectly happily, with
+the token set name folded into every custom property. A wrong stylesheet that
+reports success is worse than no stylesheet.
 
 Reject fixtures: one per rejection trigger in the PRD's allowlist section, and
 one per failure class.

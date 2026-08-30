@@ -157,10 +157,10 @@ describe('the registry', () => {
   })
 
   it('holds only the shapes this version reads', () => {
-    // Style Dictionary legacy and Tokens Studio arrive in Epic 2. Until then a
-    // document in those shapes is refused, not half-read.
-    expect(DIALECTS.map((d) => d.id)).toEqual(['dtcg'])
-    expect(failure(`{ "a": { "value": "1px", "type": "dimension" } }`).code).toBe(
+    // Tokens Studio arrives later in Epic 2. Until then a document in that
+    // shape is refused, not half-read.
+    expect(DIALECTS.map((d) => d.id)).toEqual(['dtcg', 'sd-legacy'])
+    expect(failure(`{ "$themes": [], "global": { "a": { "value": "1px" } } }`).code).toBe(
       FailureCode.FORMAT_NOT_ALLOWED,
     )
   })

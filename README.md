@@ -7,8 +7,9 @@ of `:root` custom properties your app can link, with alias relationships kept as
 `var(--…)` rather than flattened. It is not a multi-platform token pipeline and
 does not try to become one.
 
-> **Status: in development.** Nothing is published yet. DTCG files convert end to
-> end today, from a path or a URL; vendor dialects are still to come — see
+> **Status: in development.** Nothing is published yet. DTCG and Style Dictionary
+> legacy files convert end to end today, from a path or a URL; Tokens Studio
+> exports are still to come — see
 > [`_bmad-output/planning-artifacts/epics.md`](_bmad-output/planning-artifacts/epics.md).
 
 ```js
