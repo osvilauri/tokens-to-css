@@ -129,16 +129,20 @@ describe('the Main Entry contract', () => {
   })
 })
 
-describe('the placeholder cannot be published', () => {
-  it('is still a placeholder, and the guard refuses release because of it', () => {
-    expect(() => api.generateCss('x.json')).toThrow(/not implemented yet/)
-
+describe('the entry point is real', () => {
+  it('no longer carries an unimplemented marker, and the publish guard agrees', () => {
     let code = 0
     try {
       execFileSync(process.execPath, ['scripts/guard-unimplemented.mjs'], { stdio: 'pipe' })
     } catch (err) {
       code = (err as { status: number }).status
     }
-    expect(code, 'the publish guard must fail while the marker is present').toBe(1)
+    expect(code, 'the publish guard must pass once the pipeline is wired').toBe(0)
+  })
+
+  it('returns a promise rather than throwing synchronously', () => {
+    const result = api.generateCss('does-not-exist.json')
+    expect(result).toBeInstanceOf(Promise)
+    return expect(result).rejects.toBeInstanceOf(TokenCssError)
   })
 })

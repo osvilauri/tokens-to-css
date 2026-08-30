@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { discover } from './support/corpus.js'
+import { convertDocument } from '../src/pipeline.js'
+import { TokenCssError } from '../src/index.js'
+import { compareGolden, describeMismatch, discover, goldenUpdatesAllowed, writeGolden } from './support/corpus.js'
 
 /**
  * The real corpus. Fixtures arrive over Epic 1 and Epic 2; the counts below
@@ -13,9 +15,15 @@ import { discover } from './support/corpus.js'
  */
 const EXPECTED = {
   /** 9 at the Epic 2 freeze: 3 dialects × 3 hierarchies (AD-16). */
-  accept: 0,
-  /** One per rejection trigger and per failure class (SM-4). */
-  reject: 0,
+  accept: 1,
+  /**
+   * One per document-shaped rejection trigger and failure class (SM-4).
+   *
+   * The remaining classes are not shaped like a document: an unreadable source,
+   * invalid JSON and a failed write are proved end to end, and the network
+   * classes against the scenario harness (AD-23). SM-4's claim is the union.
+   */
+  reject: 14,
 } as const
 
 describe('the fixture corpus', () => {
@@ -34,8 +42,49 @@ describe('the fixture corpus', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
-  it.runIf(EXPECTED.accept > 0)('names every accept fixture <dialect>/<hierarchy>', () => {
+  it('names every accept fixture <dialect>/<hierarchy>', () => {
     for (const f of corpus.accept) expect(f.id).toMatch(/^[a-z-]+\/[a-z-]+$/)
+  })
+})
+
+/**
+ * SM-1. "Correct" is defined by these goldens, not by review.
+ *
+ * The conversion runs through the real pipeline stage order rather than a
+ * sequence assembled here — a corpus that ordered the passes itself could stay
+ * green while the pipeline ran them differently.
+ */
+describe('every accept fixture converts to its golden', () => {
+  const corpus = discover()
+
+  it.each(corpus.accept.map((f) => [f.id, f] as const))('%s', (id, fixture) => {
+    const { css } = convertDocument(fixture.input, `fixtures/accept/${id}/input.json`)
+
+    if (goldenUpdatesAllowed()) {
+      writeGolden(fixture, css)
+      return
+    }
+
+    const mismatch = compareGolden(css, fixture.expectedCss)
+    if (mismatch) throw new Error(describeMismatch(id, mismatch))
+  })
+})
+
+describe('every reject fixture fails with its expected code', () => {
+  const corpus = discover()
+
+  it.each(corpus.reject.map((f) => [f.id, f] as const))('%s', (id, fixture) => {
+    let caught: TokenCssError | undefined
+    try {
+      convertDocument(fixture.input, `fixtures/reject/${id}/input.json`)
+    } catch (err) {
+      caught = err as TokenCssError
+    }
+    expect(caught, 'expected this fixture to be refused').toBeInstanceOf(TokenCssError)
+    expect(caught!.code).toBe(fixture.expected.code)
+    if (fixture.expected.tokenPaths) {
+      expect(caught!.tokenPaths).toEqual(fixture.expected.tokenPaths)
+    }
   })
 })
 
