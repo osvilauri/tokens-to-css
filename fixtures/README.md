@@ -19,8 +19,12 @@ reject/<trigger>/
 ```
 
 Network failures are not shaped like a file — a timeout is a response, not a
-document — so they live in the in-process scenario harness instead (AD-23).
-SM-4's coverage claim is the union of both mechanisms.
+document — so they live in `network/scenarios.ts` instead (AD-23), served by an
+in-process `node:http` server the tests start and stop. SM-4's coverage claim is
+the union of both mechanisms.
+
+Adding a network case is a single-file change, the same way adding a fixture is
+a single-folder change.
 
 ## The v1 freeze
 
