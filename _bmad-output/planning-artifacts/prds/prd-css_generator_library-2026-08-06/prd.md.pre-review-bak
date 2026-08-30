@@ -1,0 +1,318 @@
+---
+title: "PRD: css_generator_library"
+status: draft
+created: 2026-08-06
+updated: 2026-08-06
+---
+
+# PRD: css_generator_library
+
+## 0. Document Purpose
+
+This PRD defines the product requirements for **css_generator_library** for PM, architecture, and epic/story workflows. It builds on the product brief (`briefs/brief-css_generator_library-2026-07-26`) and technical research (`research/technical-design-token-json-to-css-generation-research-2026-07-26`). Vocabulary will be Glossary-anchored; features group nested FRs with stable IDs; assumptions are tagged inline and indexed. Implementation mechanism detail belongs in architecture / addendum, not here.
+
+## 1. Vision
+
+**css_generator_library** is an installable Node/TypeScript library (via package manager) meant to integrate into any app or website under construction. Developers call the Main Entry with a Token Source to convert design-token JSON into a Styles File ready for the project to consume.
+
+It is not a full design system and not a multi-platform token orchestrator. It is the **JSON tokens → CSS styles file** bridge inside the developer’s toolchain: structure-aware enough to recognize common token architectures and Vendor Dialects, then emit predictable CSS — a focused last-mile helper, not a multi-platform transform stack.
+
+Differentiation is scope discipline and taxonomy fluency (complement Style Dictionary when CSS-only is the job), not platform breadth. [ASSUMPTION: V1 primary outcome is a single CSS styles file (typically custom properties); multi-file theme/layer splits are not required for V1 unless later confirmed.]
+
+**Form-factor note:** The product brief described library + CLI + API. v1 intentionally narrows to an **Installable Package + Main Entry API** (no Conversion CLI); see Non-Goals and `addendum.md`.
+
+## 2. Target User
+
+Primary audience is **web developers** integrating token-to-CSS into an app or site under construction. Roles are intentionally open in v1: product frontend engineers, design-system engineers, and freelancers/contractors who inherit a token JSON.
+
+### 2.1 Jobs To Be Done
+
+- **Functional:** From app/bootstrap code, call the Main Entry, pass a Token Source (URL or local path) for the Token JSON, and obtain a Styles File the app can consume.
+- **Contextual:** Avoid one-off conversion scripts; keep conversion inside the project’s own integration path (build or startup), not a separate design-tool workflow.
+- **Social / professional:** Ship a predictable CSS styles artifact teammates (and the app) can rely on without learning a full multi-platform token pipeline.
+
+### 2.2 Non-Users (v1)
+
+- Native **iOS / Android** token pipelines (non-CSS targets).
+- **Figma-only designers** who do not work in code or a developer-owned JSON→CSS integration.
+
+### 2.3 Key User Journeys
+
+*Library/CLI product — light form.*
+
+- **UJ-1. Alex wires token JSON into the web app’s styles.** Alex, a frontend engineer starting a web app with an existing design-token JSON (remote URL or local path), installs the library, calls the Main Entry from app core with a Token Source, and gets a Styles File the app consumes. Value lands when the UI can use the generated custom properties without a hand-written converter. **Edge case:** if the Token Source is unreachable/missing or the Token JSON is invalid, Alex gets a clear failure instead of a silent empty Styles File.
+
+## 3. Glossary
+
+- **Token JSON** — A JSON document of design tokens used as Conversion input.
+- **Token Source** — Locator passed to the Main Entry to load the Token JSON. Must accept a remote **URL** and a **local path**.
+- **Main Entry** — The library’s primary function the app calls to run Conversion.
+- **Styles File** — The CSS output file the app consumes (generated custom properties / styles).
+- **Conversion** — The process of turning Token JSON into a Styles File.
+- **Supported Format** — A Token JSON variant that v1 must accept: DTCG-style tokens; the three foundation hierarchy models (3-tier, CTI, EightShapes-like); and **Vendor Dialect** inputs (Tokens Studio–shaped exports and legacy Style Dictionary `value`/`type` without `$`).
+- **Vendor Dialect** — A Token JSON shape marked by the exporting tool (e.g. Tokens Studio wrappers; Style Dictionary legacy `value`/`type`) rather than pure DTCG alone. v1 must normalize these for Conversion.
+- **CLI** — Package-manager / install channel used to add the library to a project. v1 does **not** require a conversion CLI that runs Conversion; Conversion is invoked via the Main Entry.
+- **Installable Package** — The distributable library artifact installable via the project’s package manager (e.g. npm/pnpm/yarn).
+
+## 4. Features
+
+*Feature list locked for v1. FRs drafted per feature during coaching.*
+
+### 4.1 Token Source Loading
+**Description:** The developer passes a Token Source into the Main Entry; the library loads the Token JSON from a remote URL or a local path with the same Conversion behavior. Realizes UJ-1.
+
+**Functional Requirements:**
+
+#### FR-1: Load Token JSON from Token Source
+
+The developer can pass a Token Source (remote URL or local path) to the Main Entry. Realizes UJ-1.
+
+**Consequences (testable):**
+- Given a valid remote URL Token Source, the library reads the Token JSON and proceeds to Conversion.
+- Given a valid local path Token Source, the library reads the Token JSON and proceeds to Conversion.
+- URL and local path produce the same Conversion behavior once the Token JSON is loaded (parity of success path).
+
+#### FR-2: Write Styles File to disk
+
+The Main Entry writes the Styles File to disk as part of a successful Conversion. Realizes UJ-1.
+
+**Consequences (testable):**
+- On successful Conversion, a Styles File exists at the configured output location on disk.
+- The Main Entry does not complete successfully without writing the Styles File when Conversion succeeds.
+
+#### FR-3: Default and custom output path
+
+The developer can rely on a default Styles File output directory of `assets/css/`, or supply a custom output path. Realizes UJ-1.
+
+**Consequences (testable):**
+- When no custom output path is provided, the Styles File is written under `assets/css/`.
+- When a custom output path is provided, the Styles File is written to that path instead of the default.
+- If the output directory does not exist, the Main Entry creates it (including default `assets/css/`) before writing the Styles File.
+
+**Notes:** Exact default filename inside `assets/css/` is `tokens.css` (see FR-11).
+
+### 4.2 Supported Formats
+**Description:** Conversion accepts the Token JSON types called out in the product brief (DTCG-style tokens and the three foundation hierarchy models: 3-tier, CTI, EightShapes-like) plus Vendor Dialects (Tokens Studio–shaped exports and legacy Style Dictionary `value`/`type`), with structure recognition/normalization and alias resolution before CSS emission. Realizes UJ-1.
+
+**Functional Requirements:**
+
+#### FR-4: Parse DTCG-style Token JSON
+
+The developer can convert DTCG-style Token JSON (`$value`, `$type`, and related DTCG conventions as used in the brief). Realizes UJ-1.
+
+**Consequences (testable):**
+- Valid DTCG-style Token JSON is accepted as Conversion input.
+- DTCG `{path.to.token}` alias chains resolve without cycles or silent drops on known-good fixtures.
+
+#### FR-5: Recognize 3-tier hierarchies
+
+The library recognizes three-tier (primitive → semantic → component) Token JSON architectures. Realizes UJ-1.
+
+**Consequences (testable):**
+- Representative 3-tier fixtures are detected/normalized and successfully Conversion-eligible.
+
+#### FR-6: Recognize CTI hierarchies
+
+The library recognizes CTI (Category / Type / Item) Token JSON architectures. Realizes UJ-1.
+
+**Consequences (testable):**
+- Representative CTI fixtures are detected/normalized and successfully Conversion-eligible.
+
+#### FR-7: Recognize EightShapes-like hierarchies
+
+The library recognizes object-oriented / EightShapes-like hierarchies (namespace → object → base → modifier). Realizes UJ-1.
+
+**Consequences (testable):**
+- Representative EightShapes-like fixtures are detected/normalized and successfully Conversion-eligible.
+
+#### FR-8: Analyze and normalize common structures
+
+The library analyzes and normalizes common Token JSON structures enough to emit a Styles File for Supported Formats. Realizes UJ-1.
+
+**Consequences (testable):**
+- Known-good fixtures for each Supported Format produce Conversion without requiring the developer to hand-normalize hierarchy first.
+
+#### FR-17: Normalize Tokens Studio Vendor Dialect
+
+The library accepts Tokens Studio–shaped Token JSON (wrappers/metadata typical of that export) and normalizes it for Conversion. Realizes UJ-1.
+
+**Consequences (testable):**
+- Representative Tokens Studio–shaped fixtures convert successfully without a separate user preprocess step.
+
+#### FR-18: Normalize Style Dictionary legacy Vendor Dialect
+
+The library accepts legacy Style Dictionary Token JSON using `value`/`type` (without `$`) and normalizes it for Conversion. Realizes UJ-1.
+
+**Consequences (testable):**
+- Representative SD-legacy fixtures convert successfully without requiring the user to rewrite tokens to `$value`/`$type` first.
+
+**Out of Scope:** Mixins derived from Token JSON (explicit v1 non-goal).
+
+### 4.3 Conversion to Styles File
+**Description:** The library performs Conversion and writes a Styles File to disk containing CSS custom properties under `:root`, preserving referential aliases as `var(--…)` where tokens reference other tokens. Default output directory `assets/css/`; default filename `tokens.css` unless a custom path/name is supplied. Realizes UJ-1.
+
+**Functional Requirements:**
+
+#### FR-9: Emit CSS custom properties in `:root`
+
+On successful Conversion, the Styles File declares token values as CSS custom properties inside a `:root` rule. Realizes UJ-1.
+
+**Consequences (testable):**
+- The Styles File contains a `:root { … }` block with `--*` custom properties derived from the Token JSON.
+- The Styles File is consumable by linking/importing it so the app can use `var(--…)` in its styles.
+
+#### FR-10: Preserve aliases as `var(--…)`
+
+When Token JSON aliases resolve to other tokens, the Styles File preserves those references as `var(--…)` rather than flattening all values to literals. Realizes UJ-1.
+
+**Consequences (testable):**
+- For a known alias chain in fixtures (e.g. semantic → primitive), the emitted semantic custom property value is a `var(--…)` reference to the referenced token’s custom property.
+- Literal flattening of all alias targets is not the default v1 behavior.
+
+#### FR-11: Default Styles File name `tokens.css`
+
+When the developer does not supply a custom output file name, the Styles File is written as `tokens.css` under the output directory (default `assets/css/`, or the custom directory from FR-3). Realizes UJ-1.
+
+**Consequences (testable):**
+- Default successful Conversion writes `assets/css/tokens.css` when no custom path/name is provided.
+- A developer-supplied custom output path/name overrides this default.
+
+**Out of Scope:** Mixins derived from Token JSON; first-class SCSS/JS emitters; multi-theme selector output beyond `:root`; configurable custom-property naming prefix in v1 (fixed naming algorithm; no prefix option required).
+
+### 4.4 Clear Failure Reporting
+**Description:** When Conversion cannot complete, the library surfaces a clear failure for the four v1 failure classes below and does not leave a silent empty Styles File as a success. Realizes UJ-1 edge case.
+
+**Functional Requirements:**
+
+#### FR-12: Fail clearly on missing or unreachable Token Source
+
+If the Token Source (URL or local path) cannot be read, Conversion fails with a clear error. Realizes UJ-1.
+
+**Consequences (testable):**
+- Missing local path and unreachable/failed URL each produce a clear failure to the caller.
+- No successful completion that writes an empty Styles File for this class of error.
+
+#### FR-13: Fail clearly on invalid JSON
+
+If the Token Source content is not valid JSON, Conversion fails with a clear error. Realizes UJ-1.
+
+**Consequences (testable):**
+- Malformed JSON produces a clear failure to the caller.
+- No successful empty Styles File write for this class of error.
+
+#### FR-14: Fail clearly on unsupported format
+
+If the Token JSON is not a Supported Format, Conversion fails with a clear error. Realizes UJ-1.
+
+**Consequences (testable):**
+- Recognizably unsupported Token JSON produces a clear failure to the caller.
+- No successful empty Styles File write for this class of error.
+
+#### FR-15: Fail clearly on alias cycles
+
+If alias resolution detects a cycle, Conversion fails with a clear error. Realizes UJ-1.
+
+**Consequences (testable):**
+- Fixtures with cyclic `{alias}` chains produce a clear failure to the caller.
+- Cyclic aliases are not silently dropped or emitted as broken CSS as a success path.
+
+### 4.5 Installable Package
+**Description:** Developers can install the library into any web/app project via the package manager so the Main Entry is available from application code. v1 does not ship a Conversion CLI. Realizes UJ-1.
+
+**Functional Requirements:**
+
+#### FR-16: Install via package manager
+
+The developer can install the library as a package dependency in their project. Realizes UJ-1.
+
+**Consequences (testable):**
+- After install, the project can import/call the Main Entry from application code.
+- Installation does not require a separate Figma plugin or product UI.
+
+**Out of Scope:** A CLI command that performs Conversion (Token Source → Styles File). Conversion is Main Entry–only in v1.
+**Notes:** [ASSUMPTION: “CLI” in earlier brainstorming meant installable via package-manager CLI (`npm i …`), not a `cssgen build` style binary.]
+
+## 5. Non-Goals (Explicit)
+
+- Mixins derived from Token JSON.
+- A Conversion CLI (`build`/`convert` binary); Conversion is Main Entry–only.
+- Native iOS / Android (or other non-CSS) emitters.
+- Figma plugin or multi-brand runtime theme-switching UI.
+- First-class SCSS and JS/TS dual emitters (CSS Styles File only).
+- Replacing Style Dictionary as a full multi-platform token orchestrator.
+- Configurable custom-property naming prefix in v1 (naming is fixed by the library’s algorithm).
+
+## 6. MVP Scope
+
+### 6.1 In Scope
+
+- Installable Package + Main Entry API.
+- Token Source as URL or local path (parity behavior).
+- Supported Formats: DTCG-style tokens; 3-tier, CTI, EightShapes-like hierarchies; Vendor Dialects (Tokens Studio–shaped; Style Dictionary legacy `value`/`type`); analyze/normalize + alias resolution.
+- Write Styles File to disk; create output directory if missing; default `assets/css/tokens.css`; optional custom output path.
+- `:root` CSS custom properties with aliases preserved as `var(--…)`; no configurable naming prefix in v1.
+- Clear failures for: missing/unreachable Token Source, invalid JSON, unsupported format, alias cycles.
+
+### 6.2 Out of Scope for MVP
+
+- Mixins from Token JSON — deferred beyond v1 by product decision.
+- Conversion CLI — install-only package channel in v1 (intentional override of brief’s CLI/CI generator).
+- In-memory Token JSON ingest and multi-file/directory merge Token Sources — single URL or local path only in v1.
+- Taxonomy confidence report / model override as a standalone product feature — normalize for Conversion only.
+- Theme selectors, multi-file CSS splits, Tailwind `@theme` — single `:root` Styles File.
+- Figma plugin / theme UI — not a code-side generator concern.
+- SCSS/JS emitters — CSS-first.
+- iOS/Android / full Style Dictionary parity — web/CSS only.
+- Configurable custom-property naming prefix — not needed for v1.
+
+## 7. Success Metrics
+
+**Primary**
+
+- **SM-1**: Fixture Conversion pass rate — Representative fixtures for each Supported Format (DTCG + 3-tier, CTI, EightShapes-like + Vendor Dialects) convert to a correct Styles File (`:root` custom properties; aliases as `var(--…)` where applicable). Target: **100%** of agreed fixture suite passes. Validates FR-4–FR-11, FR-17, FR-18.
+- **SM-2**: Time-to-first-CSS — A new developer can install the package, call the Main Entry with a sample Token Source, and obtain `assets/css/tokens.css` in under **15 minutes** following docs. Measured via a **scripted onboarding checklist** (timed steps: install → call Main Entry → verify Styles File), not informal dogfood alone. [ASSUMPTION: 15-minute target.] Validates FR-1–FR-3, FR-16.
+
+**Secondary**
+
+- **SM-3**: Docs sufficiency — A design-system / frontend engineer can integrate using published docs and fixtures without reading library source. Validates FR-16 and overall MVP usability.
+- **SM-4**: Clear failure coverage — Each of the four v1 failure classes (FR-12–FR-15) produces a clear, non-silent failure in tests/docs examples. Validates FR-12–FR-15.
+
+**Counter-metrics (do not optimize)**
+
+- **SM-C1**: Emitter / platform surface area — Do not optimize for number of output languages (SCSS/JS) or native platforms. Counterbalances pressure to expand beyond CSS Styles File (protects Non-Goals vs SM-1 scope creep).
+- **SM-C2**: Style Dictionary feature parity — Do not optimize toward replacing or matching full multi-platform Style Dictionary capability. Counterbalances SM-1 “more formats/features” creep.
+
+## 8. API Contracts / Public Surface
+
+- **Runtime target (v1):** Node.js with TypeScript. Browser runtime is out of v1.
+- **Public Main Entry (capability contract):** Accepts a Token Source and optional options (including custom output path); on success writes the Styles File to disk. Exact function signature, option names, and error type shapes are deferred to architecture; this PRD owns the capability contract only.
+- **Install surface:** Installable Package via package manager; no Conversion CLI in v1.
+- **Breaking-change policy:** Semantic Versioning (semver). No breaking changes in minor or patch releases; breaking changes require a major version bump.
+
+## 9. Cross-Cutting NFRs
+
+- **Reliability:** Conversion either writes a correct Styles File or fails clearly (FR-12–FR-15); no silent empty success.
+- **Security (Token Source URL):** Remote URL fetch must follow a generic security NFR (timeouts, scheme/host constraints, no unsafe redirect abuse). Concrete policy is owned by architecture.
+- **Predictability:** Naming of emitted custom properties must be consistent with the recognized hierarchy for Supported Formats (brief success criteria). Exact naming algorithm is architecture-owned.
+- **Documentation:** Public docs + fixtures sufficient for SM-3.
+
+## 10. Language / Runtime Targets and Dependency Policy
+
+- **Language:** TypeScript.
+- **Runtime:** Node.js only in v1.
+- **Dependencies:** Prefer a small dependency surface; no hard requirement to depend on Style Dictionary or Terrazzo for MVP. [ASSUMPTION: complementary to those tools, not built on them as a hard dependency.]
+
+## 11. Open Questions
+
+1. Should dangling (unresolvable) aliases fail like cycles (FR-15), or emit a defined fallback? *[NOTE FOR PM: recommend fail-clear for launch consistency with FR-12–FR-15; confirm in architecture if not decided before epics.]*
+2. CSS custom-property name collision policy when two tokens emit the same `--name` — fail vs last-wins vs prefix-by-path? (Architecture default OK if documented.)
+
+## 12. Assumptions Index
+
+- V1 primary outcome is a single Styles File; multi-file theme/layer splits not required unless later confirmed.
+- Default output path `assets/css/tokens.css` when no custom path/name is provided; output directories are created if missing.
+- “CLI” in early brainstorming meant package-manager install, not a Conversion CLI.
+- SM-2 target of 15 minutes is an assumed launch bar; measured with a scripted onboarding checklist.
+- Interop with Style Dictionary is desirable positioning, not an MVP hard dependency (legacy SD dialect support is in-scope; depending on SD as a library is not required).
+- URL fetch security details and Main Entry TypeScript signature live in architecture, not this PRD.
+- Custom-property naming prefix is not user-configurable in v1.
