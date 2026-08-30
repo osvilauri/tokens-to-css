@@ -228,6 +228,9 @@ import `node:fs` or any networking builtin.
   chains — so that dialect and hierarchy are the only variables and their goldens are comparable.
   `fixtures/README.md` records that catalogue and the reference hardware for SM-5.
 
+  **Scope limit:** this corpus covers triggers that are *shaped like a file*. The network failure
+  classes are not — see AD-23.
+
 ### AD-17 — Golden files change only on purpose *(closes OQ-1, protocol half)*
 
 - **Binds:** SM-1, §8 breaking-change policy
@@ -285,6 +288,12 @@ import `node:fs` or any networking builtin.
 - **Binds:** FR-9, FR-17, §8 (emitted names are public)
 - **Prevents:** `--global-color-brand-primary` from one builder and `--color-brand-primary` from another, both compliant.
 - **Rule:** For A3 documents, `$themes` and `$metadata` are dropped entirely, and **top-level keys only** are token-set wrappers — dropped from the emitted path. Every key below the top level is a path segment, including keys that happen to look like set names. A document with more than one token set is `FORMAT_NOT_ALLOWED` (multi-set merge is deferred, PRD §5), so wrapper-dropping is never ambiguous.
+
+### AD-23 — Network failure classes are proved against an in-process server, not a fixture directory
+
+- **Binds:** SM-4, FR-12, NFR3–NFR6, AD-8, AD-16
+- **Prevents:** arriving at the remote-source work and discovering the file-shaped corpus cannot express its failures — then improvising, which is exactly how a security path gets tested badly.
+- **Rule:** A timeout, an oversized body, a redirect into a blocked range, and a refused address are *responses*, not documents, so they cannot live in `fixtures/reject/<trigger>/input.json`. They are proved against an **ephemeral in-process HTTP server** started by the test run — `node:http`, no dependency (AD-13 holds). The scenario table (status, headers, body size, redirect target, delay, resolved address) is versioned next to the fixtures in `fixtures/network/scenarios.ts`, so adding a scenario stays a one-place change like adding a fixture. Every failure class in AD-8 has a scenario; SM-4's coverage claim is the union of the two mechanisms.
 
 ## Consistency Conventions
 
