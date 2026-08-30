@@ -72,6 +72,46 @@ describe('https is the default (NFR3)', () => {
   })
 })
 
+describe('a real hostname, resolved through DNS', () => {
+  /**
+   * Every other test here targets 127.0.0.1, and a literal address skips
+   * resolution entirely — so the custom lookup never ran in any of them. It was
+   * broken for the whole of Epic 1 and the suite was perfectly green: Node
+   * passes `all: true` and expects an array back, and a single address left it
+   * connecting to `undefined`.
+   *
+   * `localhost` is a name, so this exercises the code path a real URL takes.
+   */
+  const viaName = (id: string, options = {}): Promise<string> =>
+    fetchWithPolicy(
+      new URL(server.urlFor(id).replace('127.0.0.1', 'localhost')),
+      `name:${id}`,
+      { ...INSECURE, ...options },
+      { allowInternalAddresses: true },
+    )
+
+  it('resolves the name and fetches the document', async () => {
+    expect(await viaName('ok')).toBe(VALID_DOCUMENT)
+  })
+
+  it('follows a redirect after resolving', async () => {
+    expect(await viaName('redirect-once')).toBe(VALID_DOCUMENT)
+  })
+
+  it('still applies the size cap on the resolved connection', async () => {
+    const err = await failure(() => viaName('oversized', { maxBytes: 1_000 }))
+    expect(err.code).toBe(FailureCode.SOURCE_UNREADABLE)
+  })
+
+  it('refuses the name under the strict policy, because it lands on loopback', async () => {
+    const err = await failure(() =>
+      fetchTokenDocument(new URL(server.urlFor('ok').replace('127.0.0.1', 'localhost')), 'name', INSECURE),
+    )
+    expect(err.code).toBe(FailureCode.SOURCE_UNREADABLE)
+    expect(err.message).toMatch(/resolves to .*internal address/)
+  })
+})
+
 describe('addresses the adapter refuses (NFR6)', () => {
   it('blocks the cloud metadata address', () => {
     expect(isBlockedAddress('169.254.169.254')).toBe(true)

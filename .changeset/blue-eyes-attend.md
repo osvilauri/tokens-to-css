@@ -1,6 +1,7 @@
 ---
+"tokens-to-css": patch
 ---
 
-Freezes the accept matrix: nine fixtures covering every dialect against every
-hierarchy, with the derived dialects generated from their DTCG source. Test
-fixtures only; no change to the package.
+Fixes remote sources against real hostnames. The custom DNS lookup answered with
+a single address where Node expects an array, so any URL naming a host — rather
+than a literal IP — failed to connect.
