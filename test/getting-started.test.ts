@@ -138,3 +138,40 @@ describe('the checklist covers the five steps SM-2 measures', () => {
     expect(guide.replace(/\s+/g, ' ')).toMatch(/no config file and no CLI/i)
   })
 })
+
+describe.skipIf(!built)('the README example is true', () => {
+  const readme = readFileSync(new URL('README.md', ROOT), 'utf8')
+
+  it('produces exactly the stylesheet it shows', () => {
+    // The first thing anyone sees on the package page. If the input and the
+    // output drift apart, the very first impression is a lie.
+    const input = readme.match(/```json\n(\{[\s\S]*?\})\n```/)![1]!
+    const shown = readme.match(/```css\n(:root \{[\s\S]*?\})\n```/)![1]!
+
+    mkdirSync(join(project, 'design'), { recursive: true })
+    writeFileSync(join(project, 'design/tokens.json'), input)
+    writeFileSync(
+      join(project, 'run.mjs'),
+      `import { generateCss } from '${new URL('dist/index.js', ROOT).pathname}'\n` +
+        `await generateCss('design/tokens.json')\n`,
+    )
+    execFileSync(process.execPath, ['run.mjs'], { cwd: project, stdio: 'pipe' })
+
+    expect(readFileSync(join(project, 'assets/css/tokens.css'), 'utf8').trim()).toBe(shown.trim())
+  })
+
+  it('is written for someone deciding whether to install it', () => {
+    // Contributor instructions belong after the reference, not before it: the
+    // reader of a package page is not there to contribute.
+    expect(readme.indexOf('## Use it')).toBeLessThan(readme.indexOf('## Contributing'))
+    expect(readme.indexOf('## Documentation')).toBeLessThan(readme.indexOf('## Contributing'))
+  })
+
+  it('does not advertise anything the published package does not contain', () => {
+    // `demo/` is not in `files`, so a reader who installed the package cannot
+    // run it. Promising it on the package page would be a dead end.
+    expect(readme).not.toMatch(/npm run demo/)
+    const files = JSON.parse(readFileSync(new URL('package.json', ROOT), 'utf8')).files
+    expect(files).toEqual(['dist'])
+  })
+})

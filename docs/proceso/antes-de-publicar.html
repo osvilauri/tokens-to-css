@@ -1,0 +1,362 @@
+<title>Antes de Publicar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --paper:     #FFFFFF;
+    --page:      #F7F7F7;
+    --ink:       #1A1A1A;
+    --muted:     #6A6A6A;
+    --rule:      #E4E4E4;
+    --link:      #0B6EA8;
+    --code-bg:   #F3F4F3;
+    --warn:      #8A5A00;
+    --warn-bg:   #FFF6E0;
+    --warn-rule: #E8C77A;
+
+    --f-ui:   "Inter Tight", -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #16181A; --page: #0E1011; --ink: #E6E8E6; --muted: #969A97;
+      --rule: #2A2E30; --link: #64B6E8; --code-bg: #1E2224;
+      --warn: #E8C77A; --warn-bg: #2A2213; --warn-rule: #5A4A22;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #16181A; --page: #0E1011; --ink: #E6E8E6; --muted: #969A97;
+    --rule: #2A2E30; --link: #64B6E8; --code-bg: #1E2224;
+    --warn: #E8C77A; --warn-bg: #2A2213; --warn-rule: #5A4A22;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 0 1rem 5rem;
+    background: var(--page);
+    color: var(--ink);
+    font-family: var(--f-ui);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .shell { max-width: 68rem; margin: 0 auto; }
+
+  /* ---------- preview banner ---------- */
+
+  .banner {
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-rule);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    margin: 1.5rem 0;
+    font-family: var(--f-mono);
+    font-size: 0.78rem;
+    color: var(--warn);
+    line-height: 1.55;
+  }
+  .banner b { font-weight: 500; }
+
+  /* ---------- package header ---------- */
+
+  .pkg-head {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 6px 6px 0 0;
+    border-bottom: 0;
+    padding: 1.4rem 1.6rem 1.1rem;
+  }
+  .pkg-name {
+    font-family: var(--f-mono);
+    font-size: 1.6rem; font-weight: 500;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.35rem;
+  }
+  .pkg-meta {
+    display: flex; flex-wrap: wrap; gap: 0.5rem 0.9rem;
+    font-size: 0.8rem; color: var(--muted);
+    font-family: var(--f-mono);
+  }
+  .pill {
+    background: var(--code-bg); border-radius: 3px;
+    padding: 0.1em 0.45em;
+  }
+  .tabs {
+    display: flex; gap: 1.4rem;
+    background: var(--paper);
+    border: 1px solid var(--rule); border-top: 0;
+    padding: 0 1.6rem;
+    font-size: 0.85rem;
+  }
+  .tabs span {
+    padding: 0.65rem 0; color: var(--muted);
+    border-bottom: 2px solid transparent;
+  }
+  .tabs span.on { color: var(--ink); font-weight: 600; border-bottom-color: #C1272D; }
+
+  /* ---------- two columns ---------- */
+
+  .cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 17rem;
+    gap: 0;
+    background: var(--paper);
+    border: 1px solid var(--rule); border-top: 0;
+    border-radius: 0 0 6px 6px;
+  }
+  @media (max-width: 56rem) { .cols { grid-template-columns: minmax(0, 1fr); } }
+
+  .readme { padding: 1.8rem 1.8rem 2.5rem; min-width: 0; }
+  .side {
+    border-left: 1px solid var(--rule);
+    padding: 1.8rem 1.4rem;
+    font-size: 0.85rem;
+  }
+  @media (max-width: 56rem) { .side { border-left: 0; border-top: 1px solid var(--rule); } }
+
+  .side h4 {
+    font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600;
+    margin: 1.4rem 0 0.35rem;
+  }
+  .side h4:first-child { margin-top: 0; }
+  .side p { margin: 0; }
+  .side .mono { font-family: var(--f-mono); font-size: 0.82rem; }
+  .side a { color: var(--link); text-decoration: none; }
+  .side a:hover { text-decoration: underline; }
+  .install {
+    display: flex; align-items: center; gap: 0.5rem;
+    background: var(--code-bg); border-radius: 4px;
+    padding: 0.5rem 0.7rem;
+    font-family: var(--f-mono); font-size: 0.8rem;
+    overflow-x: auto;
+  }
+  .install b { color: var(--muted); font-weight: 400; }
+
+  /* ---------- rendered readme ---------- */
+
+  .readme h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 0.9rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--rule); }
+  .readme h2 { font-size: 1.25rem; font-weight: 600; margin: 2rem 0 0.7rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--rule); }
+  .readme h3 { font-size: 1.02rem; font-weight: 600; margin: 1.6rem 0 0.5rem; }
+  .readme p { margin: 0 0 1rem; }
+  .readme a { color: var(--link); text-decoration: none; }
+  .readme a:hover { text-decoration: underline; }
+  .readme code {
+    font-family: var(--f-mono); font-size: 0.85em;
+    background: var(--code-bg); border-radius: 3px; padding: 0.15em 0.35em;
+  }
+  .readme pre {
+    background: var(--code-bg); border-radius: 5px;
+    padding: 0.9rem 1rem; overflow-x: auto; margin: 0 0 1rem;
+    font-family: var(--f-mono); font-size: 0.8rem; line-height: 1.6;
+  }
+  .readme pre code { background: none; padding: 0; }
+  .readme blockquote {
+    margin: 0 0 1rem; padding: 0.1rem 0 0.1rem 1rem;
+    border-left: 4px solid var(--rule); color: var(--muted);
+  }
+  .readme table { border-collapse: collapse; width: 100%; margin: 0 0 1rem; font-size: 0.88rem; display: block; overflow-x: auto; }
+  .readme th, .readme td { border: 1px solid var(--rule); padding: 0.45rem 0.7rem; text-align: left; vertical-align: top; }
+  .readme th { background: var(--code-bg); font-weight: 600; }
+  .readme strong { font-weight: 600; }
+  .readme ul { margin: 0 0 1rem; padding-left: 1.3rem; }
+  .readme li { margin-bottom: 0.5rem; }
+  .readme em { font-style: italic; }
+
+  footer {
+    margin-top: 2rem; font-family: var(--f-mono); font-size: 0.75rem;
+    color: var(--muted); line-height: 1.9;
+  }
+</style>
+
+<div class="shell">
+
+  <div class="banner">
+    <b>VISTA PREVIA — no es npmjs.com.</b><br>
+    Reconstrucción de cómo se vería <span style="font-family:inherit">tokens-to-css</span> en el registro, con los datos reales de
+    <code>package.json</code>, el README <b>reescrito</b> y las cifras que devuelve <code>npm pack</code>.
+    Nada está publicado todavía.
+  </div>
+
+  <div class="pkg-head">
+    <h1 class="pkg-name">tokens-to-css</h1>
+    <div class="pkg-meta">
+      <span class="pill">0.0.0</span>
+      <span>·</span>
+      <span>MIT</span>
+      <span>·</span>
+      <span>Publicado hace un momento</span>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <span class="on">Readme</span>
+    <span>Code</span>
+    <span>Dependencies (0)</span>
+    <span>Dependents</span>
+    <span>Versions (1)</span>
+  </div>
+
+  <div class="cols">
+
+    <div class="readme">
+      <h1>tokens-to-css</h1>
+      <p>Convert design-token JSON into a CSS custom-properties stylesheet.</p>
+      <p>You hand it a token file — a path or a URL — and it writes a stylesheet of <code>:root</code> custom properties your app can link, with alias relationships kept as <code>var(--…)</code> rather than flattened. It is not a multi-platform token pipeline and does not try to become one.</p>
+      <p>Zero runtime dependencies.</p>
+      <pre><code>npm i -D tokens-to-css</code></pre>
+
+      <h2>Use it</h2>
+      <pre><code>import { generateCss } from 'tokens-to-css'
+
+await generateCss('design/tokens.json')
+// wrote assets/css/tokens.css</code></pre>
+      <p>That is the whole integration. No config file, no CLI: you own the invocation site, so it goes wherever your build already lives — an npm script, a build step, a bootstrap file.</p>
+      <p>Given this:</p>
+      <pre><code>{
+  "color": {
+    "brand": { "$value": "#5A4FCF", "$type": "color" },
+    "ink":   { "$value": "#191627", "$type": "color" },
+    "text":  { "$value": "{color.ink}" }
+  },
+  "space": {
+    "md": { "$value": { "value": 16, "unit": "px" }, "$type": "dimension" }
+  }
+}</code></pre>
+      <p>you get this:</p>
+      <pre><code>:root {
+  --color-brand: #5A4FCF;
+  --color-ink: #191627;
+  --color-text: var(--color-ink);
+  --space-md: 16px;
+}</code></pre>
+      <p>Look at <code>--color-text</code>. Your token file said <em>text is ink</em>, and so does the stylesheet — the relationship survived instead of being flattened to <code>#191627</code>. Change the primitive and everything pointing at it moves, which is the reason to keep tokens in a hierarchy at all.</p>
+      <p>A URL works wherever a path does:</p>
+      <pre><code>await generateCss('https://tokens.example.com/design.json')</code></pre>
+
+      <h2>What it reads</h2>
+      <p>Three shapes, checked in this order. The first that matches decides how the document is read.</p>
+      <table><tbody>
+        <tr><td><strong>Tokens Studio</strong></td><td>Exports with <code>$themes</code> / <code>$metadata</code>. The token set wrapper is dropped from the name, so you get <code>--color-brand</code>, not <code>--global-color-brand</code>.</td></tr>
+        <tr><td><strong>DTCG</strong></td><td><code>$value</code>, <code>$type</code>, aliases — including the object notation the current spec uses for colours and dimensions.</td></tr>
+        <tr><td><strong>Style Dictionary legacy</strong></td><td><code>value</code> / <code>type</code> without the dollar. Converts to a byte-identical stylesheet.</td></tr>
+      </tbody></table>
+      <p>Hierarchy is not a separate concern: three-tier, CTI, EightShapes-like or any other nesting all flatten through the same naming rule.</p>
+      <p>Full detail, including everything it refuses, is in <a href="#">docs/formats.md</a>.</p>
+
+      <h2>When it fails</h2>
+      <p>It either writes a correct stylesheet or writes nothing at all. There is no partial output, and a failed run never touches the stylesheet already there.</p>
+      <pre><code>TokenCssError [ALIAS_DANGLING]
+1 reference points nowhere:
+  "color.text" references "color.inkk", which does not exist</code></pre>
+      <p>Every failure carries a stable code you can branch on:</p>
+      <pre><code>try {
+  await generateCss('design/tokens.json')
+} catch (error) {
+  error.code        // e.g. 'ALIAS_DANGLING'
+  error.source      // the Token Source, as you passed it
+  error.tokenPaths  // the offending tokens
+}</code></pre>
+      <p>The eight codes are listed in <a href="#">docs/failures.md</a>, generated from the source that defines them.</p>
+
+      <h2>Options</h2>
+      <p>All optional.</p>
+      <pre><code>await generateCss('design/tokens.json', {
+  outDir: 'public/styles',       // default: assets/css
+  fileName: 'design-tokens.css', // default: tokens.css
+  baseDir: process.cwd(),        // what relative paths resolve against
+  http: {                        // only used when the source is a URL
+    allowInsecure: false,        // https only, unless you say otherwise
+    timeoutMs: 10_000,
+    maxBytes: 10_000_000,
+    maxRedirects: 3,
+  },
+})</code></pre>
+      <p>A remote source is fetched under a guard: <code>https</code> by default, one deadline across the whole exchange, a size cap enforced while the body streams, redirects re-validated at every hop, and loopback, private, link-local and cloud-metadata addresses refused — including when the URL names one literally.</p>
+
+      <h2>Documentation</h2>
+      <table><tbody>
+        <tr><td><a href="#">Getting started</a></td><td>Five steps from install to a stylesheet, including breaking it on purpose</td></tr>
+        <tr><td><a href="#">What it accepts</a></td><td>The three shapes, the order they are checked, and everything refused</td></tr>
+        <tr><td><a href="#">The naming rule</a></td><td>How <code>color.brand</code> becomes <code>--color-brand</code>, and why that is a promise</td></tr>
+        <tr><td><a href="#">Failure codes</a></td><td>The eight codes and what each one means</td></tr>
+      </tbody></table>
+
+      <h2>What it will not do</h2>
+      <p>Some of these are on purpose and stay that way; the rest are recorded as deferred, not forgotten.</p>
+      <ul>
+        <li><strong>Invent units.</strong> A token whose value is <code>16</code> emits <code>16</code>, never <code>16px</code>, whatever its <code>$type</code> says.</li>
+        <li><strong>Flatten references.</strong> <code>var(--…)</code> all the way down.</li>
+        <li><strong>Evaluate expressions.</strong> <code>{spacing.md} * 2</code> is refused rather than computed. There is no evaluator in this package. <code>calc()</code> and <code>clamp()</code> are valid CSS and pass through untouched.</li>
+        <li><strong>Convert composite tokens.</strong> Typography, shadow, border, gradient and transition are refused: a typography token is five CSS properties, and accepting it would change what "one token, one custom property" means. Deferred to a version after this one.</li>
+        <li><strong>Pick a winner on a collision.</strong> Two token paths that produce the same custom-property name fail the conversion rather than one quietly overwriting the other.</li>
+      </ul>
+
+      <h2>Requirements</h2>
+      <p>Node <strong>22.12 or newer</strong>. Development and CI target Node 24; CI also runs 22 and 26. ESM only, with TypeScript types included.</p>
+      <p>Conversion writes to disk, so it needs a writable filesystem. There is no browser build.</p>
+
+      <h2>Contributing</h2>
+      <pre><code>npm install
+npm run check     # lint + typecheck + tests
+npm run build</code></pre>
+      <p><code>npm run lint</code> is not a style linter. It enforces the architecture: the build fails if a pure stage reaches for the filesystem or the network, and it checks that the generated fixtures and documentation still match the code they came from.</p>
+      <p>The <a href="#">fixtures</a> are the specification — nine files that must convert byte for byte, seventeen that must fail with a named code. Where the documentation and the fixtures disagree, the fixtures are right.</p>
+      <p>The requirements, the architecture and the work breakdown live under <a href="#">_bmad-output/planning-artifacts/</a>.</p>
+
+      <h2>License</h2>
+      <p>MIT — see <a href="#">LICENSE</a>.</p>
+    </div>
+
+    <aside class="side">
+      <h4>Install</h4>
+      <div class="install"><b>&gt;</b> npm i tokens-to-css</div>
+
+      <h4>Repository</h4>
+      <p class="mono"><a href="#">github.com/osvilauri/tokens-to-css</a></p>
+
+      <h4>Homepage</h4>
+      <p class="mono" style="color:var(--muted)">— sin definir —</p>
+
+      <h4>Weekly downloads</h4>
+      <p class="mono" style="color:var(--muted)">—</p>
+
+      <h4>Version</h4>
+      <p class="mono">0.0.0</p>
+
+      <h4>License</h4>
+      <p class="mono">MIT</p>
+
+      <h4>Unpacked size</h4>
+      <p class="mono">63.5 kB</p>
+
+      <h4>Total files</h4>
+      <p class="mono">5</p>
+
+      <h4>Dependencies</h4>
+      <p class="mono">0</p>
+
+      <h4>Keywords</h4>
+      <p class="mono" style="line-height:1.9">design-tokens · css · custom-properties · dtcg · style-dictionary · tokens-studio</p>
+
+      <h4>Node</h4>
+      <p class="mono">&gt;=22.12</p>
+
+      <h4>Provenance</h4>
+      <p class="mono" style="color:var(--muted)">Built and signed on GitHub Actions</p>
+    </aside>
+
+  </div>
+
+  <footer>
+    Datos reales de package.json y npm pack · README reescrito, 2026-08-30<br>
+    Los enlaces están desactivados: es una maqueta para decidir qué publicar, no una copia del registro
+  </footer>
+
+</div>

@@ -2,44 +2,170 @@
 
 Convert design-token JSON into a CSS custom-properties stylesheet.
 
-One job: you hand it a token file — a path or a URL — and it writes a stylesheet
-of `:root` custom properties your app can link, with alias relationships kept as
+You hand it a token file — a path or a URL — and it writes a stylesheet of
+`:root` custom properties your app can link, with alias relationships kept as
 `var(--…)` rather than flattened. It is not a multi-platform token pipeline and
 does not try to become one.
 
-> **Status: in development.** Nothing is published yet, but every input shape now
-> converts end to end — DTCG (including the object notation the current spec
-> uses for colours and dimensions), Style Dictionary legacy and Tokens Studio,
-> from a path or a URL. What remains is documentation and release — see
-> [`_bmad-output/planning-artifacts/epics.md`](_bmad-output/planning-artifacts/epics.md).
+Zero runtime dependencies.
+
+```bash
+npm i -D tokens-to-css
+```
+
+## Use it
 
 ```js
 import { generateCss } from 'tokens-to-css'
 
 await generateCss('design/tokens.json')
 // wrote assets/css/tokens.css
+```
 
+That is the whole integration. No config file, no CLI: you own the invocation
+site, so it goes wherever your build already lives — an npm script, a build
+step, a bootstrap file.
+
+Given this:
+
+```json
+{
+  "color": {
+    "brand": { "$value": "#5A4FCF", "$type": "color" },
+    "ink":   { "$value": "#191627", "$type": "color" },
+    "text":  { "$value": "{color.ink}" }
+  },
+  "space": {
+    "md": { "$value": { "value": 16, "unit": "px" }, "$type": "dimension" }
+  }
+}
+```
+
+you get this:
+
+```css
+:root {
+  --color-brand: #5A4FCF;
+  --color-ink: #191627;
+  --color-text: var(--color-ink);
+  --space-md: 16px;
+}
+```
+
+Look at `--color-text`. Your token file said *text is ink*, and so does the
+stylesheet — the relationship survived instead of being flattened to `#191627`.
+Change the primitive and everything pointing at it moves, which is the reason to
+keep tokens in a hierarchy at all.
+
+A URL works wherever a path does:
+
+```js
 await generateCss('https://tokens.example.com/design.json')
-// same, fetched over https
 ```
 
-## Probarlo
+## What it reads
 
-```bash
-npm run demo
+Three shapes, checked in this order. The first that matches decides how the
+document is read.
+
+| | |
+| --- | --- |
+| **Tokens Studio** | Exports with `$themes` / `$metadata`. The token set wrapper is dropped from the name, so you get `--color-brand`, not `--global-color-brand`. |
+| **DTCG** | `$value`, `$type`, aliases — including the object notation the current spec uses for colours and dimensions. |
+| **Style Dictionary legacy** | `value` / `type` without the dollar. Converts to a byte-identical stylesheet. |
+
+Hierarchy is not a separate concern: three-tier, CTI, EightShapes-like or any
+other nesting all flatten through the same naming rule.
+
+Full detail, including everything it refuses, is in
+[docs/formats.md](docs/formats.md).
+
+## When it fails
+
+It either writes a correct stylesheet or writes nothing at all. There is no
+partial output, and a failed run never touches the stylesheet already there.
+
+```
+TokenCssError [ALIAS_DANGLING]
+1 reference points nowhere:
+  "color.text" references "color.inkk", which does not exist
 ```
 
-Abre un servidor local con un campo para una URL y otro para un archivo del
-ordenador, y muestra las primeras 200 líneas del CSS junto a un enlace de
-descarga. Trae varios sistemas de diseño publicados como ejemplos de un clic,
-incluido uno que **falla** — porque leer un mensaje de error es la mitad de
-saber si esta herramienta sirve.
+Every failure carries a stable code you can branch on:
 
-La librería es Node y escribe a disco, así que la demo necesita ese servidor:
-no hay forma de correrla en una página suelta, y simularla sería mentir sobre
-lo que hace.
+```js
+try {
+  await generateCss('design/tokens.json')
+} catch (error) {
+  error.code        // e.g. 'ALIAS_DANGLING'
+  error.source      // the Token Source, as you passed it
+  error.tokenPaths  // the offending tokens
+}
+```
 
-## Working on it
+The eight codes are listed in [docs/failures.md](docs/failures.md), generated
+from the source that defines them.
+
+## Options
+
+All optional.
+
+```js
+await generateCss('design/tokens.json', {
+  outDir: 'public/styles',       // default: assets/css
+  fileName: 'design-tokens.css', // default: tokens.css
+  baseDir: process.cwd(),        // what relative paths resolve against
+  http: {                        // only used when the source is a URL
+    allowInsecure: false,        // https only, unless you say otherwise
+    timeoutMs: 10_000,
+    maxBytes: 10_000_000,
+    maxRedirects: 3,
+  },
+})
+```
+
+A remote source is fetched under a guard: `https` by default, one deadline
+across the whole exchange, a size cap enforced while the body streams, redirects
+re-validated at every hop, and loopback, private, link-local and cloud-metadata
+addresses refused — including when the URL names one literally.
+
+## Documentation
+
+| | |
+| --- | --- |
+| [Getting started](docs/getting-started.md) | Five steps from install to a stylesheet, including breaking it on purpose |
+| [What it accepts](docs/formats.md) | The three shapes, the order they are checked, and everything refused |
+| [The naming rule](docs/naming.md) | How `color.brand` becomes `--color-brand`, and why that is a promise |
+| [Failure codes](docs/failures.md) | The eight codes and what each one means |
+
+## What it will not do
+
+Some of these are on purpose and stay that way; the rest are recorded as
+deferred, not forgotten.
+
+- **Invent units.** A token whose value is `16` emits `16`, never `16px`,
+  whatever its `$type` says.
+- **Flatten references.** `var(--…)` all the way down.
+- **Evaluate expressions.** `{spacing.md} * 2` is refused rather than computed.
+  There is no evaluator in this package. `calc()` and `clamp()` are valid CSS
+  and pass through untouched.
+- **Convert composite tokens.** Typography, shadow, border, gradient and
+  transition are refused: a typography token is five CSS properties, and
+  accepting it would change what "one token, one custom property" means.
+  Deferred to a version after this one.
+- **Pick a winner on a collision.** Two token paths that produce the same
+  custom-property name fail the conversion rather than one quietly overwriting
+  the other.
+
+## Requirements
+
+Node **22.12 or newer**. Development and CI target Node 24; CI also runs 22 and
+26. ESM only, with TypeScript types included.
+
+Conversion writes to disk, so it needs a writable filesystem. There is no
+browser build.
+
+## Contributing
 
 ```bash
 npm install
@@ -47,44 +173,18 @@ npm run check     # lint + typecheck + tests
 npm run build
 ```
 
-`npm run lint` is the architecture boundary check, not a style linter: it fails
-the build if a pure stage (`src/dialects/`, `src/validate/`, `src/emit/`,
-`src/model/`, `src/pipeline.ts`) reaches for the filesystem or the network. Only
-`src/source/` and `src/write/` may do that. The rule comes from AD-1 in the
-architecture spine.
+`npm run lint` is not a style linter. It enforces the architecture: the build
+fails if a pure stage (`src/dialects/`, `src/validate/`, `src/emit/`,
+`src/model/`, `src/pipeline.ts`) reaches for the filesystem or the network, and
+it checks that the generated fixtures and documentation still match the code
+they came from.
 
-**Node 22.12 or newer.** Development and CI target 24 (Active LTS); CI also runs
-22 and 26. Node 25 is end-of-life and untested here.
-
-### TypeScript 7
-
-The stack pins TypeScript 7.0.x — the release built on the Go-native compiler.
-Verified 2026-08-30: tsdown 0.22 builds and emits declarations against it, and
-Vitest 4.1 runs the suite. tsdown does print `TypeScript 7.0 does not yet have a
-stable API and is experimental. Some options will be unavailable.` Nothing this
-package needs is among them today, so the planned fallback to TypeScript 6.x was
-not taken. Revisit if a build option turns out to be unavailable.
-
-## Reference
-
-| | |
-| --- | --- |
-| [Getting started](docs/getting-started.md) | Five steps from install to a stylesheet, including breaking it on purpose |
-| [What it accepts](docs/formats.md) | The three input shapes, in the order they are checked, and everything it refuses |
-| [The naming rule](docs/naming.md) | How a token path becomes a custom property — public contract |
-| [Failure codes](docs/failures.md) | The eight codes, generated from the source that defines them |
-
-The [fixtures](fixtures/README.md) are the specification: nine files that must
+The [fixtures](fixtures/README.md) are the specification — nine files that must
 convert byte for byte, seventeen that must fail with a named code. Where the
 documentation and the fixtures disagree, the fixtures are right.
 
-## Where the decisions live
-
-| What | Where |
-| --- | --- |
-| What it does and refuses to do | `_bmad-output/planning-artifacts/prds/prd-tokens-to-css-2026-08-06/prd.md` |
-| How it is built, and why | `_bmad-output/planning-artifacts/architecture/architecture-tokens-to-css-2026-08-29/ARCHITECTURE-SPINE.md` |
-| The work, in order | `_bmad-output/planning-artifacts/epics.md` |
+The requirements, the architecture and the work breakdown live under
+[`_bmad-output/planning-artifacts/`](_bmad-output/planning-artifacts/).
 
 ## License
 
