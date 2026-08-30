@@ -1,5 +1,5 @@
 ---
-name: 'css_generator_library'
+name: 'tokens-to-css'
 type: architecture-spine
 purpose: build-substrate
 altitude: feature
@@ -13,13 +13,13 @@ binds:
   - NFR: Reliability, Atomicity, Security, Predictability, Performance
   - OQ-1 (Fixture Corpus freeze), OQ-2 (performance bar)
 sources:
-  - '../../prds/prd-css_generator_library-2026-08-06/prd.md'
-  - '../../prds/prd-css_generator_library-2026-08-06/addendum.md'
+  - '../../prds/prd-tokens-to-css-2026-08-06/prd.md'
+  - '../../prds/prd-tokens-to-css-2026-08-06/addendum.md'
   - '../../research/technical-design-token-json-to-css-generation-research-2026-07-26.md'
 companions: []
 ---
 
-# Architecture Spine — css_generator_library
+# Architecture Spine — tokens-to-css
 
 ## Design Paradigm
 
@@ -331,7 +331,7 @@ check at repo bootstrap rather than a spine question. [ASSUMPTION]
 ## Structural Seed
 
 ```text
-css-generator-library/
+tokens-to-css/
   src/
     index.ts          # public surface — AD-14
     pipeline.ts       # stage orchestration — AD-1

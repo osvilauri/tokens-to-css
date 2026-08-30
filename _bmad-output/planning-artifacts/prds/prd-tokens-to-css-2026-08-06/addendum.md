@@ -1,11 +1,11 @@
 ---
-title: "Addendum: css_generator_library PRD"
+title: "Addendum: tokens-to-css PRD"
 status: draft
 created: 2026-08-06
 updated: 2026-08-27
 ---
 
-# Addendum — css_generator_library
+# Addendum — tokens-to-css
 
 Depth that belongs in architecture / solution design / later phases — not the PRD narrative.
 

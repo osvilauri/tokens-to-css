@@ -1,7 +1,7 @@
 # Finalize Step 2 — Input Reconciliation: Technical Research
 
 **Input:** `research/technical-design-token-json-to-css-generation-research-2026-07-26.md`  
-**PRD:** `prds/prd-css_generator_library-2026-08-06/prd.md`  
+**PRD:** `prds/prd-tokens-to-css-2026-08-06/prd.md`  
 **Addendum:** *does not exist* (`addendum.md` not present)  
 **Reconciled:** 2026-08-06  
 **Scope:** Product-relevant capabilities/risks present in research but missing or under-specified in PRD; items that belong in architecture addendum (not PRD); contradictions where research recommendations diverge from locked PRD decisions.

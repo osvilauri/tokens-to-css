@@ -1,7 +1,7 @@
 ---
 stepsCompleted: [1, 2, 3, 4, 5, 6]
 inputDocuments:
-  - _bmad-output/planning-artifacts/briefs/brief-css_generator_library-2026-07-26/brief.md
+  - _bmad-output/planning-artifacts/briefs/brief-tokens-to-css-2026-07-26/brief.md
   - .claude/skills/bmad-technical-research/research.template.md
 workflowType: 'research'
 lastStep: 6
@@ -31,7 +31,7 @@ source_verification: true
 
 This technical research maps how design-token JSON becomes CSS for design systems, web apps, and component libraries. The landscape shifted materially in October 2025 when the Design Tokens Community Group (DTCG) published its first **stable** Format Module **2025.10**, with a companion **Resolver** module for multi-context theming. Tooling now clusters around Style Dictionary (multi-platform, config-heavy), Terrazzo (formerly Cobalt; DTCG-native, plugin-centric), Tokens Studio + `@tokens-studio/sd-transforms` (authoring → transform bridge), and legacy Theo (largely superseded).
 
-For **css_generator_library**, the differentiation opportunity is clear: **structure-aware analysis first, CSS emission second** — detect 3-tier / CTI / EightShapes-like taxonomies, parse DTCG (`$value` / `$type` / `$description`, `{alias.path}`), resolve references, and emit layered CSS (`:root`, theme selectors, optional `@theme`) without requiring a full multi-platform Style Dictionary stack. See the Executive Summary and Strategic Recommendations in the Research Synthesis section below for the recommended architecture and risks.
+For **tokens-to-css**, the differentiation opportunity is clear: **structure-aware analysis first, CSS emission second** — detect 3-tier / CTI / EightShapes-like taxonomies, parse DTCG (`$value` / `$type` / `$description`, `{alias.path}`), resolve references, and emit layered CSS (`:root`, theme selectors, optional `@theme`) without requiring a full multi-platform Style Dictionary stack. See the Executive Summary and Strategic Recommendations in the Research Synthesis section below for the recommended architecture and risks.
 
 ---
 
@@ -67,7 +67,7 @@ For **css_generator_library**, the differentiation opportunity is clear: **struc
 
 **Scope Confirmed:** 2026-07-26 (non-interactive mode; topic and goals fixed by product owner)
 
-**Domain grounding:** Product brief for `css_generator_library` (2026-07-26) — library + CLI + API that analyzes token JSON structure and emits CSS custom properties for DS/web/app consumption.
+**Domain grounding:** Product brief for `tokens-to-css` (2026-07-26) — library + CLI + API that analyzes token JSON structure and emits CSS custom properties for DS/web/app consumption.
 
 ---
 
@@ -244,7 +244,7 @@ Dominant pattern for token→code tools is a **pipeline / transform architecture
 
 Style Dictionary implements this as configurable platforms with transform groups. Terrazzo uses a **plugin-centric** API (CLI + `@terrazzo/plugin-css`). Theo used formatters over a props list.
 
-For **css_generator_library**, prefer Terrazzo’s clarity of DTCG-first + plugins, but keep Style Dictionary’s battle-tested concepts (outputReferences, filters, layered files) without multi-platform scope.
+For **tokens-to-css**, prefer Terrazzo’s clarity of DTCG-first + plugins, but keep Style Dictionary’s battle-tested concepts (outputReferences, filters, layered files) without multi-platform scope.
 
 _Source:_ https://sujeet.pro/articles/design-tokens-and-theming · https://styledictionary.com/info/tokens/ · https://github.com/terrazzoapp/terrazzo/
 
@@ -326,7 +326,7 @@ CI: `cssgen build -i tokens/**/*.json -o dist/css`.
 
 ### Technology Adoption Strategies
 
-| Strategy | Fit for css_generator_library |
+| Strategy | Fit for tokens-to-css |
 | --- | --- |
 | Big-bang replace SD | Poor — users keep SD for native platforms |
 | Complementary CSS lane | **Best** — analyze + CSS emit beside existing pipelines |
@@ -437,7 +437,7 @@ _Source:_ https://www.w3.org/community/design-tokens/2025/10/28/design-tokens-sp
 
 Design tokens are now standardized enough to build focused tooling on. The DTCG **Format Module 2025.10** (stable Community Final, 28 Oct 2025) defines vendor-neutral JSON with `$value` / `$type` / `$description` and `{alias.path}` references; the **Resolver Module 2025.10** standardizes multi-file theming. Reference implementations and adopters include Style Dictionary, Tokens Studio, Terrazzo, Penpot, Figma, Sketch, Framer, zeroheight, and others — with uneven feature completeness across tools.
 
-Competitive analysis shows **Style Dictionary** as the multi-platform powerhouse (heavier for CSS-only), **Terrazzo** as the DTCG-native CSS-capable generator, **Tokens Studio + sd-transforms** as the design-to-code bridge, and **Theo** as legacy. None of these primarily sell **taxonomy detection** (3-tier / CTI / EightShapes) as a first-class product feature — that is the natural wedge for **css_generator_library**.
+Competitive analysis shows **Style Dictionary** as the multi-platform powerhouse (heavier for CSS-only), **Terrazzo** as the DTCG-native CSS-capable generator, **Tokens Studio + sd-transforms** as the design-to-code bridge, and **Theo** as legacy. None of these primarily sell **taxonomy detection** (3-tier / CTI / EightShapes) as a first-class product feature — that is the natural wedge for **tokens-to-css**.
 
 **Key Technical Findings:**
 
@@ -486,7 +486,7 @@ _Source:_ https://www.w3.org/community/design-tokens/2025/10/28/design-tokens-sp
 - **Data Sources:** DTCG specs, Style Dictionary / Terrazzo / Tokens Studio docs, EightShapes & Intuit taxonomy literature, npm/GitHub, practitioner guides (2025–2026)  
 - **Analysis Framework:** Landscape → comparison → architecture patterns → MVP recommendation → risks  
 - **Time Period:** Current as of 2026-07-26, with DTCG stable dated 2025-10  
-- **Technical Depth:** Implementation-ready architecture guidance for `css_generator_library`
+- **Technical Depth:** Implementation-ready architecture guidance for `tokens-to-css`
 
 ### Technical Research Goals and Objectives
 
@@ -617,7 +617,7 @@ _Source:_ https://www.humanstandards.org/code-design-tokens/css-json-tokens/
 
 ### Technical Strategy and Decision Framework
 
-**Top recommended architecture for css_generator_library:**
+**Top recommended architecture for tokens-to-css:**
 
 > **Analyze-Normalize-Resolve-Emit (ANRE) pipeline** implemented as a TypeScript ESM library with CLI, DTCG-first parsers, Map-based token graph, pluggable taxonomy classifiers (3-tier / CTI / EightShapes), and CSS emitters that default to layered `:root` / theme-selector outputs with optional preserved `var()` references — **without** depending on Style Dictionary.
 
@@ -785,7 +785,7 @@ The token→CSS problem is standardized at the JSON layer (DTCG 2025.10) but sti
 
 ### Strategic Technical Impact Assessment
 
-Proceeding with a TypeScript ESM library that prioritizes DTCG parsing, alias-correct CSS, and taxonomy reports positions `css_generator_library` as a complementary specialist in a maturing ecosystem — not a SD clone.
+Proceeding with a TypeScript ESM library that prioritizes DTCG parsing, alias-correct CSS, and taxonomy reports positions `tokens-to-css` as a complementary specialist in a maturing ecosystem — not a SD clone.
 
 ### Next Steps Technical Recommendations
 
@@ -803,4 +803,4 @@ Proceeding with a TypeScript ESM library that prioritizes DTCG parsing, alias-co
 **Source Verification:** Technical facts cited with current sources  
 **Technical Confidence Level:** High for landscape and architecture recommendations — based on multiple authoritative sources; Medium where tool-to-spec parity is still evolving  
 
-_This comprehensive technical research document serves as an authoritative technical reference on design token JSON to CSS generation libraries and architecture patterns and provides strategic technical insights for informed decision-making and implementation of css_generator_library._
+_This comprehensive technical research document serves as an authoritative technical reference on design token JSON to CSS generation libraries and architecture patterns and provides strategic technical insights for informed decision-making and implementation of tokens-to-css._
