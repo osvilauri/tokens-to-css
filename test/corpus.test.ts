@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { convertDocument } from '../src/pipeline.js'
@@ -15,7 +16,7 @@ import { compareGolden, describeMismatch, discover, goldenUpdatesAllowed, writeG
  */
 const EXPECTED = {
   /** 9 at the Epic 2 freeze: 3 dialects × 3 hierarchies (AD-16). */
-  accept: 3,
+  accept: 10,
   /**
    * One per document-shaped rejection trigger and failure class (SM-4).
    *
@@ -23,7 +24,7 @@ const EXPECTED = {
    * invalid JSON and a failed write are proved end to end, and the network
    * classes against the scenario harness (AD-23). SM-4's claim is the union.
    */
-  reject: 16,
+  reject: 17,
 } as const
 
 describe('the fixture corpus', () => {
@@ -42,7 +43,7 @@ describe('the fixture corpus', () => {
     // mode. Two files saying the same thing in different notations must emit
     // exactly the same stylesheet.
     const byHierarchy = new Map<string, string[]>()
-    for (const f of corpus.accept) {
+    for (const f of corpus.accept.filter((x) => !x.id.endsWith('/object-values'))) {
       const hierarchy = f.id.split('/')[1]!
       byHierarchy.set(hierarchy, [...(byHierarchy.get(hierarchy) ?? []), f.expectedCss])
     }
@@ -70,6 +71,60 @@ describe('the fixture corpus', () => {
  * sequence assembled here — a corpus that ordered the passes itself could stay
  * green while the pipeline ran them differently.
  */
+describe('the accept matrix is complete and consistent', () => {
+  const corpus = discover()
+  const DIALECTS = ['dtcg', 'sd-legacy', 'tokens-studio']
+  const HIERARCHIES = ['three-tier', 'cti', 'eightshapes']
+
+  it('covers every dialect against every hierarchy', () => {
+    const matrix = DIALECTS.flatMap((d) => HIERARCHIES.map((h) => `${d}/${h}`))
+    // Plus one fixture outside the matrix: the same catalogue written the way
+    // the current DTCG spec writes it, with colours and dimensions as objects.
+    // It has no legacy or Tokens Studio counterpart because neither notation
+    // has that concept.
+    expect(corpus.accept.map((f) => f.id).sort()).toEqual(
+      [...matrix, 'dtcg/object-values'].sort(),
+    )
+  })
+
+  it('says the same thing in all nine, however it is spelled or arranged', () => {
+    // The claim the corpus rests on. Names differ by hierarchy and notation
+    // differs by dialect, but the values and the shape of the alias graph are
+    // one catalogue — otherwise a golden comparison would be comparing two
+    // different documents and proving nothing.
+    const shapeOf = (css: string): { values: string[]; references: number } => {
+      const declarations = [...css.matchAll(/^ {2}--[\w-]+: (.+);$/gm)].map((m) => m[1]!)
+      return {
+        values: declarations.filter((v) => !v.startsWith('var(')).sort(),
+        references: declarations.filter((v) => v.startsWith('var(')).length,
+      }
+    }
+
+    const matrix = corpus.accept.filter((f) => !f.id.endsWith('/object-values'))
+    const shapes = matrix.map((f) => shapeOf(f.expectedCss))
+    for (const shape of shapes) expect(shape).toEqual(shapes[0])
+  })
+
+  it('gives each hierarchy its own names, so the corpus is not nine copies', () => {
+    const perHierarchy = HIERARCHIES.map(
+      (h) => corpus.accept.find((f) => f.id === `dtcg/${h}`)!.expectedCss,
+    )
+    expect(new Set(perHierarchy).size).toBe(HIERARCHIES.length)
+  })
+
+  it('keeps the derived dialects in step with their DTCG source', () => {
+    // Three hand-written copies of one catalogue drift the first time somebody
+    // edits one. DTCG is the source; the other two are generated.
+    let code = 0
+    try {
+      execFileSync(process.execPath, ['scripts/derive-dialects.mjs', '--check'], { stdio: 'pipe' })
+    } catch (err) {
+      code = (err as { status: number }).status
+    }
+    expect(code, 'run: node scripts/derive-dialects.mjs').toBe(0)
+  })
+})
+
 describe('every accept fixture converts to its golden', () => {
   const corpus = discover()
 

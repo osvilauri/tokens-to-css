@@ -1,0 +1,385 @@
+<title>Cero de Trece</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=DM+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --paper:      #FCFCFB;
+    --surface:    #F1F2EF;
+    --ink:        #1A1D1A;
+    --muted:      #636A62;
+    --rule:       #E0E3DD;
+    --accent:     #146B5C;
+    --accent-bg:  #E4EFEB;
+    --refused:    #9A3B22;
+    --refused-bg: #F7E9E3;
+
+    --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --f-body:    "Source Serif 4", Georgia, "Times New Roman", serif;
+    --f-mono:    "DM Mono", ui-monospace, Menlo, monospace;
+
+    --measure: 65ch;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #141614;
+      --surface:    #1E211E;
+      --ink:        #E9ECE7;
+      --muted:      #99A196;
+      --rule:       #2E332D;
+      --accent:     #5FC3AE;
+      --accent-bg:  #172B27;
+      --refused:    #E8916F;
+      --refused-bg: #2C1B14;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:      #141614;
+    --surface:    #1E211E;
+    --ink:        #E9ECE7;
+    --muted:      #99A196;
+    --rule:       #2E332D;
+    --accent:     #5FC3AE;
+    --accent-bg:  #172B27;
+    --refused:    #E8916F;
+    --refused-bg: #2C1B14;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 1.09rem;
+    line-height: 1.66;
+    margin: 0;
+    padding: 0 1.5rem 7rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: var(--measure); margin: 0 auto; }
+  .wide { max-width: 76ch; margin: 0 auto; }
+
+  /* ---------- masthead ---------- */
+
+  header.masthead { padding: clamp(3rem, 9vw, 6rem) 0 2.5rem; }
+  .eyebrow {
+    font-family: var(--f-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 1.6rem;
+  }
+  h1 {
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: clamp(2.6rem, 8vw, 4.6rem);
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+    margin: 0 0 1.2rem;
+  }
+  .standfirst {
+    font-size: 1.28rem;
+    line-height: 1.48;
+    color: var(--muted);
+    margin: 0;
+    max-width: 48ch;
+  }
+
+  /* ---------- the headline number ---------- */
+
+  .headline {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 3rem 0;
+  }
+  .stat { background: var(--paper); padding: 1.4rem 1.3rem; }
+  .stat .n {
+    font-family: var(--f-display);
+    font-weight: 600;
+    font-size: 2.1rem;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    display: block;
+    margin-bottom: 0.45rem;
+  }
+  .stat .l {
+    font-family: var(--f-mono);
+    font-size: 0.72rem;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+  .stat.bad .n { color: var(--refused); }
+  .stat.good .n { color: var(--accent); }
+
+  /* ---------- rhythm ---------- */
+
+  section { margin-bottom: 3.5rem; }
+  h2 {
+    font-family: var(--f-display);
+    font-weight: 600;
+    font-size: 1.75rem;
+    letter-spacing: -0.022em;
+    line-height: 1.18;
+    text-wrap: balance;
+    margin: 0 0 1.3rem;
+  }
+  h3 {
+    font-family: var(--f-display);
+    font-weight: 600;
+    font-size: 1.14rem;
+    margin: 2.3rem 0 0.7rem;
+  }
+  p { margin: 0 0 1.15rem; }
+  strong { font-weight: 600; }
+  code {
+    font-family: var(--f-mono);
+    font-size: 0.85em;
+    background: var(--surface);
+    padding: 0.12em 0.36em;
+    border-radius: 3px;
+  }
+  pre {
+    font-family: var(--f-mono);
+    font-size: 0.83rem;
+    line-height: 1.6;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 1rem 1.1rem;
+    overflow-x: auto;
+    margin: 0 0 1.3rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; }
+
+  /* ---------- composition bar ---------- */
+
+  .bar {
+    display: flex;
+    height: 2.6rem;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 0 0 0.9rem;
+    border: 1px solid var(--rule);
+  }
+  .bar span {
+    display: grid;
+    place-items: center;
+    font-family: var(--f-mono);
+    font-size: 0.7rem;
+    color: var(--paper);
+    white-space: nowrap;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.4rem;
+    font-family: var(--f-mono);
+    font-size: 0.73rem;
+    color: var(--muted);
+    margin-bottom: 1.4rem;
+  }
+  .dot {
+    display: inline-block;
+    width: 0.65rem; height: 0.65rem;
+    border-radius: 2px;
+    margin-right: 0.4rem;
+    vertical-align: -1px;
+  }
+
+  /* ---------- table ---------- */
+
+  .tablewrap { overflow-x: auto; margin-bottom: 1.4rem; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+  th {
+    text-align: left;
+    font-family: var(--f-mono);
+    font-size: 0.67rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 400;
+    color: var(--muted);
+    padding: 0 0.85rem 0.5rem 0;
+    border-bottom: 1px solid var(--ink);
+    white-space: nowrap;
+  }
+  td {
+    padding: 0.5rem 0.85rem 0.5rem 0;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+    font-variant-numeric: tabular-nums;
+  }
+  td.file { font-family: var(--f-mono); font-size: 0.78rem; }
+  .chip {
+    display: inline-block;
+    font-family: var(--f-mono);
+    font-size: 0.68rem;
+    padding: 0.14em 0.5em;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .chip.yes { background: var(--accent-bg); color: var(--accent); }
+  .chip.no  { background: var(--refused-bg); color: var(--refused); }
+
+  /* ---------- callout ---------- */
+
+  .callout {
+    background: var(--surface);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 4px 4px 0;
+    padding: 1.3rem 1.4rem;
+    margin: 0 0 1.4rem;
+  }
+  .callout h3 { margin-top: 0; }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout.kept { border-left-color: var(--refused); }
+
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--rule);
+    font-family: var(--f-mono);
+    font-size: 0.74rem;
+    line-height: 1.9;
+    color: var(--muted);
+  }
+  footer b { color: var(--ink); font-weight: 500; }
+</style>
+
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">tokens-to-css · revisión de alcance</p>
+    <h1>Cero de Trece</h1>
+    <p class="standfirst">Buscando archivos de ejemplo para una demo, el producto resultó no convertir ninguno. Lo que la medición cambió, y lo que decidimos no cambiar.</p>
+  </div>
+</header>
+
+<main>
+
+<section class="wide">
+  <div class="headline">
+    <div class="stat bad"><span class="n">0<span style="color:var(--muted);font-size:1.2rem">/13</span></span><span class="l">archivos que convertían</span></div>
+    <div class="stat"><span class="n">2.183</span><span class="l">tokens medidos</span></div>
+    <div class="stat"><span class="n">64%</span><span class="l">bloqueados por dos formas</span></div>
+    <div class="stat good"><span class="n">8<span style="color:var(--muted);font-size:1.2rem">/13</span></span><span class="l">después del cambio</span></div>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>Cómo apareció</h2>
+  <p>El plan era montar una demo. Para eso hacían falta archivos de tokens reales, así que se probó la librería contra trece archivos de cinco sistemas de diseño publicados: IBM Carbon, Adobe Spectrum, Microsoft Fluent, Apple HIG y Figma SDS.</p>
+  <p>No convirtió ninguno.</p>
+  <p>Esto no lo detectó ninguna revisión. El producto tenía trescientos noventa tests en verde, nueve archivos de prueba byte a byte y dos rondas de revisión adversarial. Todos los archivos contra los que se probaba estaban escritos para él.</p>
+</section>
+
+<section class="wrap">
+  <h2>Qué había dentro</h2>
+  <p>La especificación actual de design tokens escribe un color y una dimensión como objetos:</p>
+  <pre><code>"$value": { "colorSpace": "srgb", "components": [0, 0, 0], "alpha": 1, "hex": "#000" }
+"$value": { "value": 0.25, "unit": "rem" }</code></pre>
+  <p>El producto los rechazaba a los dos, en el mismo saco que un bloque de tipografía. Y esas dos formas eran la mayoría de todo:</p>
+
+  <div class="bar" role="img" aria-label="Reparto de 2.183 tokens: 33% dimensiones objeto, 31% colores objeto, 25% referencias, 4% composites reales, 3% escalares planos">
+    <span style="width:33%;background:var(--refused)">33% dimensión</span>
+    <span style="width:31%;background:#B65A3C">31% color</span>
+    <span style="width:25%;background:var(--accent)">25% referencias</span>
+    <span style="width:4%;background:#5B6159"></span>
+    <span style="width:7%;background:#8A9086"></span>
+  </div>
+  <div class="legend">
+    <span><span class="dot" style="background:var(--refused)"></span>dimensión objeto — rechazada</span>
+    <span><span class="dot" style="background:#B65A3C"></span>color objeto — rechazado</span>
+    <span><span class="dot" style="background:var(--accent)"></span>referencias — funcionaban</span>
+    <span><span class="dot" style="background:#5B6159"></span>composites reales — 4%</span>
+    <span><span class="dot" style="background:#8A9086"></span>escalares planos</span>
+  </div>
+
+  <p>Un color escrito como objeto sigue siendo <strong>un solo valor CSS</strong>. El objeto es notación, no estructura. Rechazarlo junto a un bloque de tipografía —que sí son cuatro propiedades— metía dos cosas distintas en la misma regla.</p>
+</section>
+
+<section class="wide">
+  <h2>Archivo por archivo</h2>
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr><th class="file">archivo</th><th>tokens</th><th>antes</th><th>después</th><th>qué lo bloquea</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="file">ibm-carbon/colors</td><td>244</td><td><span class="chip no">no</span></td><td><span class="chip yes">sí</span></td><td>—</td></tr>
+        <tr><td class="file">ibm-carbon/layout</td><td>54</td><td><span class="chip no">no</span></td><td><span class="chip yes">sí</span></td><td>—</td></tr>
+        <tr><td class="file">adobe-spectrum/size-desktop</td><td>597</td><td><span class="chip no">no</span></td><td><span class="chip yes">sí</span></td><td>—</td></tr>
+        <tr><td class="file">adobe-spectrum/theme-light</td><td>595</td><td><span class="chip no">no</span></td><td><span class="chip yes">sí</span></td><td>—</td></tr>
+        <tr><td class="file">figma-sds/color</td><td>90</td><td><span class="chip no">no</span></td><td><span class="chip yes">sí</span></td><td>—</td></tr>
+        <tr><td class="file">figma-sds/size</td><td>41</td><td><span class="chip no">no</span></td><td><span class="chip yes">sí</span></td><td>—</td></tr>
+        <tr><td class="file">microsoft-fluent/palette</td><td>50</td><td><span class="chip no">no</span></td><td><span class="chip yes">sí</span></td><td>—</td></tr>
+        <tr><td class="file">microsoft-fluent/spacing</td><td>5</td><td><span class="chip no">no</span></td><td><span class="chip yes">sí</span></td><td>—</td></tr>
+        <tr><td class="file">adobe-spectrum/base</td><td>387</td><td><span class="chip no">no</span></td><td><span class="chip no">no</span></td><td>un token en <code>dp</code>, unidad de Android</td></tr>
+        <tr><td class="file">figma-sds/typography</td><td>41</td><td><span class="chip no">no</span></td><td><span class="chip no">no</span></td><td>tipografía</td></tr>
+        <tr><td class="file">ibm-carbon/typography</td><td>58</td><td><span class="chip no">no</span></td><td><span class="chip no">no</span></td><td>tipografía</td></tr>
+        <tr><td class="file">microsoft-fluent/fonts</td><td>13</td><td><span class="chip no">no</span></td><td><span class="chip no">no</span></td><td>tipografía</td></tr>
+        <tr><td class="file">microsoft-fluent/effects</td><td>8</td><td><span class="chip no">no</span></td><td><span class="chip no">no</span></td><td>sombras</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>Por qué el cambio no rompió nada</h2>
+  <p>La preocupación razonable era que aceptar objetos obligara a mirar el <code>$type</code> declarado del token. Eso habría abierto la puerta que el producto lleva cerrada desde el principio: que un <code>16</code> se convierta en <code>16px</code> porque alguien dijo que era una longitud.</p>
+
+  <div class="callout">
+    <h3>No hace falta mirar el tipo</h3>
+    <p>La forma del objeto se describe a sí misma. <code>{colorSpace, components}</code> solo puede ser un color; <code>{value, unit}</code> solo puede ser una dimensión. La conversión se decide por las claves, y un <code>$type</code> que diga otra cosa no cambia nada.</p>
+    <p>La conversión ocurre además al leer el archivo, así que lo que circula por dentro del producto sigue siendo texto. Ninguna etapa posterior se entera de que existen valores objeto.</p>
+  </div>
+
+  <h3>Una decisión que sí es contrato</h3>
+  <p>Qué escribir para un color. La opción familiar, <code>rgb(90 79 207)</code>, exige multiplicar las componentes por 255 y redondear — y eso pierde precisión.</p>
+  <p>Salvo que no la pierda. Se comprobó contra los 689 colores del muestreo: la multiplicación reproduce exactamente el <code>hex</code> que el propio archivo declara, en <strong>689 de 689 casos</strong>. La notación familiar no cuesta nada.</p>
+  <pre><code>--color-black-100: rgb(0 0 0);
+--primitive-veil:  rgb(0 0 0 / 0.4);
+--primitive-wide:  color(display-p3 0.35 0.31 0.81);</code></pre>
+  <p>Fuera de sRGB no hay forma corta sin pérdida, así que los números se escriben tal cual. Y el <code>hex</code> del archivo se ignora, igual que se ignoran las descripciones: es opcional en la especificación, y una salida cuya forma dependa de si un campo opcional estaba presente es menos predecible que una que nunca lo usa.</p>
+</section>
+
+<section class="wrap">
+  <h2>Lo que se decidió no hacer</h2>
+  <div class="callout kept">
+    <h3>La tipografía sigue rechazada</h3>
+    <pre style="margin-bottom:1rem"><code>{ "fontFamily": "...", "fontSize": "...", "fontWeight": "...", "lineHeight": 1.4 }</code></pre>
+    <p>Eso no es una custom property, son cuatro. Aceptarlo cambia qué significa «un token, una propiedad», que es la frase sobre la que está construido el producto entero.</p>
+    <p>Es una pregunta de producto, no de parseo, y esta revisión no la contesta. Son los cuatro archivos que siguen sin convertir.</p>
+  </div>
+  <p>También se rechaza <code>dp</code>, la unidad de densidad de Android, que aparece en un único token de un archivo multiplataforma de Adobe. Emitirla produciría una declaración que el navegador ignora en silencio — precisamente la clase de fallo que este producto existe para no cometer.</p>
+</section>
+
+<section class="wrap">
+  <h2>Lo que deja escrito</h2>
+  <p>Nueve archivos de prueba escritos para el producto pasaban. Trece archivos escritos por otros, ninguno. La diferencia entre esas dos cifras no era un bug: era que nunca se había probado contra el mundo.</p>
+  <p>El corpus de pruebas ahora incluye un archivo en notación de objeto, y dos casos de rechazo nuevos. Pero la lección más barata de repetir es la otra: <strong>probar contra archivos que uno no escribió</strong>, antes de publicar y no después.</p>
+</section>
+
+<section class="wrap">
+  <footer>
+    <p>
+      <b>Medición</b> 13 archivos · 5 sistemas de diseño · 2.183 tokens · 2026-08-30<br>
+      <b>Fuente</b> terrazzoapp/dtcg-examples<br>
+      <b>Decisión</b> PRD §12.5 · FR-20 estrechado · FR-23 nuevo · arquitectura AD-24<br>
+      <b>Resultado</b> 0/13 → 8/13
+    </p>
+  </footer>
+</section>
+
+</main>

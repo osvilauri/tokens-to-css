@@ -2,6 +2,7 @@
 "tokens-to-css": minor
 ---
 
-Reads Tokens Studio exports. The token set wrapper is dropped from the emitted
-names rather than folded into them, and expressions are refused rather than
-evaluated.
+Accepts the object notation the current DTCG spec uses for colours and
+dimensions. A colour becomes `rgb()` (or `color()` outside sRGB) and a dimension
+becomes its number and unit — one custom property each, as before. Typography
+and the other true composites stay refused.

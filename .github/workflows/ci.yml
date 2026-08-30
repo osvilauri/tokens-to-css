@@ -26,6 +26,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
+      - name: Derived fixtures match their source
+        run: node scripts/derive-dialects.mjs --check
       - run: npm run typecheck
       - run: npm run build
       - run: npm test

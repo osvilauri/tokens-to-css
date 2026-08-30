@@ -1,0 +1,19 @@
+:root {
+  --color-palette-purple-500: #5A4FCF;
+  --color-palette-grey-900: #191627;
+  --color-palette-grey-050: #FBFAFD;
+  --color-semantic-brand: var(--color-palette-purple-500);
+  --color-semantic-text: var(--color-palette-grey-900);
+  --color-semantic-surface: var(--color-palette-grey-050);
+  --color-component-button-background: var(--color-semantic-brand);
+  --color-component-button-foreground: var(--color-semantic-surface);
+  --size-scale-4: 16px;
+  --size-scale-6: 24px;
+  --size-semantic-md: var(--size-scale-4);
+  --size-semantic-lg: var(--size-scale-6);
+  --size-component-button-padding: var(--size-semantic-md);
+  --font-family-sans: Inter, system-ui, sans-serif;
+  --font-semantic-body: var(--font-family-sans);
+  --number-ratio-snug: 1.4;
+  --number-semantic-leading: var(--number-ratio-snug);
+}

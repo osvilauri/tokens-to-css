@@ -2,7 +2,7 @@
 title: "PRD: tokens-to-css"
 status: draft
 created: 2026-08-06
-updated: 2026-08-29
+updated: 2026-08-30
 review_disposition: "C1A C2A C3A C4A H1B H2 H3 H4A H5 H6 applied (see §13)"
 ---
 
@@ -60,7 +60,8 @@ Primary audience is **web developers** integrating token-to-CSS into an app or s
 - **Fixture Corpus** — The versioned set of *accept* fixtures (input Token JSON + golden Styles File) and *reject* fixtures (input + expected failure class) that operationally defines the Format Allowlist and is the source of truth for SM-1.
 - **Alias Graph Validation** — Walking `{alias}` / reference edges to verify the graph is sound: every reference target exists (dangling → FR-22) and no cycle exists (FR-15). It **never** means computing or inlining literal values.
 - **Reference Emission** — Emitting a token whose value is a reference as `var(--target)` in the Styles File (FR-10). V1 emission is reference-preserving; value-inlining (flattening) is not a v1 behavior.
-- **Composite Token** — A token whose `$value` is a non-scalar structure (DTCG typography, shadow, border, gradient, transition, stroke-style; object-form colors). Rejected in v1 (FR-20).
+- **Composite Token** — A token whose `$value` describes **more than one CSS value**: DTCG typography, shadow, border, gradient, transition, stroke-style. Rejected in v1 (FR-20). *Revised 2026-08-30 — see FR-23.*
+- **Object-Form Scalar** — A token whose `$value` is an object that still describes exactly one CSS value: a colour (`{colorSpace, components, alpha?}`) or a dimension (`{value, unit}`), as the current DTCG spec writes them. Accepted (FR-23). The object is notation, not structure.
 - **Dangling Alias** — A reference whose target token does not exist in the Token JSON.
 - **Name Collision** — Two or more tokens that would emit the same `--custom-property` name.
 - **Installable Package** — The distributable library artifact installable via the project’s package manager (e.g. npm/pnpm/yarn). Installing via `npm i …` is a *package-manager install*, not a “CLI” — in this document **CLI** means only a Conversion CLI, which is a Non-Goal (§5).
@@ -116,7 +117,7 @@ Conversion accepts a Token JSON document that, after dialect normalization, is a
 
 | # | Allowlisted shape | Marker | FR |
 | --- | --- | --- | --- |
-| A1 | **DTCG single-file** — `$value`, `$type`, `$description`, `{path.to.token}` aliases | `$value` keys | FR-4 |
+| A1 | **DTCG single-file** — `$value`, `$type`, `$description`, `{path.to.token}` aliases, and Object-Form Scalars | `$value` keys | FR-4, FR-23 |
 | A2 | **Style Dictionary legacy** — `value` / `type` without `$`, `{path.to.token}` aliases | `value` keys, no `$value` | FR-18 |
 | A3 | **Tokens Studio export (subset)** — A1 or A2 nodes inside Tokens Studio group wrappers | `$themes` / `$metadata` / set wrappers | FR-17 |
 
@@ -124,7 +125,7 @@ Token *hierarchy* (3-tier primitive→semantic→component, CTI, EightShapes-lik
 
 **Detection precedence** (first match wins, deterministic): (1) Tokens Studio wrappers → A3; (2) any `$value` present → A1; (3) any `value` present → A2; (4) no recognizable token node → reject (FR-14). A document mixing `$value` and `value` keys is normalized under the first precedence match; keys of the other dialect at token level are a reject (FR-14), not a silent drop.
 
-**Rejection triggers (FR-14), positively defined:** non-object JSON root; no node containing a recognizable token value key after normalization; directory/glob Token Source; composite or non-scalar `$value` (FR-20); Tokens Studio math/expression values (FR-17); DTCG Resolver / multi-file constructs (`$ref`, resolver manifests); mixed-dialect token nodes.
+**Rejection triggers (FR-14), positively defined:** non-object JSON root; no node containing a recognizable token value key after normalization; directory/glob Token Source; composite `$value` (FR-20); an Object-Form Scalar that is malformed or measured in a non-CSS unit (FR-23); Tokens Studio math/expression values (FR-17); DTCG Resolver / multi-file constructs (`$ref`, resolver manifests); mixed-dialect token nodes.
 
 **Fixture Corpus contract:** every allowlisted shape has at least one *accept* fixture (input + golden Styles File) and every rejection trigger has at least one *reject* fixture (input + expected failure class). The corpus is versioned with the package and is the operational definition of this allowlist. Freezing its initial contents is an architecture deliverable with a named owner (OQ-1); SM-1 gates on it.
 
@@ -186,7 +187,7 @@ If any token’s value is a composite or otherwise non-scalar structure, Convers
 **Consequences (testable):**
 - A token whose value is an object or array (DTCG typography, shadow, border, gradient, transition, stroke-style; object-form / Color Module 4 colors) produces a clear failure identifying the offending token path and its type.
 - No `--token: [object Object]`-style output, and no silent drop of the offending token, is ever produced on a success path.
-- Reject fixtures for at least the typography, shadow, and object-color cases exist in the Fixture Corpus.
+- Reject fixtures for at least the typography and shadow cases exist in the Fixture Corpus.
 
 **Out of Scope:** Composite expansion into multiple custom properties; passthrough of raw composite `$value` as an opaque string; mixins derived from Token JSON (explicit v1 non-goal).
 
@@ -326,7 +327,7 @@ The developer can install the library as a package dependency in their project.
 - First-class SCSS and JS/TS dual emitters (CSS Styles File only).
 - Replacing Style Dictionary as a full multi-platform token orchestrator.
 - Configurable custom-property naming prefix in v1 (naming is fixed by the rule in FR-9).
-- **Composite / non-scalar token support** — rejected, not expanded and not passed through (FR-20).
+- **Composite token support** — typography, shadow, border, gradient, transition and stroke-style are rejected, not expanded and not passed through (FR-20). Object-Form Scalars are accepted (FR-23).
 - **Expression or math evaluation** of any kind, including Tokens Studio expressions (FR-17). No `eval`, no expression parser in v1.
 - **In-memory CSS return** — the Main Entry writes to disk and does not return the CSS string/Buffer in v1; Node + writable filesystem is a hard runtime constraint (§2.2, §8).
 - **Taxonomy diagnostics** — the library does not report the recognized hierarchy model, confidence, or allow model override in v1 (§13 / H1).
@@ -426,6 +427,34 @@ Closed in this revision (2026-08-27): dangling-alias policy → fail-clear (FR-2
 - Interop with Style Dictionary is desirable positioning, not an MVP hard dependency (§10).
 
 *Deferred to architecture (decisions, not assumptions):* Main Entry TypeScript signature and option names; URL-fetch mechanism implementing §9 minimums; naming-rule edge cases (unicode, leading digits); Fixture Corpus artifact (OQ-1).
+
+## 12.5 Revision — Object-Form Scalars (2026-08-30)
+
+Raised during implementation, after Epic 2, by testing the library against real
+published token files rather than against fixtures written for it.
+
+**The finding.** Thirteen files from five design systems, 2,183 tokens: **none
+converted.** The current DTCG spec writes a colour as `{colorSpace, components,
+alpha, hex}` and a dimension as `{value, unit}`, and FR-20 rejected every object
+value in a single bucket. 64% of the surveyed tokens were those two shapes.
+
+**The decision.** FR-20 is narrowed to what it was always arguing about — values
+that describe more than one CSS property — and FR-23 accepts the two that
+describe exactly one. Conversion is shape-driven, so no invariant changed: the
+internal representation still holds only strings and numbers, and nothing infers
+from `$type`.
+
+**What it moved.** 0 of 13 → 8 of 13. The five that still fail are four
+typography or shadow composites and one file carrying an Android `dp` token.
+
+**What was deliberately not done.** Typography stays rejected. It is four CSS
+properties, and accepting it would change what "one token, one custom property"
+means — a product question this revision does not settle.
+
+**Fixtures landed in the same change**, per SM-C3: one accept fixture in object
+notation, two reject fixtures (non-CSS unit, malformed colour), and the
+`composite-object-color` reject fixture retired because it is no longer a
+rejection.
 
 ## 13. Review Disposition (2026-08-07 reviews → 2026-08-27)
 
