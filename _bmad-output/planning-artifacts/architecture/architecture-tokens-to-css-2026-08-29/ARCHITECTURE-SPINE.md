@@ -7,7 +7,7 @@ paradigm: 'pipes-and-filters with a functional core and an imperative shell'
 scope: 'v1 of the library: Token JSON (allowlisted shapes) → a single CSS Styles File on disk, plus the package, fixture corpus, and release envelope around it'
 status: final
 created: '2026-08-29'
-updated: '2026-08-29'
+updated: '2026-08-30'
 binds:
   - FR-1..FR-4, FR-8..FR-22 (PRD v2)
   - NFR: Reliability, Atomicity, Security, Predictability, Performance
@@ -264,7 +264,7 @@ import `node:fs` or any networking builtin.
 
 - **Binds:** §4.2.0 rejection triggers, FR-14, AD-5
 - **Prevents:** two modules both claiming a trigger (double reporting) or both assuming the other owns it (silent pass-through).
-- **Rule:** AD-5 fixes pass order; this fixes pass *membership*. The assignment is exhaustive and exclusive:
+- **Rule:** AD-5 fixes pass order; this fixes pass *membership*. The assignment is exhaustive and exclusive. Note that the composite trigger is owned at the normalization boundary rather than by a validation pass: the IR cannot represent a composite (a literal is a string or a number), so by the time any validator ran, the value would already have had to become something it is not. Amended 2026-08-30 during Story 1.9.
 
   | Trigger | Owner |
   | --- | --- |
@@ -277,7 +277,7 @@ import `node:fs` or any networking builtin.
   | Tokens Studio math / expression values | `dialects/tokens-studio.ts` |
   | `__proto__` / `constructor` / `prototype` keys | `dialects/registry.ts` (AD-9) |
   | embedded `{…}` in a value | `dialects/registry.ts` (AD-20) |
-  | composite / non-scalar value | `validate/composites.ts` |
+  | composite / non-scalar value | `emit/literal.ts`, called from `dialects/walk.ts` |
   | alias cycle, dangling alias | `validate/alias-graph.ts` |
   | empty normalized name segment | `emit/name.ts` (AD-11) |
   | name collision | `validate/collisions.ts` |
@@ -347,12 +347,11 @@ tokens-to-css/
       sd-legacy.ts    # A2
       tokens-studio.ts# A3 — AD-22
     validate/
-      composites.ts   # FR-20
       alias-graph.ts  # FR-15, FR-22
       collisions.ts   # FR-21 — AD-12
     emit/
       name.ts         # the naming rule — AD-11
-      literal.ts      # stringifyLiteral — AD-19
+      literal.ts      # stringifyLiteral + the scalar gate — AD-19, FR-20
       css.ts          # :root block, document order — AD-10
     write/
       atomic.ts       # temp + rename — AD-7
