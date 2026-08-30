@@ -13,11 +13,11 @@ import { emitStylesheet } from './emit/css.js'
 import { DEFAULTS, type GenerateCssOptions, type GenerateCssResult } from './options.js'
 import { normalizeDocument } from './dialects/registry.js'
 import { parseTokenJson, readTokenFile } from './source/file.js'
+import { fetchTokenDocument } from './source/http.js'
 import { resolveOutputPath, resolveSource } from './source/resolve.js'
 import { validateAliasGraph } from './validate/alias-graph.js'
 import { validateNoCollisions } from './validate/collisions.js'
 import { writeStylesheet } from './write/atomic.js'
-import { FailureCode, TokenCssError } from './errors.js'
 
 /** A converted document: the stylesheet text and how many properties it declares. */
 export interface Converted {
@@ -50,15 +50,14 @@ export async function runConversion(
   const display = String(source)
   const baseDir = options.baseDir ?? process.cwd()
 
-  // 1. load
+  // 1. load — the only stage that cares where the document came from. Past
+  // this line a URL and a path are the same thing: text (FR-1, post-load parity).
   const resolved = resolveSource(source, baseDir)
-  if (resolved.kind === 'url') {
-    throw new TokenCssError(
-      `"${display}" is a URL. Reading tokens over the network arrives in a later story`,
-      { code: FailureCode.SOURCE_UNREADABLE, source: display },
-    )
-  }
-  const raw = parseTokenJson(await readTokenFile(resolved.path, display), display)
+  const text =
+    resolved.kind === 'url'
+      ? await fetchTokenDocument(resolved.url, display, options.http ?? {})
+      : await readTokenFile(resolved.path, display)
+  const raw = parseTokenJson(text, display)
 
   // 2-5. detect, normalize, validate, emit — the complete stylesheet, in memory
   const { css, tokenCount } = convertDocument(raw, display)
