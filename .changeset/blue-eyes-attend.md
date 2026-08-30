@@ -1,6 +1,6 @@
 ---
 ---
 
-Adds a local demo server and an `npm run demo` script. The demo lives outside
-the published package — `files` still ships only `dist` — so consumers see no
-change.
+Adds the reference documentation. The failure-code table is generated from
+`src/errors.ts`, so it cannot describe a different set of failures from the one
+the library throws. No change to the package.

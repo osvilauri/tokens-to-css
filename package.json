@@ -33,7 +33,7 @@
   "scripts": {
     "build": "tsdown",
     "typecheck": "tsc --noEmit",
-    "lint": "node scripts/check-boundaries.mjs && node scripts/derive-dialects.mjs --check",
+    "lint": "node scripts/check-boundaries.mjs && node scripts/derive-dialects.mjs --check && node scripts/generate-docs.mjs --check",
     "test": "vitest run",
     "test:watch": "vitest",
     "check": "npm run lint && npm run typecheck && npm run test",
@@ -41,7 +41,8 @@
     "guard:unimplemented": "node scripts/guard-unimplemented.mjs",
     "prepublishOnly": "npm run check && npm run build && npm run guard:unimplemented",
     "fixtures:derive": "node scripts/derive-dialects.mjs",
-    "demo": "npm run build && node demo/server.mjs"
+    "demo": "npm run build && node demo/server.mjs",
+    "docs:generate": "node scripts/generate-docs.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.1",
