@@ -195,8 +195,8 @@ onboarding path, ratification of the number measured in Epic 1, and the first re
 
 **FRs covered:** FR-16 (installable from the registry)
 **NFRs:** NFR10, NFR11 (release mechanics), NFR9 (ratifies the number measured in Epic 1)
-**Closes:** OQ-2 by ratifying or replacing the bar in the PRD; blocked on OQ-3 (package name and
-license) before the first publish.
+**Closes:** OQ-2 by ratifying or replacing the bar in the PRD. OQ-3 closed 2026-08-29 — the
+package is `tokens-to-css` under MIT — so this epic no longer carries a blocking decision.
 ---
 
 ## Epic 1: Convert a token file into a working stylesheet
@@ -734,9 +734,10 @@ So that adopting it costs one command.
 
 **Acceptance Criteria:**
 
-**Given** OQ-3
+**Given** the package name `tokens-to-css` and the MIT license, decided 2026-08-29
 **When** this story starts
-**Then** the package name and the license are decided and recorded, and the repository, README, and every documented example use that name
+**Then** the manifest, the repository, the README, and every documented example already use that name, and `LICENSE` is present with the MIT text
+**And** npm availability is re-checked immediately before publishing, since an unpublished name is never reserved
 
 **Given** a merged release pull request
 **When** CI runs the release job

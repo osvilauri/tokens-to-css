@@ -376,7 +376,7 @@ css-generator-library/
 ## Deferred
 
 - **OQ-2 — the performance bar.** Not decidable by argument. `bench/` ships a 10k-token fixture and a script; the first real measurement on reference hardware either ratifies the PRD's 2s bar or replaces it. Until then SM-5 stays an assumption. **Revisit when:** the emitter passes its first accept fixture end-to-end.
-- **OQ-3 — package name and license.** PM-owned. The repo is `css-generator-library`; MIT is assumed. **Revisit before:** first publish.
+- ~~**OQ-3 — package name and license.**~~ **Closed 2026-08-29:** the package is `tokens-to-css` under MIT; the repository was renamed to match. Nothing in this spine depended on the answer.
 - **Caching of remote Token Sources.** No caching in v1 — every run refetches. Revisit if CI cost or rate-limiting shows up in practice.
 - **Concurrency.** The pipeline is single-document and synchronous in its core; no worker threads, no streaming parse. Revisit only if OQ-2's measurement misses the bar.
 - **Everything in `addendum.md` "Deferred product capabilities"** — CLI, in-memory ingest, multi-file merge, composites, expressions, theme selectors, SCSS/JS emitters. The spine deliberately does not pre-shape for them; AD-1/AD-2 keep the pipeline cheap to extend when a PRD revision arrives.
