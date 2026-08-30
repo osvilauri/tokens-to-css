@@ -19,6 +19,27 @@ const refuse = (value: string): TokenCssError => {
  * so by the time any validator ran, the value would already have had to become
  * something it is not.
  */
+describe('an object-form scalar is not a composite', () => {
+  it('accepts a colour written as an object', () => {
+    // It was refused until the current DTCG spec turned out to write every
+    // colour this way. One colour is still one CSS value; the object is
+    // notation, not structure (FR-23).
+    const doc = normalizeDocument(
+      JSON.parse(`{ "t": { "$value": { "colorSpace": "srgb", "components": [0, 0, 0] } } }`),
+      SOURCE,
+    )
+    expect(doc.tokens).toHaveLength(1)
+  })
+
+  it('accepts a dimension written as an object', () => {
+    const doc = normalizeDocument(
+      JSON.parse(`{ "t": { "$value": { "value": 16, "unit": "px" } } }`),
+      SOURCE,
+    )
+    expect(doc.tokens).toHaveLength(1)
+  })
+})
+
 describe('every DTCG composite type is refused (FR-20)', () => {
   const composites = {
     typography: `{ "fontFamily": "Helvetica", "fontSize": "16px", "lineHeight": 1.4 }`,
@@ -28,7 +49,6 @@ describe('every DTCG composite type is refused (FR-20)', () => {
     gradient: `[{ "color": "#000", "position": 0 }, { "color": "#fff", "position": 1 }]`,
     transition: `{ "duration": "200ms", "delay": "0ms", "timingFunction": [0.5, 0, 1, 1] }`,
     'stroke style': `{ "dashArray": ["2px", "4px"], "lineCap": "round" }`,
-    'object colour': `{ "colorSpace": "srgb", "components": [0.35, 0.31, 0.81] }`,
   }
 
   it.each(Object.entries(composites))('refuses a %s value', (_kind, value) => {

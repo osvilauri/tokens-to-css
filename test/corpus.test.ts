@@ -16,7 +16,7 @@ import { compareGolden, describeMismatch, discover, goldenUpdatesAllowed, writeG
  */
 const EXPECTED = {
   /** 9 at the Epic 2 freeze: 3 dialects × 3 hierarchies (AD-16). */
-  accept: 9,
+  accept: 10,
   /**
    * One per document-shaped rejection trigger and failure class (SM-4).
    *
@@ -24,7 +24,7 @@ const EXPECTED = {
    * invalid JSON and a failed write are proved end to end, and the network
    * classes against the scenario harness (AD-23). SM-4's claim is the union.
    */
-  reject: 16,
+  reject: 17,
 } as const
 
 describe('the fixture corpus', () => {
@@ -43,7 +43,7 @@ describe('the fixture corpus', () => {
     // mode. Two files saying the same thing in different notations must emit
     // exactly the same stylesheet.
     const byHierarchy = new Map<string, string[]>()
-    for (const f of corpus.accept) {
+    for (const f of corpus.accept.filter((x) => !x.id.endsWith('/object-values'))) {
       const hierarchy = f.id.split('/')[1]!
       byHierarchy.set(hierarchy, [...(byHierarchy.get(hierarchy) ?? []), f.expectedCss])
     }
@@ -77,8 +77,14 @@ describe('the accept matrix is complete and consistent', () => {
   const HIERARCHIES = ['three-tier', 'cti', 'eightshapes']
 
   it('covers every dialect against every hierarchy', () => {
-    const expected = DIALECTS.flatMap((d) => HIERARCHIES.map((h) => `${d}/${h}`)).sort()
-    expect(corpus.accept.map((f) => f.id).sort()).toEqual(expected)
+    const matrix = DIALECTS.flatMap((d) => HIERARCHIES.map((h) => `${d}/${h}`))
+    // Plus one fixture outside the matrix: the same catalogue written the way
+    // the current DTCG spec writes it, with colours and dimensions as objects.
+    // It has no legacy or Tokens Studio counterpart because neither notation
+    // has that concept.
+    expect(corpus.accept.map((f) => f.id).sort()).toEqual(
+      [...matrix, 'dtcg/object-values'].sort(),
+    )
   })
 
   it('says the same thing in all nine, however it is spelled or arranged', () => {
@@ -94,7 +100,8 @@ describe('the accept matrix is complete and consistent', () => {
       }
     }
 
-    const shapes = corpus.accept.map((f) => shapeOf(f.expectedCss))
+    const matrix = corpus.accept.filter((f) => !f.id.endsWith('/object-values'))
+    const shapes = matrix.map((f) => shapeOf(f.expectedCss))
     for (const shape of shapes) expect(shape).toEqual(shapes[0])
   })
 

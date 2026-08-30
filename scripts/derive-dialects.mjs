@@ -21,6 +21,15 @@ import { join } from 'node:path'
 const ACCEPT = new URL('../fixtures/accept/', import.meta.url).pathname
 const check = process.argv.includes('--check')
 
+/**
+ * Hierarchies that exist only as DTCG.
+ *
+ * `object-values` writes colours and dimensions the way the current DTCG spec
+ * does. Style Dictionary legacy has no such notation, and rendering it there
+ * would invent a dialect nobody publishes.
+ */
+const DTCG_ONLY = new Set(['object-values'])
+
 /** DTCG to Style Dictionary legacy: the same tree with the dollars taken off. */
 function toLegacy(node) {
   if (!node || typeof node !== 'object' || Array.isArray(node)) return node
@@ -50,6 +59,7 @@ const render = (value) => JSON.stringify(value, null, 2) + '\n'
 
 let drifted = []
 for (const hierarchy of readdirSync(join(ACCEPT, 'dtcg'))) {
+  if (DTCG_ONLY.has(hierarchy)) continue
   const source = JSON.parse(readFileSync(join(ACCEPT, 'dtcg', hierarchy, 'input.json'), 'utf8'))
   const legacy = toLegacy(source)
 

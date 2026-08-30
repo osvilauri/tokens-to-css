@@ -1,7 +1,8 @@
 ---
-"tokens-to-css": patch
+"tokens-to-css": minor
 ---
 
-Fixes remote sources against real hostnames. The custom DNS lookup answered with
-a single address where Node expects an array, so any URL naming a host — rather
-than a literal IP — failed to connect.
+Accepts the object notation the current DTCG spec uses for colours and
+dimensions. A colour becomes `rgb()` (or `color()` outside sRGB) and a dimension
+becomes its number and unit — one custom property each, as before. Typography
+and the other true composites stay refused.

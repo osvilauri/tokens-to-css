@@ -8,8 +8,9 @@ of `:root` custom properties your app can link, with alias relationships kept as
 does not try to become one.
 
 > **Status: in development.** Nothing is published yet, but every input shape now
-> converts end to end — DTCG, Style Dictionary legacy and Tokens Studio, from a
-> path or a URL. What remains is documentation and release — see
+> converts end to end — DTCG (including the object notation the current spec
+> uses for colours and dimensions), Style Dictionary legacy and Tokens Studio,
+> from a path or a URL. What remains is documentation and release — see
 > [`_bmad-output/planning-artifacts/epics.md`](_bmad-output/planning-artifacts/epics.md).
 
 ```js
