@@ -40,7 +40,8 @@
     "release": "changeset publish",
     "guard:unimplemented": "node scripts/guard-unimplemented.mjs",
     "prepublishOnly": "npm run check && npm run build && npm run guard:unimplemented",
-    "fixtures:derive": "node scripts/derive-dialects.mjs"
+    "fixtures:derive": "node scripts/derive-dialects.mjs",
+    "demo": "npm run build && node demo/server.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.1",
