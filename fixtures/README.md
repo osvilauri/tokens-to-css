@@ -68,6 +68,37 @@ a run that rewrites its own expectations proves nothing.
 request.** A golden changing means emitted output changed, and emitted names are
 public contract. A *new* fixture's first golden is not a breaking change.
 
-## Reference hardware
+## The performance measurement (SM-5, OQ-2)
 
-Recorded when Story 1.14 takes the first measurement for SM-5.
+Taken 2026-08-30, at the close of Epic 1, while the pipeline could still change.
+
+**Reference hardware:** Apple M3 Pro × 12 · 18 GB RAM · darwin 25.6.0 arm64 · node 24.20.0
+
+| Tokens | Best of 3 | JSON size |
+| ---: | ---: | ---: |
+| 1,000 | 7 ms | 38 KB |
+| **10,000** | **30 ms** | 395 KB |
+| 50,000 | 127 ms | 2.0 MB |
+| 200,000 | 590 ms | 8.3 MB |
+
+Measured end to end through `generateCss` — read, parse, normalize, validate,
+emit, write — because that is what a caller actually waits for.
+
+**The assumed bar was 2,000 ms for 10,000 tokens. The real number is 30 ms.**
+
+Scaling is linear: twenty times the tokens takes twenty times as long from 10k
+to 200k, so there is no quadratic hiding at a size nobody tested.
+
+Two things follow, both for the story that ratifies the bar:
+
+1. **OQ-2 is answered.** The bar is not at risk and nothing in the pipeline
+   needs redesigning for it.
+2. **A 66× margin is not a bar, it is a formality.** At 2,000 ms the emitter
+   could get sixty times slower and still pass, which means the metric would
+   never catch the regression it exists to catch. Something around 300 ms
+   leaves room for slower CI hardware and ordinary variance while still
+   noticing if something goes badly wrong.
+
+Regenerate with `node bench/run.mjs`, or `BENCH_TOKENS=50000 node bench/run.mjs`.
+The document is generated rather than stored: it is fully determined by
+`bench/generate.mjs`, and ten thousand tokens of JSON is a lot of file to review.
