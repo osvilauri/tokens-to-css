@@ -158,7 +158,10 @@ describe('the performance bar is ratified, not assumed', () => {
   })
 
   it('records why it is judged on the best of three', () => {
-    expect(bench.replace(/\s+/g, ' ')).toMatch(/never on a single sample/i)
-    expect(bench.replace(/\s+/g, ' ')).toMatch(/flaky performance gate gets ignored/i)
+    // Flattened past the JSDoc continuation markers as well as the wrapping,
+    // so the test is not quietly dictating where a comment breaks.
+    const prose = bench.replace(/^\s*\*\s?/gm, '').replace(/\s+/g, ' ')
+    expect(prose).toMatch(/never on a single sample/i)
+    expect(prose).toMatch(/flaky performance gate gets ignored/i)
   })
 })
