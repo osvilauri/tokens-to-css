@@ -169,16 +169,30 @@ function fetchOnce(attempt: Attempt, policy: AddressPolicy): Promise<Fetched> {
       // The address this approves is the address the socket connects to. A
       // second resolution between checking and connecting is a window in which
       // the answer can change (DNS rebinding).
-      lookup: (hostname, _options, callback) => {
-        dnsLookup(hostname, { all: false }, (err, address, family) => {
+      // The address this approves is the address the socket connects to. A
+      // second resolution between checking and connecting is a window in which
+      // the answer can change (DNS rebinding).
+      //
+      // Node asks for every address — it passes `all: true` — and expects the
+      // callback shaped to match. Answering with a single address hands it
+      // `undefined` and the connection dies as an invalid address. That failure
+      // only ever appears against a real hostname, because a literal IP skips
+      // resolution entirely, which is exactly why it survived a suite that
+      // tested against 127.0.0.1.
+      lookup: (hostname, options, callback) => {
+        dnsLookup(hostname, { ...options, all: true }, (err, addresses) => {
           if (err) {
             callback(err, '', 4)
             return
           }
-          if (!policy.allowInternalAddresses && isBlockedAddress(address)) {
+
+          const internal = addresses.find((entry) => isBlockedAddress(entry.address))
+          if (internal !== undefined && !policy.allowInternalAddresses) {
+            // Refused if *any* answer is internal. Taking the public ones would
+            // leave a host that resolves to both as a way through.
             callback(
               new Error(
-                `"${hostname}" resolves to ${address}, which is a loopback, private, ` +
+                `"${hostname}" resolves to ${internal.address}, which is a loopback, private, ` +
                   `link-local or otherwise internal address`,
               ),
               '',
@@ -186,7 +200,18 @@ function fetchOnce(attempt: Attempt, policy: AddressPolicy): Promise<Fetched> {
             )
             return
           }
-          callback(null, address, family)
+
+          if (options.all === true) {
+            callback(null, addresses as unknown as string, 0)
+            return
+          }
+
+          const first = addresses[0]
+          if (first === undefined) {
+            callback(new Error(`"${hostname}" resolved to no addresses`), '', 4)
+            return
+          }
+          callback(null, first.address, first.family)
         })
       },
     }

@@ -1,0 +1,17 @@
+:root {
+  --primitive-purple-500: rgb(90 79 207);
+  --primitive-grey-900: rgb(25 22 39);
+  --primitive-grey-050: rgb(251 250 253);
+  --primitive-size-4: 16px;
+  --primitive-size-6: 1.5rem;
+  --primitive-zero: 0;
+  --primitive-veil: rgb(0 0 0 / 0.4);
+  --primitive-wide: color(display-p3 0.35 0.31 0.81);
+  --semantic-color-brand: var(--primitive-purple-500);
+  --semantic-color-text: var(--primitive-grey-900);
+  --semantic-color-scrim: var(--primitive-veil);
+  --semantic-space-md: var(--primitive-size-4);
+  --semantic-space-none: var(--primitive-zero);
+  --component-button-background: var(--semantic-color-brand);
+  --component-button-padding: var(--semantic-space-md);
+}

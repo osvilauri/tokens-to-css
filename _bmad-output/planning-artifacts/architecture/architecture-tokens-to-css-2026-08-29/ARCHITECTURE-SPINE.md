@@ -277,7 +277,8 @@ import `node:fs` or any networking builtin.
   | Tokens Studio math / expression values | `dialects/tokens-studio.ts` |
   | `__proto__` / `constructor` / `prototype` keys | `dialects/registry.ts` (AD-9) |
   | embedded `{…}` in a value | `dialects/registry.ts` (AD-20) |
-  | composite / non-scalar value | `emit/literal.ts`, called from `dialects/walk.ts` |
+  | composite value (more than one CSS value) | `emit/literal.ts`, called from `dialects/walk.ts` |
+  | object-form scalar, malformed or non-CSS unit | `dialects/values.ts` |
   | alias cycle, dangling alias | `validate/alias-graph.ts` |
   | empty normalized name segment | `emit/name.ts` (AD-11) |
   | name collision | `validate/collisions.ts` |
@@ -294,6 +295,12 @@ import `node:fs` or any networking builtin.
 - **Binds:** SM-4, FR-12, NFR3–NFR6, AD-8, AD-16
 - **Prevents:** arriving at the remote-source work and discovering the file-shaped corpus cannot express its failures — then improvising, which is exactly how a security path gets tested badly.
 - **Rule:** A timeout, an oversized body, a redirect into a blocked range, and a refused address are *responses*, not documents, so they cannot live in `fixtures/reject/<trigger>/input.json`. They are proved against an **ephemeral in-process HTTP server** started by the test run — `node:http`, no dependency (AD-13 holds). The scenario table (status, headers, body size, redirect target, delay, resolved address) is versioned next to the fixtures in `fixtures/network/scenarios.ts`, so adding a scenario stays a one-place change like adding a fixture. Every failure class in AD-8 has a scenario; SM-4's coverage claim is the union of the two mechanisms.
+
+### AD-24 — Object-form scalars are converted by shape, at normalization
+
+- **Binds:** FR-23, FR-20, AD-2, AD-19, AD-21
+- **Prevents:** the object notation of the current DTCG spec leaking past the normalizers; and `$type` becoming an input to conversion, which is the door AD-19 exists to keep shut.
+- **Rule:** A `{colorSpace, components}` or `{value, unit}` object becomes stylesheet text in `dialects/values.ts`, at the normalization boundary, before anything reaches the IR. **The decision is made from the object's own keys, never from `$type`** — a declared type that disagrees with the shape changes nothing. sRGB emits `rgb()` with components scaled to 0–255; any other space emits `color(space …)` verbatim. `hex` is ignored the way `$description` is: it is optional in the spec, and output whose form depended on an optional field would be less predictable than output that never uses it. Units outside CSS are refused rather than emitted. Everything downstream still sees only a string, so AD-2 and AD-19 are untouched.
 
 ## Consistency Conventions
 
@@ -346,6 +353,7 @@ tokens-to-css/
       dtcg.ts         # A1
       sd-legacy.ts    # A2
       tokens-studio.ts# A3 — AD-22
+      values.ts       # object-form scalars — AD-24, FR-23
     validate/
       alias-graph.ts  # FR-15, FR-22
       collisions.ts   # FR-21 — AD-12

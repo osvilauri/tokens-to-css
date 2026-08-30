@@ -9,6 +9,7 @@
 import { FailureCode, TokenCssError } from '../errors.js'
 import { formatPath, literal, ref, token, type TokenNode, type TokenValue } from '../model/index.js'
 import { assertScalar } from '../emit/literal.js'
+import { objectValueToCss } from './values.js'
 
 /** A JSON object, as it comes out of `JSON.parse`. */
 export type JsonObject = Record<string, unknown>
@@ -76,6 +77,12 @@ export function toTokenValue(raw: unknown, path: readonly string[], source: stri
       )
     }
   }
+  // The current DTCG spec writes colours and dimensions as objects. They are
+  // still one CSS value each, so they become a string here and nothing further
+  // down ever learns they arrived as objects (FR-23).
+  const asObjectScalar = objectValueToCss(raw, path, source)
+  if (asObjectScalar !== null) return literal(asObjectScalar)
+
   return literal(assertScalar(raw, path, source))
 }
 

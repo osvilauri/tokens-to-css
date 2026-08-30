@@ -1,0 +1,36 @@
+{
+  "$description": "The shared catalogue again, written the way the current DTCG spec writes it: colours and dimensions as objects.",
+  "primitive": {
+    "purple": {
+      "500": { "$value": { "colorSpace": "srgb", "components": [0.3529411764705882, 0.30980392156862746, 0.8117647058823529], "alpha": 1, "hex": "#5A4FCF" }, "$type": "color" }
+    },
+    "grey": {
+      "900": { "$value": { "colorSpace": "srgb", "components": [0.09803921568627451, 0.08627450980392157, 0.15294117647058825], "hex": "#191627" }, "$type": "color" },
+      "050": { "$value": { "colorSpace": "srgb", "components": [0.984313725490196, 0.9803921568627451, 0.9921568627450981], "hex": "#FBFAFD" }, "$type": "color" }
+    },
+    "size": {
+      "4": { "$value": { "value": 16, "unit": "px" }, "$type": "dimension" },
+      "6": { "$value": { "value": 1.5, "unit": "rem" }, "$type": "dimension" }
+    },
+    "zero": { "$value": { "value": 0, "unit": "" }, "$type": "dimension" },
+    "veil": { "$value": { "colorSpace": "srgb", "components": [0, 0, 0], "alpha": 0.4 }, "$type": "color" },
+    "wide": { "$value": { "colorSpace": "display-p3", "components": [0.35, 0.31, 0.81] }, "$type": "color" }
+  },
+  "semantic": {
+    "color": {
+      "brand": { "$value": "{primitive.purple.500}" },
+      "text": { "$value": "{primitive.grey.900}" },
+      "scrim": { "$value": "{primitive.veil}" }
+    },
+    "space": {
+      "md": { "$value": "{primitive.size.4}" },
+      "none": { "$value": "{primitive.zero}" }
+    }
+  },
+  "component": {
+    "button": {
+      "background": { "$value": "{semantic.color.brand}" },
+      "padding": { "$value": "{semantic.space.md}" }
+    }
+  }
+}

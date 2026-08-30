@@ -33,13 +33,14 @@
   "scripts": {
     "build": "tsdown",
     "typecheck": "tsc --noEmit",
-    "lint": "node scripts/check-boundaries.mjs",
+    "lint": "node scripts/check-boundaries.mjs && node scripts/derive-dialects.mjs --check",
     "test": "vitest run",
     "test:watch": "vitest",
     "check": "npm run lint && npm run typecheck && npm run test",
     "release": "changeset publish",
     "guard:unimplemented": "node scripts/guard-unimplemented.mjs",
-    "prepublishOnly": "npm run check && npm run build && npm run guard:unimplemented"
+    "prepublishOnly": "npm run check && npm run build && npm run guard:unimplemented",
+    "fixtures:derive": "node scripts/derive-dialects.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.1",

@@ -29,9 +29,30 @@ a single-folder change.
 ## The v1 freeze
 
 Nine accept fixtures: three dialects (`dtcg`, `sd-legacy`, `tokens-studio`)
-across three hierarchies (`three-tier`, `cti`, `eightshapes`). All three
-dialects exist at `three-tier`; their goldens are byte-identical and asserted to
-be. The remaining hierarchies land with the accept-matrix freeze.
+across three hierarchies (`three-tier`, `cti`, `eightshapes`). **The matrix is
+complete and frozen.**
+
+Within a hierarchy the three dialects emit byte-identical stylesheets — asserted,
+not assumed. Across hierarchies the names differ, because the paths do: the same
+colour is `--primitive-purple-500`, `--color-palette-purple-500` or
+`--esds-color-purple-500` depending on how the catalogue is arranged.
+
+**DTCG is the source; the other two are generated.**
+
+```bash
+npm run fixtures:derive          # rewrite the derived dialects
+node scripts/derive-dialects.mjs --check   # what lint and CI run
+```
+
+Three hand-written copies of one catalogue drift the first time somebody edits
+one, and the drift would surface months later as a confusing golden mismatch. So
+only the DTCG files are edited by hand, and a check in `npm run lint` fails if a
+derived file has fallen out of step.
+
+A separate test asserts that all nine really do say the same thing: the same
+values, the same number of references, however they are spelled or arranged.
+Without that, comparing goldens would be comparing two different documents and
+proving nothing.
 
 **All nine express the same token catalogue.** Dialect and hierarchy are the only
 variables, which is what makes their goldens comparable — two fixtures differing

@@ -1,0 +1,19 @@
+:root {
+  --esds-color-purple-500: #5A4FCF;
+  --esds-color-grey-900: #191627;
+  --esds-color-grey-050: #FBFAFD;
+  --esds-color-brand-base: var(--esds-color-purple-500);
+  --esds-color-text-base: var(--esds-color-grey-900);
+  --esds-color-surface-base: var(--esds-color-grey-050);
+  --esds-size-scale-4: 16px;
+  --esds-size-scale-6: 24px;
+  --esds-size-space-md: var(--esds-size-scale-4);
+  --esds-size-space-lg: var(--esds-size-scale-6);
+  --esds-font-family-sans: Inter, system-ui, sans-serif;
+  --esds-font-body-base: var(--esds-font-family-sans);
+  --esds-number-ratio-snug: 1.4;
+  --esds-number-leading-base: var(--esds-number-ratio-snug);
+  --esds-button-background-base: var(--esds-color-brand-base);
+  --esds-button-foreground-base: var(--esds-color-surface-base);
+  --esds-button-padding-base: var(--esds-size-space-md);
+}
