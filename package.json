@@ -1,0 +1,49 @@
+{
+  "name": "tokens-to-css",
+  "version": "0.0.0",
+  "description": "Convert design-token JSON into a CSS custom-properties stylesheet.",
+  "keywords": [
+    "design-tokens",
+    "css",
+    "custom-properties",
+    "dtcg",
+    "style-dictionary",
+    "tokens-studio"
+  ],
+  "license": "MIT",
+  "author": "Osvaldo Morgan",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/osvilauri/tokens-to-css.git"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22.12"
+  },
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "lint": "node scripts/check-boundaries.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "npm run lint && npm run typecheck && npm run test",
+    "release": "changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^3.0.1",
+    "@types/node": "^24.13.3",
+    "tsdown": "^0.22.14",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11"
+  }
+}
