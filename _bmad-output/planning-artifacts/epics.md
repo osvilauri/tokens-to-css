@@ -105,7 +105,7 @@ produced, and none is required.
 
 ### FR Coverage Map
 
-FR-1: **Epic 1** (single local file path) + **Epic 3** (remote URL)
+FR-1: Epic 1 — both Token Source kinds, single local file path and remote URL
 FR-2: Epic 1 — atomic write of the Styles File
 FR-3: Epic 1 — default `assets/css/` and custom output path
 FR-4: Epic 1 — DTCG single-file subset (A1)
@@ -113,11 +113,11 @@ FR-8: **Epic 1** (normalizes A1) + **Epic 2** (extends to A2 and A3)
 FR-9: Epic 1 — `:root` custom properties, naming rule, deterministic order
 FR-10: Epic 1 — Reference Emission as `var(--…)`
 FR-11: Epic 1 — default filename `tokens.css`
-FR-12: **Epic 1** (missing / unreadable local path) + **Epic 3** (unreachable, timeout, oversize, policy)
+FR-12: Epic 1 — every load failure class, local and network, mutually distinguishable
 FR-13: Epic 1 — invalid JSON
 FR-14: **Epic 1** (structural triggers: non-object root, no token node, directory/glob, `$ref`, unsafe keys, embedded `{…}`) + **Epic 2** (dialect triggers: mixed dialect, expressions, multi-set)
 FR-15: Epic 1 — alias cycles
-FR-16: **Epic 1** (importable from application code, typed) + **Epic 4** (installable from the registry)
+FR-16: **Epic 1** (importable from application code, typed) + **Epic 3** (installable from the registry)
 FR-17: Epic 2 — Tokens Studio subset
 FR-18: Epic 2 — Style Dictionary legacy
 FR-19: Epic 1 — write failure
@@ -125,51 +125,47 @@ FR-20: Epic 1 — composite / non-scalar rejection
 FR-21: Epic 1 — name collision
 FR-22: Epic 1 — dangling alias
 
-**NFR coverage:** NFR1, NFR2, NFR7 (parsing), NFR8 and the NFR11 guards → Epic 1.
-NFR3–NFR6 (the whole remote-source security envelope) → Epic 3. NFR7 is extended by Epic 2
-(expression rejection). NFR9 (performance bar), NFR10 (documentation) and NFR11's release
-mechanics → Epic 4.
+**NFR coverage:** NFR1, NFR2, NFR7 (parsing), NFR8, NFR11's guards and the whole remote-source
+security envelope NFR3–NFR6 → Epic 1. NFR7 is extended by Epic 2 (expression rejection). NFR9 is
+measured in Epic 1 and ratified in Epic 3, which also owns NFR10 and the release mechanics of NFR11.
 
-**Success-metric coverage:** SM-1 and SM-4 are gated by the Fixture Corpus built in Epic 1 and
-extended in Epics 2–3. SM-2, SM-3 and SM-5 are satisfied in Epic 4.
+**Success-metric coverage:** SM-1 and SM-4 are gated by the Fixture Corpus and the network scenario
+harness, both built in Epic 1 and extended in Epic 2. SM-2, SM-3 and SM-5's ratification are
+satisfied in Epic 3.
 
 ## Epic List
 
-Four epics. The architecture spine is final and no direction change is expected between them,
+Three epics. The architecture spine is final and no direction change is expected between them,
 so these are few and large by design rather than sliced per technical layer. Each one leaves the
 library in a shippable state.
 
 **Reviewed 2026-08-29** by four independent reviewers (product, architecture, quality,
-development). Four of four asked that the SM-5 performance measurement move out of Epic 4 to the
-close of Epic 1; three of four rejected splitting Epic 1 and asked for deliberate story order
-instead. Both were adopted, along with a named public-surface story and a new spine invariant
-(AD-23) for the network failure classes the file-based corpus cannot express. Two questions were
-raised and left open: who holds the stopwatch for SM-2 against a real person, and whether the
-remote path belongs in v1 at all — the latter reopens a closed PRD gate and is the product
-owner's call, not this workflow's.
+development), then dispositioned by the product owner. Adopted: the SM-5 performance measurement
+moves out of the release epic to the close of Epic 1; Epic 1 is not split but takes a deliberate
+story order; the public surface becomes a named early story; and a new spine invariant (AD-23)
+covers the network failure classes the file-based corpus cannot express.
+
+**Two product-owner rulings closed the review.** SM-2 will be timed by the product owner
+personally, so it is a named commitment rather than an unassigned metric. And the remote Token
+Source **stays in v1 and must work from Epic 1** — the reviewer's proposal to defer or cut it was
+declined. That ruling folded what had been a separate remote epic into Epic 1, which is why there
+are three epics here and not four.
 
 ### Epic 1: Convert a token file into a working stylesheet
 
-A developer with a DTCG token file on disk installs the library, calls it from a few lines of
-their own code, and gets `assets/css/tokens.css` — custom properties under `:root`, alias
-relationships preserved as `var(--…)` — which their app can link and use immediately. When the
-token file is wrong, they get a clear, coded failure and their previous stylesheet is left intact.
+A developer with a DTCG token file — on disk **or** at a URL — installs the library, calls it from a
+few lines of their own code, and gets `assets/css/tokens.css`: custom properties under `:root`,
+alias relationships preserved as `var(--…)`, ready to link. When the token file is wrong, they get
+a clear, coded failure and their previous stylesheet is left intact.
 
-This epic is the whole product in its narrowest form: the vertical slice from install to usable
-CSS, plus every failure class that a local file can produce. It also lays down the repository, the
-Fixture Corpus, and the eight public failure codes — the machinery every later epic extends
-rather than redesigns.
+This epic is the whole product in its narrowest form: both Token Source kinds, the complete failure
+vocabulary, and the security envelope that a URL demands. It also lays down the repository, the
+Fixture Corpus, the network scenario harness, and the eight public failure codes — the machinery
+the later epics extend rather than redesign.
 
-Two things were pulled forward into this epic by the review. The **public surface** — the function
-signature, the option shape, and what an error carries — is its own early story rather than a
-by-product of the last one, because in a library that promise *is* the product. And the **SM-5
-measurement** lands as the final story here, not in Epic 4: the core is complete at this point, and
-a performance surprise discovered now is cheap while the same surprise discovered at publish time
-is a redesign.
-
-**FRs covered:** FR-1 (local), FR-2, FR-3, FR-4, FR-8 (A1), FR-9, FR-10, FR-11, FR-12 (local),
-FR-13, FR-14 (structural), FR-15, FR-16 (importable), FR-19, FR-20, FR-21, FR-22
-**NFRs:** NFR1, NFR2, NFR7, NFR8, NFR9 (measured), NFR11 (guards)
+**FRs covered:** FR-1, FR-2, FR-3, FR-4, FR-8 (A1), FR-9, FR-10, FR-11, FR-12, FR-13,
+FR-14 (structural), FR-15, FR-16 (importable), FR-19, FR-20, FR-21, FR-22
+**NFRs:** NFR1, NFR2, NFR3, NFR4, NFR5, NFR6, NFR7, NFR8, NFR9 (measured), NFR11 (guards)
 
 ### Epic 2: Accept the token files teams actually have
 
@@ -180,59 +176,42 @@ a math expression, a mixed dialect, multiple token sets — it is refused by nam
 half-converted.
 
 This is the product's actual differentiator: breadth of accepted *input shapes*, not breadth of
-output platforms. It extends the dialect registry and adds fixtures; it does not touch the
-emitter.
+output platforms. It adds registry entries and fixtures; it touches neither the emitter, the
+validators, nor the public surface.
 
 **FRs covered:** FR-17, FR-18, FR-8 (A2, A3), FR-14 (dialect triggers)
 **NFRs:** NFR7 (expression rejection)
 
-### Epic 3: Point it at a URL, safely
+### Epic 3: Install it from the registry and be converting in fifteen minutes
 
-A developer whose design team publishes tokens at a URL passes that URL instead of a path and gets
-the same result, without writing a download step. Everything after the download behaves
-identically to a local file.
+A developer who has never seen this repository installs the published package, follows the docs, and
+has a stylesheet before they lose patience — and can read a failure message well enough to fix their
+own token file without opening the library's source. The team can cut releases without breaking the
+naming contract or the failure codes by accident.
 
-Isolated as its own epic because it is the one real risk boundary in v1: the whole remote-source
-security envelope lives here — HTTPS by default, timeouts, size caps, capped redirects
-re-validated per hop, and refusal of link-local and cloud-metadata addresses with the connection
-pinned to the address that was actually checked.
-
-The scenario harness is the **first** story here, not the last. The adapter is the cheap half;
-proving it — a server that stalls, that returns a body too large, that redirects into a blocked
-range — is the expensive half, and it is the only work in the project the fixture corpus cannot
-carry (AD-23).
-
-**FRs covered:** FR-1 (URL), FR-12 (network failure classes)
-**NFRs:** NFR3, NFR4, NFR5, NFR6
-
-### Epic 4: Install it from the registry and be converting in fifteen minutes
-
-A developer who has never seen this repository installs the published package, follows the docs,
-and has a stylesheet before they lose patience — and can read a failure message well enough to fix
-their own token file without opening the library's source. The team can cut releases without
-breaking the naming contract or the failure codes by accident.
-
-This is where the product stops being a repository and becomes a package: published docs, the
-measured onboarding path, the benchmark that settles the performance bar, and the first release.
+This is where the product stops being a repository and becomes a package: published docs, the timed
+onboarding path, ratification of the number measured in Epic 1, and the first release.
 
 **FRs covered:** FR-16 (installable from the registry)
 **NFRs:** NFR10, NFR11 (release mechanics), NFR9 (ratifies the number measured in Epic 1)
 **Closes:** OQ-2 by ratifying or replacing the bar in the PRD; blocked on OQ-3 (package name and
 license) before the first publish.
-
 ---
 
 ## Epic 1: Convert a token file into a working stylesheet
 
-A developer with a DTCG token file on disk installs the library, calls it from a few lines of their
-own code, and gets `assets/css/tokens.css` — custom properties under `:root`, alias relationships
-preserved as `var(--…)` — which their app can link and use immediately. When the token file is
-wrong, they get a clear, coded failure and their previous stylesheet is left intact.
+A developer with a DTCG token file — on disk or at a URL — installs the library, calls it from a few
+lines of their own code, and gets `assets/css/tokens.css`: custom properties under `:root`, alias
+relationships preserved as `var(--…)`, ready to link. When the token file is wrong, they get a
+clear, coded failure and their previous stylesheet is left intact.
 
-Story order is deliberate, not incidental: the harness and the public contract come before anything
-that produces CSS, the two decisions that cannot be taken back (naming and the alias graph) come
-early rather than in the middle, and the performance number is taken while it can still change
-something.
+Story order is deliberate, not incidental. The harness and the public contract come before anything
+that produces CSS. The two decisions that cannot be taken back — the naming rule and the alias
+graph — come early rather than in the middle. The local path is proved end to end before the
+network work starts, so a network bug is never confused with a pipeline bug. The network scenario
+harness (1.11) precedes the adapter it tests, because proving the security envelope is the
+expensive half of that work and the file-based corpus cannot carry it. And the performance number
+is taken last but still inside this epic, while it can change something.
 
 ### Story 1.1: Repository scaffold with the architecture's boundaries enforced
 
@@ -282,7 +261,7 @@ So that I can branch on failures programmatically and my imports survive future 
 **Given** the Main Entry's type signature
 **When** it is inspected from TypeScript
 **Then** it is `generateCss(source: string | URL, options?: GenerateCssOptions): Promise<GenerateCssResult>`
-**And** `GenerateCssOptions` carries `outDir`, `fileName`, `baseDir`, and a nested `http` object whose fields exist even though Epic 3 implements them
+**And** `GenerateCssOptions` carries `outDir`, `fileName`, `baseDir`, and a nested `http` object with `allowInsecure`, `timeoutMs`, `maxBytes`, and `maxRedirects`
 **And** `GenerateCssResult` carries `outputPath` and `tokenCount`, and carries no CSS payload
 
 **Given** `FailureCode`
@@ -491,7 +470,75 @@ So that I can stop maintaining my own conversion script.
 **Then** the first two fail with `SOURCE_UNREADABLE` and the last two with `FORMAT_NOT_ALLOWED` naming the single-file constraint
 **And** malformed JSON fails with `SOURCE_INVALID_JSON`, including the parse position where available
 
-### Story 1.11: Measure the conversion bar
+### Story 1.11: Network scenario harness
+
+As a maintainer of the library,
+I want network failures reproducible in-process before the adapter exists,
+So that the security path is proved rather than assumed.
+
+**Acceptance Criteria:**
+
+**Given** the test run
+**When** a network scenario is requested
+**Then** an ephemeral HTTP server starts in-process using `node:http` and shuts down afterwards
+**And** no dependency is added to the package
+
+**Given** the scenario table in `fixtures/network/scenarios.ts`
+**When** it is inspected
+**Then** each scenario declares status, headers, body size, redirect target, delay, and resolved address
+**And** adding a scenario is a single-file change, mirroring how adding a fixture works
+
+**Given** the scenarios required by the adapter's failure classes
+**When** the harness is complete
+**Then** a stalling response, an oversized body, a redirect chain, a redirect into a blocked range, and an address in a refused range are all reproducible
+
+### Story 1.12: Guarded HTTPS adapter
+
+As a developer passing a URL,
+I want the download itself to be safe by construction,
+So that a hostile or misconfigured token URL cannot reach into my network.
+
+**Acceptance Criteria:**
+
+**Given** a URL with the `http:` scheme and no explicit opt-in
+**When** it is loaded
+**Then** it fails with `SOURCE_UNREADABLE` naming the HTTPS-only default
+**And** it succeeds when `http.allowInsecure` is set
+
+**Given** a host that resolves to a loopback, link-local, private, or cloud-metadata address, including an IPv4-mapped IPv6 form
+**When** it is loaded
+**Then** it is refused, and the connection is made only to an address that was validated — verified by the custom lookup receiving and returning the checked address
+
+**Given** a redirect chain
+**When** it is followed
+**Then** each hop is re-validated for scheme and address, the hop count is capped, and a redirect into a refused range fails even when the original URL was allowed
+
+**Given** a response that stalls, or whose body exceeds the configured maximum
+**When** it is loaded
+**Then** it fails with `SOURCE_UNREADABLE` within the configured timeout, distinguishably from the other network causes
+**And** the adapter hands the core a buffer, never a URL
+
+### Story 1.13: URL as a Token Source
+
+As a developer whose tokens live at a URL,
+I want to pass that URL where I would have passed a path,
+So that I do not maintain a download step of my own.
+
+**Acceptance Criteria:**
+
+**Given** a URL serving a valid allowlisted document
+**When** the Main Entry is called with it
+**Then** the stylesheet written is byte-identical to the one produced from the same content on disk
+
+**Given** a network failure and a local file failure
+**When** each is caught
+**Then** they are distinguishable from each other and from `SOURCE_INVALID_JSON` by code alone
+
+**Given** every failure class introduced by this epic
+**When** the corpus is checked
+**Then** each has a scenario in the network harness, so SM-4's coverage claim holds across both mechanisms
+
+### Story 1.14: Measure the conversion bar
 
 As the product owner,
 I want the assumed performance bar measured while the core can still change,
@@ -511,6 +558,10 @@ So that OQ-2 is answered by a number rather than carried to publish as a guess.
 **When** the story closes
 **Then** it is recorded in `fixtures/README.md` alongside the reference hardware
 **And** if it exceeds the assumed 2-second bar, that is raised as a finding against the spine before Epic 2 begins
+
+**Given** the same 10,000-token fixture
+**When** it is served over the local network harness instead of read from disk
+**Then** the measurement is taken for that path too, since both Token Source kinds ship in this epic
 
 ---
 
@@ -598,93 +649,14 @@ So that SM-1 measures the whole allowlist rather than the part that happened to 
 
 ---
 
-## Epic 3: Point it at a URL, safely
-
-A developer whose design team publishes tokens at a URL passes that URL instead of a path and gets
-the same result, without writing a download step. Everything after the download behaves identically
-to a local file.
-
-The scenario harness comes first. The adapter is the cheap half of this epic; proving it is the
-expensive half, and it is the only work in the project the file-based corpus cannot carry.
-
-### Story 3.1: Network scenario harness
-
-As a maintainer of the library,
-I want network failures reproducible in-process before the adapter exists,
-So that the security path is proved rather than assumed.
-
-**Acceptance Criteria:**
-
-**Given** the test run
-**When** a network scenario is requested
-**Then** an ephemeral HTTP server starts in-process using `node:http` and shuts down afterwards
-**And** no dependency is added to the package
-
-**Given** the scenario table in `fixtures/network/scenarios.ts`
-**When** it is inspected
-**Then** each scenario declares status, headers, body size, redirect target, delay, and resolved address
-**And** adding a scenario is a single-file change, mirroring how adding a fixture works
-
-**Given** the scenarios required by the adapter's failure classes
-**When** the harness is complete
-**Then** a stalling response, an oversized body, a redirect chain, a redirect into a blocked range, and an address in a refused range are all reproducible
-
-### Story 3.2: Guarded HTTPS adapter
-
-As a developer passing a URL,
-I want the download itself to be safe by construction,
-So that a hostile or misconfigured token URL cannot reach into my network.
-
-**Acceptance Criteria:**
-
-**Given** a URL with the `http:` scheme and no explicit opt-in
-**When** it is loaded
-**Then** it fails with `SOURCE_UNREADABLE` naming the HTTPS-only default
-**And** it succeeds when `http.allowInsecure` is set
-
-**Given** a host that resolves to a loopback, link-local, private, or cloud-metadata address, including an IPv4-mapped IPv6 form
-**When** it is loaded
-**Then** it is refused, and the connection is made only to an address that was validated — verified by the custom lookup receiving and returning the checked address
-
-**Given** a redirect chain
-**When** it is followed
-**Then** each hop is re-validated for scheme and address, the hop count is capped, and a redirect into a refused range fails even when the original URL was allowed
-
-**Given** a response that stalls, or whose body exceeds the configured maximum
-**When** it is loaded
-**Then** it fails with `SOURCE_UNREADABLE` within the configured timeout, distinguishably from the other network causes
-**And** the adapter hands the core a buffer, never a URL
-
-### Story 3.3: URL as a Token Source
-
-As a developer whose tokens live at a URL,
-I want to pass that URL where I would have passed a path,
-So that I do not maintain a download step of my own.
-
-**Acceptance Criteria:**
-
-**Given** a URL serving a valid allowlisted document
-**When** the Main Entry is called with it
-**Then** the stylesheet written is byte-identical to the one produced from the same content on disk
-
-**Given** a network failure and a local file failure
-**When** each is caught
-**Then** they are distinguishable from each other and from `SOURCE_INVALID_JSON` by code alone
-
-**Given** every failure class introduced by this epic
-**When** the corpus is checked
-**Then** each has a scenario in the network harness, so SM-4's coverage claim holds across both mechanisms
-
----
-
-## Epic 4: Install it from the registry and be converting in fifteen minutes
+## Epic 3: Install it from the registry and be converting in fifteen minutes
 
 A developer who has never seen this repository installs the published package, follows the docs, and
 has a stylesheet before they lose patience — and can read a failure message well enough to fix their
 own token file without opening the library's source. The team can cut releases without breaking the
 naming contract or the failure codes by accident.
 
-### Story 4.1: Reference documentation that cannot drift
+### Story 3.1: Reference documentation that cannot drift
 
 As a developer evaluating the library,
 I want the allowlist, the naming rule, and the failure codes documented accurately,
@@ -705,7 +677,7 @@ So that I can predict what it will do before I install it.
 **When** they attempt to convert a Style Dictionary legacy file and to interpret one rejection message
 **Then** they complete both unaided, without reading library source — SM-3
 
-### Story 4.2: The fifteen-minute path, timed against a real person
+### Story 3.2: The fifteen-minute path, timed by the product owner
 
 As a developer new to the library,
 I want a first run that works on the first try,
@@ -721,11 +693,12 @@ So that I can judge the tool in minutes rather than an afternoon.
 **When** it is copied verbatim into a project that did not write it
 **Then** it runs unmodified — this example is tested in CI, not only printed
 
-**Given** a developer who has not seen the project
-**When** they attempt the checklist with a stopwatch
-**Then** each of the five steps passes and the total is under fifteen minutes — SM-2, measured against a named person on a named date rather than asserted
+**Given** the checklist and a developer who has not seen the project
+**When** the product owner (Osvaldo) times the attempt personally
+**Then** each of the five steps passes and the total is under fifteen minutes — SM-2, measured on a recorded date rather than asserted
+**And** the measured time and date are recorded in the docs, so a later regression in onboarding is visible rather than argued
 
-### Story 4.3: Ratify or replace the performance bar
+### Story 3.3: Ratify or replace the performance bar
 
 As the product owner,
 I want the PRD's performance bar to reflect a measurement,
@@ -733,7 +706,7 @@ So that OQ-2 closes on evidence.
 
 **Acceptance Criteria:**
 
-**Given** the number measured in Story 1.11
+**Given** the number measured in Story 1.14
 **When** OQ-2 is closed
 **Then** the PRD's SM-5 either keeps the 2-second bar with the measurement recorded, or states a revised bar with its rationale
 **And** the `[ASSUMPTION]` tag is removed from SM-5 in the PRD and the Assumptions Index
@@ -742,7 +715,7 @@ So that OQ-2 closes on evidence.
 **When** it runs in CI after this story
 **Then** exceeding the ratified bar is reported as a regression
 
-### Story 4.4: First release
+### Story 3.4: First release
 
 As a developer who wants to use this,
 I want to install it from the registry like any other package,
