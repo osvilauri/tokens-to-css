@@ -68,6 +68,15 @@ The catalogue is deliberately small and deliberately awkward in the right places
 | A three-hop chain (component → semantic → primitive) | Proves each hop emits its own `var()` rather than collapsing |
 | A `$description` at document level and on a token | Proves both are read and ignored |
 
+### Why the typography reject fixtures stay
+
+`composite-typography` and `composite-shadow` are not placeholders for something
+unfinished. Composite tokens are deferred to the first version after release
+(decided 2026-08-30), because a typography token is five CSS properties and
+accepting it is a product decision rather than a parsing one — see
+`addendum.md`. Until that decision is made, refusing them clearly is the
+behaviour, and these fixtures are what holds it.
+
 ### Why a Tokens Studio fixture is worth having
 
 Read as an ordinary legacy document, such an export converts perfectly happily

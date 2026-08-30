@@ -43,7 +43,40 @@ Depth that belongs in architecture / solution design / later phases — not the 
 - Multi-file / directory merge Token Sources; DTCG Resolver 2025.10.
 - Taxonomy confidence report + model override as a first-class product feature (beyond normalize-for-Conversion).
 - Theme selectors, multi-file CSS splits, Tailwind `@theme`.
-- Composites, Color Module 4, Theo parser priority — v1 rejects these inputs outright (FR-20).
+- **Composite tokens — deferred to the first version after release. Decided 2026-08-30.**
+  Typography, shadow, border, gradient, transition and stroke-style stay rejected in
+  v1 (FR-20). Object-form colours and dimensions were moved *out* of this bucket and
+  are accepted (FR-23, PRD §12.5); what remains is genuinely different.
+
+  A typography token is five values for five CSS properties:
+
+  ```json
+  { "fontFamily": ["system-ui","sans-serif"], "fontSize": { "value": 0.875, "unit": "rem" },
+    "fontWeight": 400, "letterSpacing": "0.16px", "lineHeight": 1.42857 }
+  ```
+
+  There is no line it fits on, so accepting it means choosing one of three things,
+  each with consequences that do not come back:
+
+  1. **Expand into several properties.** Breaks "one token, one custom property" —
+     the sentence the product is built on — and freezes a set of new name suffixes
+     (`-font-size`, `-line-height`, …) as public contract. IBM Carbon's 58 typography
+     tokens would become roughly 290 declarations.
+  2. **Use the `font` shorthand.** Fits on one line, but `letterSpacing` has no place
+     in it and would be dropped silently. That is the exact failure this product
+     exists to prevent.
+  3. **Pass it through.** `[object Object]`. Never on the table.
+
+  Shadow, border and transition have the same shape of problem in milder form: they
+  *do* fit a single value, but the component order would become contract too.
+
+  **Cost of deferring:** measured at four of thirteen published files in the 2026-08-30
+  survey. Every file that converts today is colour, size or spacing; typography usually
+  lives in its own file, so a fail-closed refusal costs that file rather than the system.
+
+  **If it is picked up:** expansion (option 1), not the shorthand — losing `letterSpacing`
+  quietly contradicts everything else here. It needs its own PRD revision, with a survey
+  and fixtures in the same change, the way FR-23 did.
 - Tokens Studio expressions / math and multi-file Studio sets.
 - In-memory CSS return from the Main Entry (disk write is the only v1 success path).
 - Taxonomy diagnostics: reporting the recognized hierarchy model, confidence, or model override.

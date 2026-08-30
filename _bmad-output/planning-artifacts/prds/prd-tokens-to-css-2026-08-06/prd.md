@@ -447,9 +447,12 @@ from `$type`.
 **What it moved.** 0 of 13 → 8 of 13. The five that still fail are four
 typography or shadow composites and one file carrying an Android `dp` token.
 
-**What was deliberately not done.** Typography stays rejected. It is four CSS
-properties, and accepting it would change what "one token, one custom property"
-means — a product question this revision does not settle.
+**What was deliberately not done.** Typography stays rejected. It is five CSS
+properties, not one, and accepting it would change what "one token, one custom
+property" means. **Decided 2026-08-30: deferred to the first version after
+release**, with the three options and their consequences written up in
+`addendum.md`. It is a product question, and the answer costs four of thirteen
+files rather than the ability to ship.
 
 **Fixtures landed in the same change**, per SM-C3: one accept fixture in object
 notation, two reject fixtures (non-CSS unit, malformed colour), and the
