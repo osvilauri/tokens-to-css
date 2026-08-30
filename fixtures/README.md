@@ -29,9 +29,9 @@ a single-folder change.
 ## The v1 freeze
 
 Nine accept fixtures: three dialects (`dtcg`, `sd-legacy`, `tokens-studio`)
-across three hierarchies (`three-tier`, `cti`, `eightshapes`). Two of the nine
-exist so far — `dtcg/three-tier` and `sd-legacy/three-tier`, whose goldens are
-byte-identical and asserted to be; the rest arrive with their dialects.
+across three hierarchies (`three-tier`, `cti`, `eightshapes`). All three
+dialects exist at `three-tier`; their goldens are byte-identical and asserted to
+be. The remaining hierarchies land with the accept-matrix freeze.
 
 **All nine express the same token catalogue.** Dialect and hierarchy are the only
 variables, which is what makes their goldens comparable — two fixtures differing
@@ -47,16 +47,12 @@ The catalogue is deliberately small and deliberately awkward in the right places
 | A three-hop chain (component → semantic → primitive) | Proves each hop emits its own `var()` rather than collapsing |
 | A `$description` at document level and on a token | Proves both are read and ignored |
 
-### A note on `reject/tokens-studio-not-yet`
+### Why a Tokens Studio fixture is worth having
 
-Tokens Studio exports are refused *today* and become accept fixtures once that
-shape is read properly. Moving one is an allowlist addition, not a golden
-change, so it is a minor release — see the rule below.
-
-The refusal is deliberate rather than incidental. Such a document would
-otherwise be read as Style Dictionary legacy and convert perfectly happily, with
-the token set name folded into every custom property. A wrong stylesheet that
-reports success is worse than no stylesheet.
+Read as an ordinary legacy document, such an export converts perfectly happily
+and folds the token set name into every custom property — `--global-color-brand`
+where `--color-brand` was meant. It reports success and is wrong everywhere at
+once, which is the failure this corpus exists to make impossible.
 
 Reject fixtures: one per rejection trigger in the PRD's allowlist section, and
 one per failure class.

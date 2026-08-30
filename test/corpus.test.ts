@@ -15,7 +15,7 @@ import { compareGolden, describeMismatch, discover, goldenUpdatesAllowed, writeG
  */
 const EXPECTED = {
   /** 9 at the Epic 2 freeze: 3 dialects × 3 hierarchies (AD-16). */
-  accept: 2,
+  accept: 3,
   /**
    * One per document-shaped rejection trigger and failure class (SM-4).
    *
@@ -23,7 +23,7 @@ const EXPECTED = {
    * invalid JSON and a failed write are proved end to end, and the network
    * classes against the scenario harness (AD-23). SM-4's claim is the union.
    */
-  reject: 14,
+  reject: 16,
 } as const
 
 describe('the fixture corpus', () => {

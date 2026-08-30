@@ -1,0 +1,93 @@
+{
+  "$metadata": {
+    "tokenSetOrder": [
+      "global"
+    ]
+  },
+  "$themes": [],
+  "global": {
+    "primitive": {
+      "purple": {
+        "500": {
+          "value": "#5A4FCF",
+          "type": "color"
+        }
+      },
+      "grey": {
+        "900": {
+          "value": "#191627",
+          "type": "color"
+        },
+        "050": {
+          "value": "#FBFAFD",
+          "type": "color"
+        }
+      },
+      "size": {
+        "4": {
+          "value": "16px",
+          "type": "dimension"
+        },
+        "6": {
+          "value": "24px",
+          "type": "dimension"
+        }
+      },
+      "font": {
+        "sans": {
+          "value": "Inter, system-ui, sans-serif",
+          "type": "fontFamily"
+        }
+      },
+      "ratio": {
+        "snug": {
+          "value": 1.4,
+          "type": "number"
+        }
+      }
+    },
+    "semantic": {
+      "color": {
+        "brand": {
+          "value": "{primitive.purple.500}",
+          "comment": "The one accent."
+        },
+        "text": {
+          "value": "{primitive.grey.900}"
+        },
+        "surface": {
+          "value": "{primitive.grey.050}"
+        }
+      },
+      "space": {
+        "md": {
+          "value": "{primitive.size.4}"
+        },
+        "lg": {
+          "value": "{primitive.size.6}"
+        }
+      },
+      "type": {
+        "body": {
+          "value": "{primitive.font.sans}"
+        },
+        "leading": {
+          "value": "{primitive.ratio.snug}"
+        }
+      }
+    },
+    "component": {
+      "button": {
+        "background": {
+          "value": "{semantic.color.brand}"
+        },
+        "foreground": {
+          "value": "{semantic.color.surface}"
+        },
+        "padding": {
+          "value": "{semantic.space.md}"
+        }
+      }
+    }
+  }
+}

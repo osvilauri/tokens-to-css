@@ -156,13 +156,8 @@ describe('the registry', () => {
     }
   })
 
-  it('holds only the shapes this version reads', () => {
-    // Tokens Studio arrives later in Epic 2. Until then a document in that
-    // shape is refused, not half-read.
-    expect(DIALECTS.map((d) => d.id)).toEqual(['dtcg', 'sd-legacy'])
-    expect(failure(`{ "$themes": [], "global": { "a": { "value": "1px" } } }`).code).toBe(
-      FailureCode.FORMAT_NOT_ALLOWED,
-    )
+  it('holds the three shapes this version reads', () => {
+    expect(DIALECTS.map((d) => d.id)).toEqual(['tokens-studio', 'dtcg', 'sd-legacy'])
   })
 
   it('detects first-match-wins, in the order the array declares', () => {
