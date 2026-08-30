@@ -19,8 +19,14 @@ describe.skipIf(!built)('build output matches the exports map', () => {
     expect(existsSync(fileURLToPath(new URL(target, root)))).toBe(true)
   })
 
-  it('can actually be imported', async () => {
+  it('carries the real public surface once imported', async () => {
     const mod = await import(new URL(pkg.exports['.'].default, root).href)
-    expect(mod.VERSION).toBe('0.0.0')
+    expect(Object.keys(mod).sort()).toEqual([
+      'DEFAULTS',
+      'FailureCode',
+      'TokenCssError',
+      'generateCss',
+    ])
+    expect(typeof mod.generateCss).toBe('function')
   })
 })
