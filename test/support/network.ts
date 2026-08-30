@@ -35,6 +35,8 @@ const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(
 export async function startScenarioServer(): Promise<ScenarioServer> {
   const served: string[] = []
   const openSockets = new Set<{ destroy: () => void }>()
+  /** Filled in once the port is known; read by delayed responders. */
+  let origin = ''
 
   const server: Server = createServer((request, response) => {
     const id = (request.url ?? '/').slice(1).split('?')[0] ?? ''
@@ -54,11 +56,14 @@ export async function startScenarioServer(): Promise<ScenarioServer> {
     async function respond(s: NetworkScenario): Promise<void> {
       if (s.delayMs) await wait(s.delayMs)
 
+      // A delayed response can outlive the client that asked for it — the
+      // adapter gives up on a deadline, the test ends, the server closes — and
+      // writing to a dead socket turns a passing suite into a flaky one.
+      if (response.destroyed || response.writableEnded) return
+
       const headers: Record<string, string> = { ...s.headers }
       if (s.redirectTo) {
-        headers['location'] = s.redirectTo.startsWith('/')
-          ? `http://127.0.0.1:${port()}${s.redirectTo}`
-          : s.redirectTo
+        headers['location'] = s.redirectTo.startsWith('/') ? `${origin}${s.redirectTo}` : s.redirectTo
       }
 
       response.writeHead(s.status ?? 200, headers)
@@ -93,8 +98,7 @@ export async function startScenarioServer(): Promise<ScenarioServer> {
   })
 
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
-  const port = (): number => (server.address() as AddressInfo).port
-  const origin = `http://127.0.0.1:${port()}`
+  origin = `http://127.0.0.1:${(server.address() as AddressInfo).port}`
 
   return {
     origin,
