@@ -7,6 +7,13 @@ version impact. CI checks for one.
 npx changeset
 ```
 
+For a change with no version impact — tests, docs, an internal refactor — say so
+explicitly rather than skipping the step:
+
+```bash
+npx changeset --empty
+```
+
 **Read this before choosing `major`.** The public surface of this package is
 larger than its function signature. A major bump is required for any change to:
 

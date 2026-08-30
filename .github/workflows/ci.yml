@@ -2,7 +2,9 @@ name: CI
 
 on:
   push:
-    branches: ['**']
+    # Branch pushes are covered by the pull request they belong to; running
+    # both would double every check for no extra signal.
+    branches: [main]
   pull_request:
 
 permissions:
@@ -46,4 +48,18 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci
-      - run: npx changeset status --since=origin/${{ github.base_ref }}
+      - run: git fetch --no-tags --depth=1 origin "$BASE"
+        env:
+          BASE: ${{ github.base_ref }}
+      - name: Every change declares its version impact
+        run: |
+          npx changeset status --since="origin/$BASE" || {
+            echo
+            echo "This pull request changes the package but declares no version impact."
+            echo "Add one with:  npx changeset"
+            echo "If the change genuinely has none (tests, docs, internal refactor),"
+            echo "record that explicitly:  npx changeset --empty"
+            exit 1
+          }
+        env:
+          BASE: ${{ github.base_ref }}
