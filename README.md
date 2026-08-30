@@ -23,6 +23,22 @@ await generateCss('https://tokens.example.com/design.json')
 // same, fetched over https
 ```
 
+## Probarlo
+
+```bash
+npm run demo
+```
+
+Abre un servidor local con un campo para una URL y otro para un archivo del
+ordenador, y muestra las primeras 200 líneas del CSS junto a un enlace de
+descarga. Trae varios sistemas de diseño publicados como ejemplos de un clic,
+incluido uno que **falla** — porque leer un mensaje de error es la mitad de
+saber si esta herramienta sirve.
+
+La librería es Node y escribe a disco, así que la demo necesita ese servidor:
+no hay forma de correrla en una página suelta, y simularla sería mentir sobre
+lo que hace.
+
 ## Working on it
 
 ```bash
