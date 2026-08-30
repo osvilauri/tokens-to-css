@@ -2,17 +2,17 @@
 stepsCompleted: ['step-01-validate-prerequisites', 'step-02-design-epics', 'step-03-create-stories', 'step-04-final-validation']
 status: final
 inputDocuments:
-  - '_bmad-output/planning-artifacts/prds/prd-css_generator_library-2026-08-06/prd.md'
-  - '_bmad-output/planning-artifacts/prds/prd-css_generator_library-2026-08-06/addendum.md'
-  - '_bmad-output/planning-artifacts/architecture/architecture-css_generator_library-2026-08-29/ARCHITECTURE-SPINE.md'
+  - '_bmad-output/planning-artifacts/prds/prd-tokens-to-css-2026-08-06/prd.md'
+  - '_bmad-output/planning-artifacts/prds/prd-tokens-to-css-2026-08-06/addendum.md'
+  - '_bmad-output/planning-artifacts/architecture/architecture-tokens-to-css-2026-08-29/ARCHITECTURE-SPINE.md'
   - '_bmad-output/planning-artifacts/research/technical-design-token-json-to-css-generation-research-2026-07-26.md'
 ---
 
-# css_generator_library - Epic Breakdown
+# tokens-to-css - Epic Breakdown
 
 ## Overview
 
-This document provides the complete epic and story breakdown for **css_generator_library**,
+This document provides the complete epic and story breakdown for **tokens-to-css**,
 decomposing the requirements from the PRD and the Architecture Spine into implementable stories.
 
 There is **no UX Design document and no UX Design Requirements section**: the product is a

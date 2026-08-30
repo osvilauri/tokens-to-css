@@ -14,7 +14,7 @@ primary_platform:
   - other
 
 # Core Configuration Values
-project_name: css_generator_library
+project_name: tokens-to-css
 user_name: osvi
 communication_language: englis spanish
 document_output_language: English

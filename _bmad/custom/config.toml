@@ -5,3 +5,10 @@
 #
 # [agents.bmad-agent-pm]
 # description = "Prefers short, bulleted PRDs over narrative drafts."
+
+# Pinned 2026-08-30. The installer-managed files carry the same value, but a
+# reinstall regenerates them from the stored install answers — this entry is
+# what survives that. The project was renamed from css_generator_library when
+# OQ-3 closed on the npm package name.
+[core]
+project_name = "tokens-to-css"

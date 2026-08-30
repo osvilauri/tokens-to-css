@@ -18,3 +18,7 @@ Exportado el 2026-08-27 10:37 desde el almacenamiento local de Cursor.
 
 Los JSON íntegros (incluyendo metadatos, diffs y resultados de herramientas completos) están en [`raw/`](raw/).
 - [CONTINUATION.md](CONTINUATION.md) — resumen del estado y del bloqueo actual, para retomar el proyecto.
+
+---
+
+> **Nota de 2026-08-30.** El proyecto se llamaba `css_generator_library` cuando se grabaron estas conversaciones. Al cerrar OQ-3 pasó a llamarse **`tokens-to-css`**, que es el nombre del paquete npm y del repositorio. Estos archivos son transcripciones y **no se reescribieron**: el nombre viejo que aparece en ellos es correcto para su fecha.

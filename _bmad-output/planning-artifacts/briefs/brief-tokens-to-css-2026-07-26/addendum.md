@@ -1,11 +1,11 @@
 ---
-title: "Addendum: css_generator_library"
+title: "Addendum: tokens-to-css"
 status: complete
 created: 2026-07-26
 updated: 2026-07-26
 ---
 
-# Addendum: css_generator_library
+# Addendum: tokens-to-css
 
 Technical and roadmap detail that supports the product brief but does not belong in the 1–2 page narrative. Intended for PRD / architecture follow-ons.
 

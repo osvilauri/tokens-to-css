@@ -1,7 +1,7 @@
 ---
 title: "Brief ↔ PRD reconciliation"
-input: "briefs/brief-css_generator_library-2026-07-26/brief.md"
-prd: "prds/prd-css_generator_library-2026-08-06/prd.md"
+input: "briefs/brief-tokens-to-css-2026-07-26/brief.md"
+prd: "prds/prd-tokens-to-css-2026-08-06/prd.md"
 addendum: none (file not present)
 status: complete
 created: 2026-08-06
@@ -15,9 +15,9 @@ verdict: gaps-material
 
 | Artifact | Path | Status |
 | --- | --- | --- |
-| Product brief | `_bmad-output/planning-artifacts/briefs/brief-css_generator_library-2026-07-26/brief.md` | complete (2026-07-26) |
-| PRD | `_bmad-output/planning-artifacts/prds/prd-css_generator_library-2026-08-06/prd.md` | draft (2026-08-06) |
-| PRD addendum | `…/prd-css_generator_library-2026-08-06/addendum.md` | **missing** — no addendum reconciled |
+| Product brief | `_bmad-output/planning-artifacts/briefs/brief-tokens-to-css-2026-07-26/brief.md` | complete (2026-07-26) |
+| PRD | `_bmad-output/planning-artifacts/prds/prd-tokens-to-css-2026-08-06/prd.md` | draft (2026-08-06) |
+| PRD addendum | `…/prd-tokens-to-css-2026-08-06/addendum.md` | **missing** — no addendum reconciled |
 
 **Method:** Walk brief sections (problem, solution, differentiation, audience, success, scope, vision) against PRD vision, users, glossary, FRs, non-goals, MVP, metrics, and assumptions. Tag each finding as **aligned**, **gap** (brief idea absent or under-specified in PRD), **contradiction**, or **intentional override** (PRD deliberately changes brief).
 

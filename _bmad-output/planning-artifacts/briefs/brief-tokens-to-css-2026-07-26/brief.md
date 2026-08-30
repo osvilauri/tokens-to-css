@@ -1,15 +1,15 @@
 ---
-title: "Product Brief: css_generator_library"
+title: "Product Brief: tokens-to-css"
 status: complete
 created: 2026-07-26
 updated: 2026-07-26
 ---
 
-# Product Brief: css_generator_library
+# Product Brief: tokens-to-css
 
 ## Executive Summary
 
-**css_generator_library** is a developer-facing library (with CLI and programmatic API) that turns design-token JSON into CSS custom properties ready for design systems, web apps, and component libraries. Given one or more token files, it analyzes structure, normalizes common naming models, resolves aliases, and emits CSS sets that plug directly into a token-driven styling pipeline.
+**tokens-to-css** is a developer-facing library (with CLI and programmatic API) that turns design-token JSON into CSS custom properties ready for design systems, web apps, and component libraries. Given one or more token files, it analyzes structure, normalizes common naming models, resolves aliases, and emits CSS sets that plug directly into a token-driven styling pipeline.
 
 Design systems increasingly treat tokens as the contract between design and code. Teams receive JSON from Figma exports, Tokens Studio, hand-authored catalogs, or legacy Style Dictionary trees — but formats and hierarchies vary. Getting from “token JSON on disk” to “CSS variables the app can consume” still means custom scripts, fragile path conventions, or heavy multi-platform tooling when only CSS is needed.
 
@@ -40,7 +40,7 @@ Outcome: drop in token JSON, get CSS token sets you can wire into a DS, app, or 
 | **Theo** | Legacy; weak DTCG story for new greenfield work |
 | **Tokens Studio** | Design-side authoring / Figma sync — not a code-side CSS generator |
 
-**css_generator_library** positions as a **focused CSS generation and structure-analysis helper**: detect and normalize how tokens are organized, then emit CSS. Differentiation is scope discipline and taxonomy fluency, not a fabricated platform moat. [ASSUMPTION] Interop with Style Dictionary pipelines (consume similar JSON, complement rather than replace) is desirable but not an MVP hard requirement.
+**tokens-to-css** positions as a **focused CSS generation and structure-analysis helper**: detect and normalize how tokens are organized, then emit CSS. Differentiation is scope discipline and taxonomy fluency, not a fabricated platform moat. [ASSUMPTION] Interop with Style Dictionary pipelines (consume similar JSON, complement rather than replace) is desirable but not an MVP hard requirement.
 
 ## Who This Serves
 

@@ -1,22 +1,22 @@
 ---
-title: "PRD: css_generator_library"
+title: "PRD: tokens-to-css"
 status: draft
 created: 2026-08-06
 updated: 2026-08-29
 review_disposition: "C1A C2A C3A C4A H1B H2 H3 H4A H5 H6 applied (see §13)"
 ---
 
-# PRD: css_generator_library
+# PRD: tokens-to-css
 
 ## 0. Document Purpose
 
-This PRD defines the product requirements for **css_generator_library** for PM, architecture, and epic/story workflows. It builds on the product brief (`briefs/brief-css_generator_library-2026-07-26`) and technical research (`research/technical-design-token-json-to-css-generation-research-2026-07-26`). Vocabulary is Glossary-anchored; features group nested FRs with stable IDs; assumptions are tagged inline and indexed. Implementation mechanism detail belongs in architecture / addendum, not here.
+This PRD defines the product requirements for **tokens-to-css** for PM, architecture, and epic/story workflows. It builds on the product brief (`briefs/brief-tokens-to-css-2026-07-26`) and technical research (`research/technical-design-token-json-to-css-generation-research-2026-07-26`). Vocabulary is Glossary-anchored; features group nested FRs with stable IDs; assumptions are tagged inline and indexed. Implementation mechanism detail belongs in architecture / addendum, not here.
 
 **Review status:** rubric + adversarial reviews (2026-08-07) are dispositioned in §13. Critical and high findings are closed in this revision; residual items are Open Questions with named owners.
 
 ## 1. Vision
 
-**css_generator_library** is an installable Node/TypeScript library (via package manager) meant to integrate into any app or website under construction. Developers call the Main Entry with a Token Source to convert design-token JSON into a Styles File ready for the project to consume.
+**tokens-to-css** is an installable Node/TypeScript library (via package manager) meant to integrate into any app or website under construction. Developers call the Main Entry with a Token Source to convert design-token JSON into a Styles File ready for the project to consume.
 
 It is not a full design system and not a multi-platform token orchestrator. It is the **JSON tokens → CSS styles file** bridge inside the developer’s toolchain: it accepts the token shapes teams actually have — DTCG plus the Vendor Dialects listed in the **Format Allowlist (V1)** (§4.2.0) — and emits predictable CSS. A focused last-mile helper, not a multi-platform transform stack.
 
