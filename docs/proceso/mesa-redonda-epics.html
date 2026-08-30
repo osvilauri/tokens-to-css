@@ -1,0 +1,404 @@
+<title>Cuatro Voces, Un Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Petrona:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --paper:        #FAFBFA;
+    --surface:      #EFF2F0;
+    --ink:          #1C211F;
+    --muted:        #667069;
+    --rule:         #DCE2DE;
+    --consensus:    #2F6F5E;
+    --consensus-bg: #E7F0EC;
+    --dissent:      #7A3B6B;
+    --dissent-bg:   #F3E9F1;
+
+    --f-display: "Familjen Grotesk", "Helvetica Neue", Arial, sans-serif;
+    --f-body:    "Petrona", Georgia, "Times New Roman", serif;
+    --f-mono:    "IBM Plex Mono", ui-monospace, Menlo, monospace;
+
+    --measure: 66ch;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:        #131715;
+      --surface:      #1D2320;
+      --ink:          #E9EEEA;
+      --muted:        #93A099;
+      --rule:         #2C3531;
+      --consensus:    #6FC0A8;
+      --consensus-bg: #172822;
+      --dissent:      #D48FC0;
+      --dissent-bg:   #271A24;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:        #131715;
+    --surface:      #1D2320;
+    --ink:          #E9EEEA;
+    --muted:        #93A099;
+    --rule:         #2C3531;
+    --consensus:    #6FC0A8;
+    --consensus-bg: #172822;
+    --dissent:      #D48FC0;
+    --dissent-bg:   #271A24;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 1.11rem;
+    line-height: 1.68;
+    margin: 0;
+    padding: 0 1.5rem 7rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: var(--measure); margin: 0 auto; }
+
+  /* ---------- masthead ---------- */
+
+  header.masthead {
+    padding: clamp(3.5rem, 10vw, 7rem) 0 3rem;
+    margin-bottom: 3.5rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .kicker {
+    font-family: var(--f-mono);
+    font-size: 0.73rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--consensus);
+    margin: 0 0 1.5rem;
+  }
+  h1 {
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: clamp(2.5rem, 7vw, 4.1rem);
+    line-height: 1.0;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+    margin: 0 0 1.3rem;
+  }
+  .standfirst {
+    font-size: 1.3rem;
+    line-height: 1.48;
+    color: var(--muted);
+    margin: 0;
+    max-width: 46ch;
+  }
+
+  /* ---------- rhythm ---------- */
+
+  section { margin-bottom: 4rem; }
+  h2 {
+    font-family: var(--f-display);
+    font-weight: 600;
+    font-size: 1.85rem;
+    letter-spacing: -0.02em;
+    line-height: 1.16;
+    text-wrap: balance;
+    margin: 0 0 1.5rem;
+  }
+  h3 {
+    font-family: var(--f-display);
+    font-weight: 600;
+    font-size: 1.22rem;
+    letter-spacing: -0.008em;
+    margin: 2.6rem 0 0.8rem;
+  }
+  p { margin: 0 0 1.2rem; }
+  strong { font-weight: 600; }
+  .lead-in {
+    font-family: var(--f-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 0.9rem;
+  }
+  a { color: var(--consensus); text-underline-offset: 0.18em; }
+  a:focus-visible { outline: 2px solid var(--consensus); outline-offset: 3px; }
+
+  /* ---------- the four voices ---------- */
+
+  .voices { display: grid; gap: 0; }
+  .voice {
+    display: grid;
+    grid-template-columns: 3.2rem 1fr;
+    gap: 0 1.15rem;
+    padding: 1.4rem 0;
+    border-top: 1px solid var(--rule);
+  }
+  .voice:last-child { border-bottom: 1px solid var(--rule); }
+  .voice-icon {
+    font-size: 1.5rem;
+    line-height: 1.2;
+    text-align: center;
+  }
+  .voice-name {
+    font-family: var(--f-display);
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin: 0 0 0.15rem;
+  }
+  .voice-role {
+    font-family: var(--f-mono);
+    font-size: 0.73rem;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    margin: 0 0 0.6rem;
+  }
+  .voice p:last-child { margin-bottom: 0; font-size: 1.03rem; }
+
+  /* ---------- verdict blocks ---------- */
+
+  .verdict {
+    border-radius: 4px;
+    padding: 1.5rem 1.6rem;
+    margin: 0 0 1.4rem;
+    border: 1px solid var(--rule);
+  }
+  .verdict.agree  { background: var(--consensus-bg); border-left: 3px solid var(--consensus); }
+  .verdict.split  { background: var(--dissent-bg);   border-left: 3px solid var(--dissent); }
+  .tally {
+    font-family: var(--f-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin: 0 0 0.7rem;
+    font-weight: 500;
+  }
+  .verdict.agree .tally { color: var(--consensus); }
+  .verdict.split .tally { color: var(--dissent); }
+  .verdict h3 { margin-top: 0; }
+  .verdict p:last-child { margin-bottom: 0; }
+
+  /* ---------- findings ---------- */
+
+  .finding {
+    padding: 1.3rem 0;
+    border-top: 1px solid var(--rule);
+  }
+  .finding:last-of-type { border-bottom: 1px solid var(--rule); }
+  .finding h3 { margin: 0 0 0.55rem; }
+  .finding .who {
+    font-family: var(--f-mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin: 0 0 0.7rem;
+  }
+  .finding p:last-child { margin-bottom: 0; }
+
+  /* ---------- pull quote ---------- */
+
+  blockquote {
+    margin: 2.2rem 0;
+    padding: 0 0 0 1.4rem;
+    border-left: 3px solid var(--consensus);
+    font-size: 1.28rem;
+    line-height: 1.42;
+    font-style: italic;
+    color: var(--ink);
+  }
+  blockquote cite {
+    display: block;
+    margin-top: 0.7rem;
+    font-family: var(--f-mono);
+    font-size: 0.72rem;
+    font-style: normal;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+
+  /* ---------- closing ---------- */
+
+  .closing {
+    background: var(--surface);
+    border-radius: 4px;
+    padding: 2rem 1.7rem;
+  }
+  .closing h2 { font-size: 1.5rem; margin-bottom: 1rem; }
+  .closing p:last-child { margin-bottom: 0; }
+
+  footer {
+    margin-top: 3.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+    font-family: var(--f-mono);
+    font-size: 0.74rem;
+    line-height: 1.9;
+    color: var(--muted);
+  }
+</style>
+
+<header class="masthead">
+  <div class="wrap">
+    <p class="kicker">css_generator_library · revisión de plan</p>
+    <h1>Cuatro Voces, Un Plan</h1>
+    <p class="standfirst">Qué pasa cuando el plan de trabajo se somete a cuatro especialistas que no se ponen de acuerdo — y por qué eso es exactamente lo que queríamos.</p>
+  </div>
+</header>
+
+<main>
+
+<section class="wrap">
+  <h2>Qué estamos mirando</h2>
+  <p>Este proyecto todavía no tiene una sola línea de código escrita. Lo que existe es un plan: la descripción de qué se va a construir, en qué orden, y qué cuenta como terminado.</p>
+  <p>Antes de empezar a construir, ese plan se puso sobre la mesa frente a cuatro especialistas. Cada uno lo leyó por su cuenta, sin ver lo que decían los otros, y lo criticó desde su oficio. Después se juntaron las cuatro opiniones y se miró dónde coincidían y dónde chocaban.</p>
+  <p>La independencia no es un detalle: es el mecanismo. Si las cuatro opiniones se generaran una después de otra, la segunda tendería a estar de acuerdo con la primera y la cuarta ya no aportaría nada. Al separarlas, cuando dos coinciden es porque llegaron al mismo sitio por caminos distintos — y eso vale mucho más que un consenso de pasillo.</p>
+  <p>Este documento cuenta esa conversación en lenguaje corriente. No hace falta saber programar para seguirla.</p>
+</section>
+
+<section class="wrap">
+  <h2>El plan que se puso sobre la mesa</h2>
+  <p>El producto es una herramienta pequeña para desarrolladores. Traduce un archivo de configuración de diseño — la lista de colores, tamaños y espaciados que un equipo acordó — al formato que un navegador entiende. Hoy eso se hace con programas caseros que cada equipo rehace desde cero.</p>
+  <p>El plan dividía el trabajo en <strong>cuatro bloques</strong>:</p>
+  <p><strong>Bloque 1.</strong> Que funcione de punta a punta con el formato más estándar: se instala, se llama, sale el archivo, y si algo está mal avisa con claridad. Este bloque se llevaba casi todo el trabajo.<br>
+  <strong>Bloque 2.</strong> Que acepte también los formatos que traen las herramientas de diseño que la gente usa en la vida real, que no siempre siguen el estándar.<br>
+  <strong>Bloque 3.</strong> Que además de leer un archivo del computador pueda leerlo de una dirección web, con todas las precauciones de seguridad que eso exige.<br>
+  <strong>Bloque 4.</strong> Publicarlo, documentarlo, y comprobar que alguien nuevo puede usarlo en quince minutos.</p>
+</section>
+
+<section class="wrap">
+  <h2>Quiénes revisaron</h2>
+  <p>Cuatro perfiles con incentivos distintos, elegidos justamente porque tiran para lados diferentes.</p>
+
+  <div class="voices">
+    <div class="voice">
+      <div class="voice-icon">📋</div>
+      <div>
+        <p class="voice-name">John</p>
+        <p class="voice-role">Producto</p>
+        <p>Le importa una sola cosa: cuándo alguien de verdad puede usar esto. Pregunta por el valor entregado, no por la elegancia interna.</p>
+      </div>
+    </div>
+    <div class="voice">
+      <div class="voice-icon">🏗️</div>
+      <div>
+        <p class="voice-name">Winston</p>
+        <p class="voice-role">Arquitectura</p>
+        <p>Cuida las decisiones que después no se pueden deshacer. Piensa en qué parte del plan esconde una sorpresa cara.</p>
+      </div>
+    </div>
+    <div class="voice">
+      <div class="voice-icon">🧪</div>
+      <div>
+        <p class="voice-name">Murat</p>
+        <p class="voice-role">Calidad</p>
+        <p>Se pregunta cómo sabremos que algo está bien, y qué pasa cuando el sistema que nos avisa de los errores se rompe.</p>
+      </div>
+    </div>
+    <div class="voice">
+      <div class="voice-icon">💻</div>
+      <div>
+        <p class="voice-name">Amelia</p>
+        <p class="voice-role">Desarrollo</p>
+        <p>Es quien tendría que ejecutar el plan. Mira si cada tarea es de un tamaño que una persona puede terminar sin perderse.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>Dónde coincidieron</h2>
+
+  <div class="verdict agree">
+    <p class="tally">Los cuatro, sin excepción</p>
+    <h3>La prueba de velocidad estaba al final. Tiene que estar al principio.</h3>
+    <p>El plan promete que la herramienta procesa un archivo grande en menos de dos segundos. Ese número nunca se ha medido: es una suposición heredada. Y la medición estaba programada para el último bloque, justo antes de publicar.</p>
+    <p>Los cuatro dijeron lo mismo con palabras distintas: si al medir resulta que tarda seis segundos, enterarse al final significa tener que rehacer el corazón del producto cuando ya está todo construido encima. Medir al terminar el primer bloque cuesta prácticamente lo mismo y se sabe a tiempo.</p>
+    <p>Que cuatro especialistas con prioridades opuestas — el de producto, el de arquitectura, el de calidad y la de desarrollo — señalen el mismo punto no es casualidad. Es la señal más fuerte que salió de la revisión.</p>
+  </div>
+
+  <div class="verdict agree">
+    <p class="tally">Tres de cuatro</p>
+    <h3>El orden interno del primer bloque importa más que su tamaño.</h3>
+    <p>Winston, Murat y Amelia coincidieron en que lo arriesgado del primer bloque no es que sea grande, sino que las dos piezas más delicadas estaban enterradas en el medio: la que decide cómo se llaman las cosas en el archivo final — una decisión que después ya no se puede cambiar sin romperle el trabajo a todo el que la esté usando — y la que sigue las referencias entre elementos.</p>
+    <p>Los tres pidieron lo mismo: que esas dos vayan temprano, y que la primerísima tarea sea una versión mínima que atraviese el sistema entero de punta a punta. No porque sirva para algo todavía, sino porque comprueba que las seis piezas encajan antes de que ninguna tenga contenido real.</p>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>Dónde se dividieron</h2>
+
+  <div class="verdict split">
+    <p class="tally">Uno contra tres</p>
+    <h3>¿Un bloque grande o tres pequeños?</h3>
+    <p><strong>John</strong> quiere partir el primer bloque en tres. Su argumento es incómodo y honesto: el plan justifica el bloque grande diciendo que partirlo daría trozos sin valor para nadie — pero si el bloque grande tarda semanas en producir el primer resultado visible, entonces <em>ya es</em> un bloque sin valor hasta el último día. Partirlo no crea ese problema; lo hace visible.</p>
+    <p><strong>Winston, Murat y Amelia</strong> dicen que no. Que partirlo en tres crearía tres etiquetas administrativas sobre el mismo trabajo, y que lo que realmente falta no son más bloques sino un orden pensado dentro del que ya existe. Amelia lo puso en términos prácticos: propuso las nueve tareas concretas, en orden, y ese ejercicio resolvió el problema que John señalaba sin necesidad de tocar la estructura.</p>
+    <p><strong>Lo que las dos posturas comparten</strong> — y esto es lo útil — es el diagnóstico: pasa demasiado tiempo antes del primer resultado visible. Discrepan en el remedio, no en la enfermedad.</p>
+  </div>
+
+  <blockquote>
+    Los mismos quince archivos se tocan igual, solo que el primer resultado llega el día 3 en vez del día 20. ¿Qué gana el proyecto esperando?
+    <cite>John, producto</cite>
+  </blockquote>
+</section>
+
+<section class="wrap">
+  <h2>Lo que nadie había visto</h2>
+  <p>Además del desacuerdo, salieron cuatro hallazgos que no estaban en el plan de ninguna forma. Estos son el rendimiento real del ejercicio.</p>
+
+  <div class="finding">
+    <p class="lead-in">Hallazgo 1</p>
+    <h3>La alarma que suena siempre deja de ser una alarma</h3>
+    <p class="who">🧪 Murat, calidad</p>
+    <p>El proyecto usa una batería de pruebas automáticas como definición oficial de "está bien". Si el primer bloque solo cubre un formato pero la batería ya incluye los tres, quedarían pruebas en rojo de forma permanente durante meses.</p>
+    <p>El problema no es estético. Es que el equipo aprende a leer "esos seis rojos son normales" — y a partir de ese momento nadie mira los rojos, incluido el rojo nuevo que sí importaba. Murat lo llamó normalización de la desviación: el mecanismo que nos avisa de los problemas se apaga solo, sin que nadie decida apagarlo.</p>
+  </div>
+
+  <div class="finding">
+    <p class="lead-in">Hallazgo 2</p>
+    <h3>Falta la promesa que se le hace a quien lo usa</h3>
+    <p class="who">🏗️ Winston, arquitectura</p>
+    <p>Los cuatro bloques describen <em>qué sabe hacer</em> la herramienta. Ninguno describe <em>qué se le promete</em> a quien la instala: cómo se la llama exactamente, qué opciones acepta, qué información trae un mensaje de error.</p>
+    <p>En una herramienta para desarrolladores esa promesa <strong>es</strong> el producto — todo lo demás se puede reescribir mañana sin que nadie se entere. Winston hizo la pregunta incómoda: si el bloque 3 va a añadir opciones nuevas, ¿la forma que se fije en el bloque 1 las va a poder acomodar sin romper a quien ya la esté usando? Es barato resolverlo ahora y caro después.</p>
+  </div>
+
+  <div class="finding">
+    <p class="lead-in">Hallazgo 3</p>
+    <h3>La parte de seguridad no se puede probar como todo lo demás</h3>
+    <p class="who">🧪 Murat, calidad · 🏗️ Winston, arquitectura</p>
+    <p>Todas las pruebas del proyecto funcionan igual: se le da un archivo de ejemplo y se comprueba el resultado. Pero los fallos que hay que probar en el bloque 3 no son archivos — son situaciones de red: una conexión que se cuelga, una respuesta enorme, un desvío hacia una dirección prohibida.</p>
+    <p>Eso necesita un mecanismo distinto que hoy no está previsto en ningún lado. Winston añadió que por eso el bloque 3 está mal presupuestado: escribir esa parte es lo fácil, probarla bien es lo caro. Y llegar a ese bloque sin haberlo pensado es exactamente el momento en que la seguridad se prueba mal.</p>
+  </div>
+
+  <div class="finding">
+    <p class="lead-in">Hallazgo 4</p>
+    <h3>Una meta que nadie tiene la tarea de medir</h3>
+    <p class="who">📋 John, producto</p>
+    <p>El plan promete que alguien nuevo estará usando la herramienta en menos de quince minutos. John preguntó lo obvio: ¿quién lo mide, contra quién, y con qué cronómetro? Porque una promesa que nadie tiene asignada la tarea de comprobar no es una meta — es decoración.</p>
+    <p>Señaló además que el archivo de tres líneas que el desarrollador tiene que escribir para usar la herramienta es, desde fuera, <em>el producto</em>. Y no aparecía en ningún bloque.</p>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>Dos objeciones que ya estaban resueltas</h2>
+  <p>Vale la pena decirlo, porque es parte honesta del método: dos de las preocupaciones planteadas ya tenían respuesta escrita en los documentos de arquitectura. Los revisores no los habían leído completos — trabajaban solo con el resumen del plan.</p>
+  <p>Eso no invalida el ejercicio, pero sí calibra qué esperar de él: de las cinco objeciones de fondo, dos eran ruido recuperable y tres eran huecos reales. Un revisor que hace preguntas ya contestadas sigue siendo barato; uno que no pregunta nada es el que sale caro.</p>
+</section>
+
+<section class="wrap">
+  <div class="closing">
+    <h2>Por qué esto se hace antes y no después</h2>
+    <p>Los cuatro hallazgos comparten una forma: son cosas que igual habrían aparecido, pero mucho más tarde y bastante más caras. La prueba de velocidad se habría hecho igual — con el producto terminado. La promesa a quien lo usa se habría fijado igual — por accidente, mientras se escribía otra cosa. Las pruebas de seguridad se habrían improvisado con el bloque ya empezado.</p>
+    <p>El costo de esta conversación se mide en minutos. El costo de cada uno de esos descubrimientos, hecho en su momento tardío, se mide en semanas de trabajo rehecho.</p>
+    <p>Esa es toda la propuesta del método: no evitar los errores — eso no existe — sino <strong>adelantarlos al momento en que corregirlos todavía es barato</strong>.</p>
+  </div>
+
+  <footer>
+    Revisión realizada el 29 de agosto de 2026, antes de escribir código.<br>
+    Cuatro revisores independientes · un desacuerdo estructural · cuatro hallazgos nuevos · dos objeciones ya resueltas.<br>
+    Siguiente paso: incorporar los hallazgos y redactar las tareas de trabajo.
+  </footer>
+</section>
+
+</main>
