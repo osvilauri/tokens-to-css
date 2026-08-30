@@ -1,0 +1,1 @@
+{ "$themes": [], "global": { "spacing": { "lg": { "value": "{spacing.md} * 2", "type": "spacing" } } } }
