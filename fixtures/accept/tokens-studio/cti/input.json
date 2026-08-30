@@ -1,0 +1,97 @@
+{
+  "$metadata": {
+    "tokenSetOrder": [
+      "global"
+    ]
+  },
+  "$themes": [],
+  "global": {
+    "color": {
+      "palette": {
+        "purple-500": {
+          "value": "#5A4FCF",
+          "type": "color"
+        },
+        "grey-900": {
+          "value": "#191627",
+          "type": "color"
+        },
+        "grey-050": {
+          "value": "#FBFAFD",
+          "type": "color"
+        }
+      },
+      "semantic": {
+        "brand": {
+          "value": "{color.palette.purple-500}",
+          "comment": "The one accent."
+        },
+        "text": {
+          "value": "{color.palette.grey-900}"
+        },
+        "surface": {
+          "value": "{color.palette.grey-050}"
+        }
+      },
+      "component": {
+        "button-background": {
+          "value": "{color.semantic.brand}"
+        },
+        "button-foreground": {
+          "value": "{color.semantic.surface}"
+        }
+      }
+    },
+    "size": {
+      "scale": {
+        "4": {
+          "value": "16px",
+          "type": "dimension"
+        },
+        "6": {
+          "value": "24px",
+          "type": "dimension"
+        }
+      },
+      "semantic": {
+        "md": {
+          "value": "{size.scale.4}"
+        },
+        "lg": {
+          "value": "{size.scale.6}"
+        }
+      },
+      "component": {
+        "button-padding": {
+          "value": "{size.semantic.md}"
+        }
+      }
+    },
+    "font": {
+      "family": {
+        "sans": {
+          "value": "Inter, system-ui, sans-serif",
+          "type": "fontFamily"
+        }
+      },
+      "semantic": {
+        "body": {
+          "value": "{font.family.sans}"
+        }
+      }
+    },
+    "number": {
+      "ratio": {
+        "snug": {
+          "value": 1.4,
+          "type": "number"
+        }
+      },
+      "semantic": {
+        "leading": {
+          "value": "{number.ratio.snug}"
+        }
+      }
+    }
+  }
+}

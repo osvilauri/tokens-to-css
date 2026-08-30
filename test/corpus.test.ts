@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { convertDocument } from '../src/pipeline.js'
@@ -15,7 +16,7 @@ import { compareGolden, describeMismatch, discover, goldenUpdatesAllowed, writeG
  */
 const EXPECTED = {
   /** 9 at the Epic 2 freeze: 3 dialects × 3 hierarchies (AD-16). */
-  accept: 3,
+  accept: 9,
   /**
    * One per document-shaped rejection trigger and failure class (SM-4).
    *
@@ -70,6 +71,53 @@ describe('the fixture corpus', () => {
  * sequence assembled here — a corpus that ordered the passes itself could stay
  * green while the pipeline ran them differently.
  */
+describe('the accept matrix is complete and consistent', () => {
+  const corpus = discover()
+  const DIALECTS = ['dtcg', 'sd-legacy', 'tokens-studio']
+  const HIERARCHIES = ['three-tier', 'cti', 'eightshapes']
+
+  it('covers every dialect against every hierarchy', () => {
+    const expected = DIALECTS.flatMap((d) => HIERARCHIES.map((h) => `${d}/${h}`)).sort()
+    expect(corpus.accept.map((f) => f.id).sort()).toEqual(expected)
+  })
+
+  it('says the same thing in all nine, however it is spelled or arranged', () => {
+    // The claim the corpus rests on. Names differ by hierarchy and notation
+    // differs by dialect, but the values and the shape of the alias graph are
+    // one catalogue — otherwise a golden comparison would be comparing two
+    // different documents and proving nothing.
+    const shapeOf = (css: string): { values: string[]; references: number } => {
+      const declarations = [...css.matchAll(/^ {2}--[\w-]+: (.+);$/gm)].map((m) => m[1]!)
+      return {
+        values: declarations.filter((v) => !v.startsWith('var(')).sort(),
+        references: declarations.filter((v) => v.startsWith('var(')).length,
+      }
+    }
+
+    const shapes = corpus.accept.map((f) => shapeOf(f.expectedCss))
+    for (const shape of shapes) expect(shape).toEqual(shapes[0])
+  })
+
+  it('gives each hierarchy its own names, so the corpus is not nine copies', () => {
+    const perHierarchy = HIERARCHIES.map(
+      (h) => corpus.accept.find((f) => f.id === `dtcg/${h}`)!.expectedCss,
+    )
+    expect(new Set(perHierarchy).size).toBe(HIERARCHIES.length)
+  })
+
+  it('keeps the derived dialects in step with their DTCG source', () => {
+    // Three hand-written copies of one catalogue drift the first time somebody
+    // edits one. DTCG is the source; the other two are generated.
+    let code = 0
+    try {
+      execFileSync(process.execPath, ['scripts/derive-dialects.mjs', '--check'], { stdio: 'pipe' })
+    } catch (err) {
+      code = (err as { status: number }).status
+    }
+    expect(code, 'run: node scripts/derive-dialects.mjs').toBe(0)
+  })
+})
+
 describe('every accept fixture converts to its golden', () => {
   const corpus = discover()
 

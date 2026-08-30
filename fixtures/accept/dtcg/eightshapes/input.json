@@ -1,0 +1,38 @@
+{
+  "$description": "The shared catalogue, arranged as namespace / object / base / modifier.",
+  "esds": {
+    "color": {
+      "purple": { "500": { "$value": "#5A4FCF", "$type": "color" } },
+      "grey": {
+        "900": { "$value": "#191627", "$type": "color" },
+        "050": { "$value": "#FBFAFD", "$type": "color" }
+      },
+      "brand": { "base": { "$value": "{esds.color.purple.500}", "$description": "The one accent." } },
+      "text": { "base": { "$value": "{esds.color.grey.900}" } },
+      "surface": { "base": { "$value": "{esds.color.grey.050}" } }
+    },
+    "size": {
+      "scale": {
+        "4": { "$value": "16px", "$type": "dimension" },
+        "6": { "$value": "24px", "$type": "dimension" }
+      },
+      "space": {
+        "md": { "$value": "{esds.size.scale.4}" },
+        "lg": { "$value": "{esds.size.scale.6}" }
+      }
+    },
+    "font": {
+      "family": { "sans": { "$value": "Inter, system-ui, sans-serif", "$type": "fontFamily" } },
+      "body": { "base": { "$value": "{esds.font.family.sans}" } }
+    },
+    "number": {
+      "ratio": { "snug": { "$value": 1.4, "$type": "number" } },
+      "leading": { "base": { "$value": "{esds.number.ratio.snug}" } }
+    },
+    "button": {
+      "background": { "base": { "$value": "{esds.color.brand.base}" } },
+      "foreground": { "base": { "$value": "{esds.color.surface.base}" } },
+      "padding": { "base": { "$value": "{esds.size.space.md}" } }
+    }
+  }
+}
