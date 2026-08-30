@@ -1,0 +1,7 @@
+{
+  "$themes": [],
+  "$metadata": { "tokenSetOrder": ["global"] },
+  "global": {
+    "color": { "brand": { "value": "#5A4FCF", "type": "color" } }
+  }
+}

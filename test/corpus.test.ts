@@ -15,7 +15,7 @@ import { compareGolden, describeMismatch, discover, goldenUpdatesAllowed, writeG
  */
 const EXPECTED = {
   /** 9 at the Epic 2 freeze: 3 dialects × 3 hierarchies (AD-16). */
-  accept: 1,
+  accept: 2,
   /**
    * One per document-shaped rejection trigger and failure class (SM-4).
    *
@@ -35,6 +35,22 @@ describe('the fixture corpus', () => {
 
   it('holds exactly the number of reject fixtures we expect', () => {
     expect(corpus.reject.length, corpus.reject.map((f) => f.id).join(', ')).toBe(EXPECTED.reject)
+  })
+
+  it('produces identical goldens for fixtures that differ only by dialect', () => {
+    // The point of the shared catalogue: a dialect is an input shape, never a
+    // mode. Two files saying the same thing in different notations must emit
+    // exactly the same stylesheet.
+    const byHierarchy = new Map<string, string[]>()
+    for (const f of corpus.accept) {
+      const hierarchy = f.id.split('/')[1]!
+      byHierarchy.set(hierarchy, [...(byHierarchy.get(hierarchy) ?? []), f.expectedCss])
+    }
+    for (const [hierarchy, goldens] of byHierarchy) {
+      for (const golden of goldens) {
+        expect(golden, `dialects disagree for ${hierarchy}`).toBe(goldens[0])
+      }
+    }
   })
 
   it('has no duplicate ids', () => {
