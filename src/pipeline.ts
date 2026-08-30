@@ -1,0 +1,75 @@
+/**
+ * The conversion pipeline (AD-1, AD-5, AD-6).
+ *
+ * Six stages, in one fixed order, sequenced only here. Reading and writing
+ * happen at the two ends; everything between them is a pure function of what
+ * the stage before it returned.
+ *
+ * Nothing touches the output path until the whole stylesheet exists in memory
+ * and every check has passed. That is what makes "it failed" and "your previous
+ * stylesheet is intact" the same sentence.
+ */
+import { emitStylesheet } from './emit/css.js'
+import { DEFAULTS, type GenerateCssOptions, type GenerateCssResult } from './options.js'
+import { normalizeDocument } from './dialects/registry.js'
+import { parseTokenJson, readTokenFile } from './source/file.js'
+import { resolveOutputPath, resolveSource } from './source/resolve.js'
+import { validateAliasGraph } from './validate/alias-graph.js'
+import { validateNoCollisions } from './validate/collisions.js'
+import { writeStylesheet } from './write/atomic.js'
+import { FailureCode, TokenCssError } from './errors.js'
+
+/** A converted document: the stylesheet text and how many properties it declares. */
+export interface Converted {
+  readonly css: string
+  readonly tokenCount: number
+}
+
+/**
+ * Everything between reading and writing: detect, normalize, validate, emit.
+ *
+ * Exported so the fixture corpus exercises the real stage order rather than
+ * re-implementing it. A corpus that sequenced the passes itself could stay green
+ * while the pipeline ran them in a different order, which is precisely the
+ * divergence the fixed order exists to prevent.
+ */
+export function convertDocument(raw: unknown, source: string): Converted {
+  const doc = normalizeDocument(raw, source)
+
+  // A fixed order, each pass exhaustive within its class (AD-5).
+  validateAliasGraph(doc, source)
+  validateNoCollisions(doc, source)
+
+  return { css: emitStylesheet(doc, source), tokenCount: doc.tokens.length }
+}
+
+export async function runConversion(
+  source: string | URL,
+  options: GenerateCssOptions = {},
+): Promise<GenerateCssResult> {
+  const display = String(source)
+  const baseDir = options.baseDir ?? process.cwd()
+
+  // 1. load
+  const resolved = resolveSource(source, baseDir)
+  if (resolved.kind === 'url') {
+    throw new TokenCssError(
+      `"${display}" is a URL. Reading tokens over the network arrives in a later story`,
+      { code: FailureCode.SOURCE_UNREADABLE, source: display },
+    )
+  }
+  const raw = parseTokenJson(await readTokenFile(resolved.path, display), display)
+
+  // 2-5. detect, normalize, validate, emit — the complete stylesheet, in memory
+  const { css, tokenCount } = convertDocument(raw, display)
+
+  // 6. write — the first and only time the output path is opened
+  const outputPath = resolveOutputPath(
+    options.outDir ?? DEFAULTS.outDir,
+    options.fileName ?? DEFAULTS.fileName,
+    baseDir,
+  )
+  await writeStylesheet(outputPath, css, display)
+
+  return { outputPath, tokenCount }
+}

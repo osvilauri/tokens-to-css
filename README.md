@@ -7,9 +7,16 @@ of `:root` custom properties your app can link, with alias relationships kept as
 `var(--…)` rather than flattened. It is not a multi-platform token pipeline and
 does not try to become one.
 
-> **Status: in development.** Nothing is published yet. The package builds and
-> tests, but conversion itself arrives over Epic 1 — see
+> **Status: in development.** Nothing is published yet. Local DTCG files convert
+> end to end today; vendor dialects and URL sources are still to come — see
 > [`_bmad-output/planning-artifacts/epics.md`](_bmad-output/planning-artifacts/epics.md).
+
+```js
+import { generateCss } from 'tokens-to-css'
+
+await generateCss('design/tokens.json')
+// wrote assets/css/tokens.css
+```
 
 ## Working on it
 
