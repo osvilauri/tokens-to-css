@@ -100,6 +100,22 @@ export const SCENARIOS: readonly NetworkScenario[] = [
   { id: 'redirect-chain-2', description: 'Hop two of four.', status: 302, redirectTo: '/redirect-chain-1' },
   { id: 'redirect-chain-1', description: 'Hop one of four, ending at a good response.', status: 302, redirectTo: '/ok' },
   {
+    id: 'slow-hop-a',
+    description:
+      'A slow redirect into another slow redirect. Two of these beat any per-hop budget and ' +
+      'together blow a shared one, which is how the difference between the two is provable.',
+    status: 302,
+    delayMs: 60,
+    redirectTo: '/slow-hop-b',
+  },
+  {
+    id: 'slow-hop-b',
+    description: 'The second slow hop, ending at a good response.',
+    status: 302,
+    delayMs: 60,
+    redirectTo: '/ok',
+  },
+  {
     id: 'redirect-to-metadata',
     description:
       'A redirect into the cloud metadata address. The first hop is allowed, the second is not — ' +
