@@ -2,7 +2,7 @@
 title: "PRD: css_generator_library"
 status: draft
 created: 2026-08-06
-updated: 2026-08-27
+updated: 2026-08-29
 review_disposition: "C1A C2A C3A C4A H1B H2 H3 H4A H5 H6 applied (see §13)"
 ---
 
@@ -382,7 +382,7 @@ The developer can install the library as a package dependency in their project.
 - **Error contract:** failures throw/reject with a stable, machine-distinguishable failure code per class (§4.4). Codes are part of the public surface; renaming or merging a code is a breaking change.
 - **Emitted names are public:** custom-property names produced by the FR-9 naming rule are part of the public contract for a given major version; any naming change requires a major bump. The naming rule documentation is normative.
 - **Install surface:** Installable Package via package manager; no Conversion CLI in v1; TypeScript types published with the package.
-- **Public package surface:** published to the public npm registry under an OSS license. [ASSUMPTION: MIT license; package name TBD — confirm before publish (OQ-3).]
+- **Public package surface:** published to the public npm registry as **`tokens-to-css`** under the **MIT** license. Confirmed 2026-08-29 (OQ-3 closed); npm availability verified at that date, and the name is unreserved until first publish.
 - **Breaking-change policy:** Semantic Versioning. No breaking changes in minor or patch releases. Breaking includes: naming-rule changes, failure-code changes, allowlist removals, and default output path/filename changes.
 
 ## 9. Cross-Cutting NFRs
@@ -412,7 +412,7 @@ Closed in this revision (2026-08-27): dangling-alias policy → fail-clear (FR-2
 
 1. **OQ-1 — Fixture Corpus freeze.** Initial contents, directory layout, and golden-file update protocol for the accept/reject corpus. **Owner: architecture** (`bmad-architecture`), due before epics; SM-1 cannot gate until frozen. PRD owns the corpus *contract* (§4.2.0); architecture owns the artifact.
 2. **OQ-2 — SM-5 performance bar.** Confirm 2s / 10k tokens, or replace with a measured bar. **Owner: architecture**, with PM sign-off on the launch bar.
-3. **OQ-3 — Package identity.** npm package name and license confirmation before first publish. **Owner: PM.**
+3. ~~**OQ-3 — Package identity.**~~ **Closed 2026-08-29:** package name `tokens-to-css`, license MIT. `token-css`, `css-tokens` and the Token CSS project's `@tokencss/*` scope were ruled out for collision; `dtcg-css` was rejected because naming the package after one accepted format understates an allowlist that also carries vendor dialects. The GitHub repository was renamed to match.
 
 ## 12. Assumptions Index
 
@@ -423,7 +423,6 @@ Closed in this revision (2026-08-27): dangling-alias policy → fail-clear (FR-2
 - SM-2 target of 15 minutes is an assumed launch bar (§7).
 - SM-5 bar of 2s per 10k tokens is assumed pending measurement (§7, OQ-2).
 - Overwrite-by-default matches the build-step usage pattern (FR-2).
-- MIT license / npm registry publish (§8, OQ-3).
 - Interop with Style Dictionary is desirable positioning, not an MVP hard dependency (§10).
 
 *Deferred to architecture (decisions, not assumptions):* Main Entry TypeScript signature and option names; URL-fetch mechanism implementing §9 minimums; naming-rule edge cases (unicode, leading digits); Fixture Corpus artifact (OQ-1).
