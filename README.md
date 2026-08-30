@@ -69,6 +69,7 @@ not taken. Revisit if a build option turns out to be unavailable.
 
 | | |
 | --- | --- |
+| [Getting started](docs/getting-started.md) | Five steps from install to a stylesheet, including breaking it on purpose |
 | [What it accepts](docs/formats.md) | The three input shapes, in the order they are checked, and everything it refuses |
 | [The naming rule](docs/naming.md) | How a token path becomes a custom property — public contract |
 | [Failure codes](docs/failures.md) | The eight codes, generated from the source that defines them |
