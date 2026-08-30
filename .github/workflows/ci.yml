@@ -34,6 +34,12 @@ jobs:
           # its own expectations proves nothing.
           UPDATE_GOLDEN: ''
 
+      # An instrument, not a gate. The number is reported so a regression is
+      # visible in the log; it does not fail the build until the bar has been
+      # ratified against a real measurement (OQ-2).
+      - name: Conversion benchmark
+        run: node bench/run.mjs
+
   changeset:
     # A release must be deliberate: every pull request that touches src/ or the
     # manifest declares its version impact, or says in writing that it has none.
