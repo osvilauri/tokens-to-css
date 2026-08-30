@@ -25,12 +25,28 @@ SM-4's coverage claim is the union of both mechanisms.
 ## The v1 freeze
 
 Nine accept fixtures: three dialects (`dtcg`, `sd-legacy`, `tokens-studio`)
-across three hierarchies (`three-tier`, `cti`, `eightshapes`).
+across three hierarchies (`three-tier`, `cti`, `eightshapes`). One of the nine
+exists so far — `dtcg/three-tier`; the rest arrive with their dialects in Epic 2.
 
 **All nine express the same token catalogue.** Dialect and hierarchy are the only
 variables, which is what makes their goldens comparable — two fixtures differing
-only by dialect must produce byte-identical output. The shared catalogue is
-recorded here as fixtures land.
+only by dialect must produce byte-identical output.
+
+The catalogue is deliberately small and deliberately awkward in the right places:
+
+| What | Why it is there |
+| --- | --- |
+| A colour, a dimension, a font stack | The three value shapes teams actually have |
+| A unitless number (`1.4`) | Proves no unit is invented for a value that must not have one |
+| A key of `050` | Proves a numeric-looking key is not coerced to `50` |
+| A three-hop chain (component → semantic → primitive) | Proves each hop emits its own `var()` rather than collapsing |
+| A `$description` at document level and on a token | Proves both are read and ignored |
+
+### A note on `reject/sd-legacy-not-yet`
+
+Style Dictionary legacy documents are refused *today* and become an accept
+fixture in Epic 2. Moving it is an allowlist addition, not a golden change, so
+it is a minor release — see the rule below.
 
 Reject fixtures: one per rejection trigger in the PRD's allowlist section, and
 one per failure class.

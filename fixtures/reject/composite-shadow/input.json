@@ -1,0 +1,1 @@
+{ "elevation": { "$value": [{ "offsetY": "2px", "blur": "4px" }], "$type": "shadow" } }
