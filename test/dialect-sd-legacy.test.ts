@@ -128,34 +128,28 @@ describe('a document mixing dialects across different nodes', () => {
   })
 })
 
-describe('a Tokens Studio export is refused rather than half-read', () => {
-  it('refuses a document carrying $themes', () => {
-    const err = failure(`{ "$themes": [], "global": { "a": { "value": "1px" } } }`)
-    expect(err.code).toBe(FailureCode.FORMAT_NOT_ALLOWED)
-    expect(err.message).toMatch(/Tokens Studio/)
+describe('a Tokens Studio export is not read as legacy', () => {
+  it('drops the set wrapper instead of folding it into every name', () => {
+    // Before the Tokens Studio entry existed, this document matched here and
+    // converted happily with every name wrong. The regression it guards
+    // against is silent, so the test outlives the bug.
+    const doc = read(`{ "$themes": [], "global": { "color": { "brand": { "value": "#000" } } } }`)
+    expect(doc.tokens[0]!.path).toEqual(['color', 'brand'])
+    expect(doc.tokens[0]!.path).not.toContain('global')
   })
 
-  it('refuses one carrying $metadata', () => {
-    expect(failure(`{ "$metadata": {}, "g": { "a": { "value": "1px" } } }`).message).toMatch(
-      /Tokens Studio/,
-    )
-  })
-
-  it('says why, because the alternative is a silently wrong stylesheet', () => {
-    // Read as plain legacy this converts happily — and folds the set name into
-    // every custom property, so "global.color.brand" emits --global-color-brand
-    // instead of --color-brand. Wrong names are worse than no output.
-    const err = failure(`{ "$themes": [], "global": { "color": { "brand": { "value": "#000" } } } }`)
-    expect(err.message).toMatch(/fold the token set name/)
+  it('emits --color-brand rather than --global-color-brand', () => {
+    const doc = read(`{ "$metadata": {}, "global": { "color": { "brand": { "value": "#000" } } } }`)
+    expect(emitStylesheet(doc, SOURCE)).toContain('--color-brand: #000;')
   })
 })
 
 describe('the registry', () => {
-  it('lists both shapes, DTCG before legacy', () => {
-    expect(DIALECTS.map((d) => d.id)).toEqual(['dtcg', 'sd-legacy'])
+  it('lists every shape, with Tokens Studio checked first', () => {
+    expect(DIALECTS.map((d) => d.id)).toEqual(['tokens-studio', 'dtcg', 'sd-legacy'])
   })
 
-  it('names both when a document matches nothing', () => {
+  it('names them all when a document matches nothing', () => {
     const err = failure(`{ "a": { "nope": 1 } }`)
     expect(err.message).toContain('DTCG single-file documents using $value')
     expect(err.message).toContain('Style Dictionary legacy documents using value/type')
