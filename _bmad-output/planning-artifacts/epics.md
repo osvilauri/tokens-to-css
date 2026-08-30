@@ -1,5 +1,6 @@
 ---
-stepsCompleted: ['step-01-validate-prerequisites', 'step-02-design-epics', 'step-03-create-stories']
+stepsCompleted: ['step-01-validate-prerequisites', 'step-02-design-epics', 'step-03-create-stories', 'step-04-final-validation']
+status: final
 inputDocuments:
   - '_bmad-output/planning-artifacts/prds/prd-css_generator_library-2026-08-06/prd.md'
   - '_bmad-output/planning-artifacts/prds/prd-css_generator_library-2026-08-06/addendum.md'
@@ -273,6 +274,11 @@ So that I can branch on failures programmatically and my imports survive future 
 **When** it is caught by the caller
 **Then** it is an instance of `TokenCssError` and never a bare `Error`
 
+**Given** the scope of this story
+**When** its tests are written
+**Then** they are type-level and surface-snapshot only — no runtime conversion behavior is asserted here, because the Main Entry's body is completed in Story 1.10
+**And** the release job refuses to publish until the full suite exists, so a contract without an implementation can never ship
+
 ### Story 1.3: Golden-file test harness
 
 As a maintainer of the library,
@@ -286,7 +292,12 @@ So that a green suite actually means every case ran.
 **Then** accept and reject fixtures are discovered by walking directories, with no registration file
 **And** the discovered count is asserted against an explicit expected number, so a silently skipped fixture fails the run
 
-**Given** an accept fixture whose `expected.css` differs from the produced output by a single byte
+**Given** that no converter exists yet at this point in the epic
+**When** the harness is exercised
+**Then** it is proved against a stub producer injected by the test, so this story depends on nothing after it
+**And** the first real fixture arrives with Story 1.10, using this harness unchanged
+
+**Given** output that differs from `expected.css` by a single byte
 **When** the suite runs
 **Then** the test fails and the diff identifies the differing line
 
