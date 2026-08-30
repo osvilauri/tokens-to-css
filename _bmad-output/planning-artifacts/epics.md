@@ -717,10 +717,14 @@ So that OQ-2 closes on evidence.
 
 **Acceptance Criteria:**
 
-**Given** the number measured in Story 1.14
+**Given** the number measured in Story 1.14 — 10,000 tokens in 30 ms against an assumed 2,000 ms bar, scaling linearly to 200,000 (`fixtures/README.md`)
 **When** OQ-2 is closed
 **Then** the PRD's SM-5 either keeps the 2-second bar with the measurement recorded, or states a revised bar with its rationale
 **And** the `[ASSUMPTION]` tag is removed from SM-5 in the PRD and the Assumptions Index
+
+**Given** that a 66× margin would let the emitter get sixty times slower and still pass
+**When** the bar is chosen
+**Then** it is set close enough to the measurement to notice a real regression, while leaving room for slower CI hardware and ordinary variance
 
 **Given** the benchmark
 **When** it runs in CI after this story
