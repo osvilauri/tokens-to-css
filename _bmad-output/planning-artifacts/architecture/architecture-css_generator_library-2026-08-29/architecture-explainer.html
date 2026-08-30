@@ -1,0 +1,588 @@
+<title>The Six-Stage Contract</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;600&display=swap">
+
+<style>
+  :root {
+    --paper:      #FBFAFD;
+    --surface:    #F3F1F8;
+    --ink:        #191627;
+    --muted:      #6B6580;
+    --rule:       #E3E0EC;
+    --accent:     #5A4FCF;
+    --accent-dim: #EEEBFB;
+    --reject:     #A82B54;
+    --reject-dim: #FBEBF0;
+
+    --f-display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+    --f-body:    "Newsreader", Georgia, "Times New Roman", serif;
+    --f-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+    --measure: 68ch;
+    --step-0: 1.0625rem;
+    --step-1: 1.3rem;
+    --step-2: 1.75rem;
+    --step-3: 2.4rem;
+    --step-4: clamp(2.6rem, 6vw, 4rem);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #14121C;
+      --surface:    #1E1B2A;
+      --ink:        #EEEBF6;
+      --muted:      #9E96B4;
+      --rule:       #322D42;
+      --accent:     #AEA2FF;
+      --accent-dim: #251F3E;
+      --reject:     #F291AB;
+      --reject-dim: #33192339;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:      #14121C;
+    --surface:    #1E1B2A;
+    --ink:        #EEEBF6;
+    --muted:      #9E96B4;
+    --rule:       #322D42;
+    --accent:     #AEA2FF;
+    --accent-dim: #251F3E;
+    --reject:     #F291AB;
+    --reject-dim: #33192339;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: var(--step-0);
+    line-height: 1.62;
+    margin: 0;
+    padding: 0 1.5rem 6rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: var(--measure); margin: 0 auto; }
+  .wide { max-width: 78ch; margin: 0 auto; }
+
+  /* ---------- masthead ---------- */
+
+  header.masthead {
+    padding: clamp(3rem, 9vw, 6rem) 0 2.5rem;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 3rem;
+  }
+  .eyebrow {
+    font-family: var(--f-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 1.4rem;
+  }
+  h1 {
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: var(--step-4);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+    margin: 0 0 1.2rem;
+  }
+  .standfirst {
+    font-size: var(--step-1);
+    line-height: 1.5;
+    color: var(--muted);
+    margin: 0 0 2rem;
+    max-width: 54ch;
+  }
+  .meta {
+    font-family: var(--f-mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.6rem;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- rhythm ---------- */
+
+  section { margin-bottom: 4.5rem; }
+  h2 {
+    font-family: var(--f-display);
+    font-weight: 600;
+    font-size: var(--step-2);
+    letter-spacing: -0.018em;
+    line-height: 1.15;
+    text-wrap: balance;
+    margin: 0 0 1.4rem;
+    padding-top: 0.4rem;
+    border-top: 2px solid var(--ink);
+    display: inline-block;
+  }
+  h3 {
+    font-family: var(--f-display);
+    font-weight: 600;
+    font-size: var(--step-1);
+    letter-spacing: -0.01em;
+    margin: 2.4rem 0 0.7rem;
+  }
+  p { margin: 0 0 1.15rem; }
+  strong { font-weight: 500; color: var(--ink); }
+  em.term { font-style: normal; font-family: var(--f-mono); font-size: 0.9em; }
+  code {
+    font-family: var(--f-mono);
+    font-size: 0.86em;
+    background: var(--surface);
+    padding: 0.12em 0.36em;
+    border-radius: 3px;
+  }
+  a { color: var(--accent); text-underline-offset: 0.18em; }
+  a:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  /* ---------- pipeline diagram ---------- */
+
+  .diagram {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 2rem 1.25rem 1.5rem;
+    margin: 0 0 1.5rem;
+    overflow-x: auto;
+  }
+  .diagram svg { display: block; min-width: 640px; width: 100%; height: auto; }
+
+  /* SVG colors live in CSS, not in presentation attributes:
+     var() is unreliable inside fill="" / stroke="" attributes. */
+  .diagram svg text        { font-family: var(--f-mono); }
+  .dg-lane                 { fill: var(--muted); }
+  .dg-lane-reject          { fill: var(--reject); }
+  .dg-shell                { fill: var(--paper);      stroke: var(--accent); stroke-width: 1.5; }
+  .dg-pure                 { fill: var(--accent-dim); stroke: var(--accent); stroke-width: 1.5; }
+  .dg-label                { fill: var(--ink); }
+  .dg-flow                 { stroke: var(--accent); stroke-width: 1.5; fill: none; }
+  .dg-abort                { stroke: var(--reject); stroke-width: 1.2; fill: none;
+                             stroke-dasharray: 3 3; opacity: 0.85; }
+  .dg-err-box              { fill: var(--reject-dim); stroke: var(--reject); stroke-width: 1.5; }
+  .dg-err-text             { fill: var(--reject); }
+  .dg-arrowhead            { fill: var(--accent); }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    font-family: var(--f-mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 1.1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--rule);
+  }
+  .swatch {
+    display: inline-block;
+    width: 0.7rem; height: 0.7rem;
+    border-radius: 2px;
+    margin-right: 0.45rem;
+    vertical-align: -1px;
+  }
+
+  /* ---------- decision blocks ---------- */
+
+  .ad {
+    display: grid;
+    grid-template-columns: 4.5rem 1fr;
+    gap: 0 1.25rem;
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--rule);
+  }
+  .ad:last-of-type { border-bottom: 1px solid var(--rule); }
+  .ad-id {
+    font-family: var(--f-mono);
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--accent);
+    padding-top: 0.35rem;
+  }
+  .ad h4 {
+    font-family: var(--f-display);
+    font-weight: 600;
+    font-size: 1.08rem;
+    margin: 0 0 0.5rem;
+    line-height: 1.3;
+  }
+  .ad p { margin: 0 0 0.6rem; }
+  .ad p:last-child { margin-bottom: 0; }
+  .prevents {
+    font-size: 0.94rem;
+    color: var(--muted);
+    border-left: 2px solid var(--rule);
+    padding-left: 0.9rem;
+  }
+  .prevents b {
+    font-family: var(--f-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 0.2rem;
+    font-weight: 400;
+  }
+  @media (max-width: 34rem) {
+    .ad { grid-template-columns: 1fr; gap: 0.4rem; }
+    .ad-id { padding-top: 0; }
+  }
+
+  /* ---------- seams (what the gate caught) ---------- */
+
+  .seam {
+    background: var(--reject-dim);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--reject);
+    border-radius: 0 4px 4px 0;
+    padding: 1.1rem 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .seam h4 {
+    font-family: var(--f-display);
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
+  }
+  .seam p { margin: 0 0 0.55rem; font-size: 0.97rem; }
+  .seam p:last-child { margin-bottom: 0; }
+  .seam .fix {
+    font-family: var(--f-mono);
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .seam .fix b { color: var(--reject); font-weight: 600; }
+
+  /* ---------- tables ---------- */
+
+  .tablewrap { overflow-x: auto; margin-bottom: 1.5rem; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.92rem;
+    font-variant-numeric: tabular-nums;
+  }
+  th {
+    text-align: left;
+    font-family: var(--f-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 400;
+    color: var(--muted);
+    padding: 0 0.9rem 0.55rem 0;
+    border-bottom: 1px solid var(--ink);
+    white-space: nowrap;
+  }
+  td {
+    padding: 0.6rem 0.9rem 0.6rem 0;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  td.mono, th.mono { font-family: var(--f-mono); font-size: 0.82rem; }
+  td.mono { color: var(--reject); }
+
+  /* ---------- open items ---------- */
+
+  .open { display: grid; gap: 0.9rem; }
+  .open-item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0 0.9rem;
+    align-items: baseline;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .tag {
+    font-family: var(--f-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.22em 0.5em;
+    border-radius: 3px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .open-item p { margin: 0; font-size: 0.97rem; }
+  .open-item .who {
+    display: block;
+    font-family: var(--f-mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 0.3rem;
+  }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 1.5rem;
+    font-family: var(--f-mono);
+    font-size: 0.76rem;
+    color: var(--muted);
+    line-height: 1.9;
+  }
+  footer b { color: var(--ink); font-weight: 600; }
+</style>
+
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">css_generator_library · architecture</p>
+    <h1>The Six-Stage Contract</h1>
+    <p class="standfirst">What the library is allowed to do, in what order, and what it must refuse — fixed before a line of it exists.</p>
+    <div class="meta">
+      <span><b>29 Aug 2026</b></span>
+      <span>22 invariants</span>
+      <span>status <b>final</b></span>
+      <span>altitude <b>feature</b></span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section class="wrap">
+  <h2>What this governs</h2>
+  <p>The library takes one design-token JSON file — from a path or a URL — and writes one CSS file of custom properties. It does not transform values, does not target iOS or Android, and ships no command-line tool. That narrowness is the product.</p>
+  <p>An architecture spine is not a design document. It fixes only the calls that two people, building two halves of this independently, could answer differently and still both be right. Everything a future reader could work out by looking at compliant code was left out on purpose.</p>
+  <p>The test applied to every candidate decision: <strong>could two units one level down choose incompatibly?</strong> If not, it isn't here.</p>
+</section>
+
+<section class="wide">
+  <h2>The shape</h2>
+  <div class="diagram">
+    <svg viewBox="0 0 900 260" role="img" aria-label="Six-stage pipeline: load and write touch the outside world; detect, normalize, validate and emit are pure functions. Any stage can abort into a single typed error.">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path class="dg-arrowhead" d="M 0 0 L 10 5 L 0 10 z"/>
+        </marker>
+      </defs>
+
+      <g>
+        <!-- lane labels -->
+        <text class="dg-lane" x="0" y="34" font-size="10" letter-spacing="1.6">SHELL</text>
+        <text class="dg-lane" x="0" y="106" font-size="10" letter-spacing="1.6">CORE — PURE</text>
+        <text class="dg-lane-reject" x="0" y="228" font-size="10" letter-spacing="1.6">ABORT</text>
+
+        <!-- stage boxes -->
+        <g class="dg-shell">
+          <rect x="96"  y="48" width="118" height="44" rx="3"/>
+          <rect x="700" y="48" width="118" height="44" rx="3"/>
+        </g>
+        <g class="dg-pure">
+          <rect x="240" y="118" width="100" height="44" rx="3"/>
+          <rect x="356" y="118" width="112" height="44" rx="3"/>
+          <rect x="484" y="118" width="100" height="44" rx="3"/>
+          <rect x="600" y="118" width="84"  height="44" rx="3"/>
+        </g>
+
+        <g class="dg-label" font-size="13" text-anchor="middle">
+          <text x="155" y="75">load</text>
+          <text x="290" y="145">detect</text>
+          <text x="412" y="145">normalize</text>
+          <text x="534" y="145">validate</text>
+          <text x="642" y="145">emit</text>
+          <text x="759" y="75">write</text>
+        </g>
+
+        <!-- flow -->
+        <g class="dg-flow" marker-end="url(#arrow)">
+          <path d="M 214 70 L 250 70 L 250 114"/>
+          <path d="M 340 140 L 352 140"/>
+          <path d="M 468 140 L 480 140"/>
+          <path d="M 584 140 L 596 140"/>
+          <path d="M 684 140 L 710 140 L 710 96"/>
+        </g>
+
+        <!-- error rail -->
+        <g class="dg-abort">
+          <path d="M 155 92  L 155 200"/>
+          <path d="M 290 162 L 290 200"/>
+          <path d="M 412 162 L 412 200"/>
+          <path d="M 534 162 L 534 200"/>
+          <path d="M 759 92  L 759 200"/>
+          <path d="M 155 200 L 759 200"/>
+        </g>
+        <rect class="dg-err-box" x="360" y="204" width="180" height="34" rx="3"/>
+        <text class="dg-err-text" x="450" y="226" font-size="12" text-anchor="middle">TokenCssError</text>
+      </g>
+    </svg>
+    <div class="legend">
+      <span><span class="swatch" style="background: var(--paper); border: 1.5px solid var(--accent);"></span>touches disk or network</span>
+      <span><span class="swatch" style="background: var(--accent-dim); border: 1.5px solid var(--accent);"></span>pure function — no IO, no clock, no randomness</span>
+      <span><span class="swatch" style="background: var(--reject-dim); border: 1.5px solid var(--reject);"></span>the only way to fail</span>
+    </div>
+  </div>
+  <p>Pipes and filters, with the IO pushed to both ends. The four middle stages are ordinary functions you can call in a test without a filesystem. Nothing between them may import <code>node:fs</code> or open a socket — which is what makes the fixture corpus cheap enough to be the primary test suite.</p>
+</section>
+
+<section class="wrap">
+  <h2>The decisions that carry weight</h2>
+  <p>Twenty-two invariants are recorded. These six are the ones the rest hang from.</p>
+
+  <div class="ad">
+    <div class="ad-id">AD-1</div>
+    <div>
+      <h4>The pipeline is the only control flow</h4>
+      <p>One file sequences the six stages. A stage takes the previous stage's output and returns the next stage's input — never a callback into a later one.</p>
+      <p class="prevents"><b>Prevents</b>A shortcut path that reaches the writer without passing validation.</p>
+    </div>
+  </div>
+
+  <div class="ad">
+    <div class="ad-id">AD-4</div>
+    <div>
+      <h4>One error type; the codes are the contract</h4>
+      <p>Every failure throws the same class, carrying a code from a frozen list. No error subclasses, no returned <code>null</code>, no stage signalling failure in its own dialect.</p>
+      <p class="prevents"><b>Prevents</b>Callers matching on message text — which would make every wording change a breaking change.</p>
+    </div>
+  </div>
+
+  <div class="ad">
+    <div class="ad-id">AD-5</div>
+    <div>
+      <h4>Fail closed, one class at a time, exhaustively</h4>
+      <p>Validation passes run in a fixed order. Each pass walks the whole document and reports <em class="term">every</em> offender of its class; the first failing pass stops the run.</p>
+      <p class="prevents"><b>Prevents</b>Whack-a-mole: fix one token, rerun, discover the next. You get the whole class at once.</p>
+    </div>
+  </div>
+
+  <div class="ad">
+    <div class="ad-id">AD-6</div>
+    <div>
+      <h4>Nothing is written until the whole output exists in memory</h4>
+      <p>The emitter returns a complete string. The writer is the first code to open the output path, and it runs only after every check has passed.</p>
+      <p class="prevents"><b>Prevents</b>A streaming emitter leaving half a stylesheet on disk when validation fails late.</p>
+    </div>
+  </div>
+
+  <div class="ad">
+    <div class="ad-id">AD-8</div>
+    <div>
+      <h4>All network policy lives in one guarded adapter</h4>
+      <p>Built on <code>node:https</code> with a custom DNS lookup, so the socket connects to the address that was actually checked. Redirects are followed by hand and re-validated at every hop.</p>
+      <p class="prevents"><b>Prevents</b>A redirect walking out of the guard and into a cloud metadata endpoint.</p>
+    </div>
+  </div>
+
+  <div class="ad">
+    <div class="ad-id">AD-13</div>
+    <div>
+      <h4>Zero runtime dependencies</h4>
+      <p>The published package installs nothing. Node builtins only. Adding a runtime dependency needs an explicit amendment to this document.</p>
+      <p class="prevents"><b>Prevents</b>Slowly becoming the heavy toolchain the product exists to avoid.</p>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>What the review pass caught</h2>
+  <p>The spine was drafted, then attacked: construct two implementations that obey every rule and still produce different output. Five of those exist — and four of them changed the emitted CSS, which is the part under a version guarantee. Each became a new invariant.</p>
+
+  <div class="seam">
+    <h4>What does the number 16 become?</h4>
+    <p>The internal model carried <code>string | number</code>, and nothing said how a number reaches the stylesheet. One builder writes <code>16</code>. Another, reasoning that spacing must be a length, writes <code>16px</code>. Both followed every rule.</p>
+    <p class="fix"><b>AD-19</b> — one stringify function; strings verbatim, numbers via <code>String(n)</code>, no unit inference ever. Booleans, null, objects and arrays are refused.</p>
+  </div>
+
+  <div class="seam">
+    <h4>Is "1px solid {color.border}" a reference?</h4>
+    <p>A value that is entirely <code>{color.border}</code> is obviously an alias. A value that merely contains one was undecided. Treat it as a literal and you ship dead CSS that a browser accepts silently — the exact failure mode the whole product forbids.</p>
+    <p class="fix"><b>AD-20</b> — a reference only when the whole string is one. Anything embedded is refused by name.</p>
+  </div>
+
+  <div class="seam">
+    <h4>Which Tokens Studio keys disappear from the name?</h4>
+    <p>Wrapper keys don't become part of a custom property's name. But which keys are wrappers was never stated — so one builder emits <code>--global-color-brand-primary</code> and another <code>--color-brand-primary</code>. Two compliant implementations, two incompatible public contracts.</p>
+    <p class="fix"><b>AD-22</b> — only top-level keys are set wrappers; more than one set is refused outright.</p>
+  </div>
+
+  <div class="seam">
+    <h4>Who owns each rejection?</h4>
+    <p>The order of validation passes was fixed. Their <em class="term">membership</em> was not. "Mixed-dialect token node" could plausibly live in detection or in validation — so it gets reported twice, or, worse, each side assumes the other has it.</p>
+    <p class="fix"><b>AD-21</b> — an exhaustive table assigning every rejection trigger to exactly one module.</p>
+  </div>
+
+  <div class="seam">
+    <h4>A rule that could not be implemented</h4>
+    <p>The first draft routed remote fetching through the global <code>fetch</code> while demanding per-hop IP validation. <code>fetch</code> never exposes the address it resolved, and pinning a connection to a checked one requires a library that isn't a Node builtin — which would have broken the zero-dependency rule two pages earlier.</p>
+    <p class="fix"><b>AD-8 rewritten</b> — <code>node:https</code> with a custom lookup and <code>node:net.BlockList</code>. Both builtins.</p>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>The public surface</h2>
+  <p>Two things are frozen under semantic versioning, and both are outputs rather than function signatures: the names this library emits, and the codes it fails with. Changing either is a major release.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr><th class="mono">Failure code</th><th>Raised when</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="mono">SOURCE_UNREADABLE</td><td>The path or URL cannot be read, times out, is too large, or violates the network policy</td></tr>
+        <tr><td class="mono">SOURCE_INVALID_JSON</td><td>The content is not valid JSON</td></tr>
+        <tr><td class="mono">FORMAT_NOT_ALLOWED</td><td>The shape is not on the allowlist — including embedded references and mixed dialects</td></tr>
+        <tr><td class="mono">ALIAS_CYCLE</td><td>Aliases reference each other in a loop</td></tr>
+        <tr><td class="mono">ALIAS_DANGLING</td><td>An alias points at a token that does not exist</td></tr>
+        <tr><td class="mono">COMPOSITE_VALUE</td><td>A value is an object, array, boolean, or null rather than a scalar</td></tr>
+        <tr><td class="mono">NAME_COLLISION</td><td>Two tokens would produce the same custom-property name</td></tr>
+        <tr><td class="mono">OUTPUT_WRITE_FAILED</td><td>The stylesheet could not be written</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Every one of these has a fixture that must fail with exactly that code. Every accepted shape has a fixture whose output is compared byte for byte against a stored file. Those stored files only change under an explicit flag, and changing one requires shipping a major-version note in the same pull request — which is what stops "just regenerate it" from quietly rewriting the contract.</p>
+</section>
+
+<section class="wrap">
+  <h2>Still open</h2>
+  <div class="open">
+    <div class="open-item">
+      <span class="tag">OQ-2</span>
+      <div>
+        <p>The performance bar — 10,000 tokens in under two seconds — is inherited as an assumption and cannot be settled by argument. A benchmark fixture ships in the repo; the first real measurement either confirms the number or replaces it.</p>
+        <span class="who">Revisit when the emitter passes its first fixture end to end</span>
+      </div>
+    </div>
+    <div class="open-item">
+      <span class="tag">OQ-3</span>
+      <div>
+        <p>Package name and license. The repository is <code>css-generator-library</code> and MIT is assumed, but neither is confirmed.</p>
+        <span class="who">Owner: product · needed before first publish</span>
+      </div>
+    </div>
+    <div class="open-item">
+      <span class="tag">check</span>
+      <div>
+        <p>That the bundler and test runner both drive TypeScript 7's new Go-based compiler cleanly. Plausible, unverified, and a one-command check when the repository is scaffolded.</p>
+        <span class="who">Not a blocker for this document</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <footer>
+    <p>
+      <b>Spine</b> _bmad-output/planning-artifacts/architecture/architecture-css_generator_library-2026-08-29/ARCHITECTURE-SPINE.md<br>
+      <b>Decision log</b> same folder, .memlog.md<br>
+      <b>Review lenses</b> same folder, reviews/<br>
+      <b>Upstream</b> prd.md v2 §13 · addendum.md · technical research, Jul 2026<br>
+      <b>Next</b> epics and stories, then the fixture corpus before any emitter code
+    </p>
+  </footer>
+</section>
+
+</main>
