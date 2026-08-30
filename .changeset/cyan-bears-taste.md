@@ -2,5 +2,5 @@
 "tokens-to-css": minor
 ---
 
-Alias Graph Validation: references that point nowhere and reference cycles are
-refused, each reporting every offender of its class in one run.
+Name collision detection: two token paths that arrive at the same custom
+property are refused by name rather than one quietly overwriting the other.
