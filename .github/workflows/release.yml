@@ -34,10 +34,13 @@ jobs:
 
       # The same gate as every other change. A release is not a reason to skip
       # the checks; it is the one moment they matter most.
+      # Build before test, the same order as ci.yml. Some tests read the built
+      # bundle — the one that proves no evaluator ships, among them — and the
+      # first run of this workflow failed for exactly that reason.
       - run: npm run lint
       - run: npm run typecheck
-      - run: npm test
       - run: npm run build
+      - run: npm test
       - run: node bench/run.mjs
 
       # Refuses to publish while the public surface is still a placeholder.
