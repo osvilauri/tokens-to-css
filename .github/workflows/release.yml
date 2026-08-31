@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+# The token that publishes never appears here. `id-token: write` is what lets npm
+# verify, from GitHub's own signature, that this tarball was built by this
+# workflow from this commit — the provenance attestation on the package page.
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - run: npm ci
+
+      # The same gate as every other change. A release is not a reason to skip
+      # the checks; it is the one moment they matter most.
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: node bench/run.mjs
+
+      # Refuses to publish while the public surface is still a placeholder.
+      - run: npm run guard:unimplemented
+
+      # Either opens a "Version Packages" pull request that consumes the
+      # changesets, or — when that pull request has been merged and the version
+      # is already bumped — publishes.
+      - name: Version or publish
+        uses: changesets/action@v1
+        with:
+          version: npx changeset version
+          publish: npx changeset publish
+          commit: 'chore: version packages'
+          title: 'chore: version packages'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true'
