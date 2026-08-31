@@ -4,9 +4,15 @@ on:
   push:
     branches: [main]
 
-# The token that publishes never appears here. `id-token: write` is what lets npm
-# verify, from GitHub's own signature, that this tarball was built by this
-# workflow from this commit — the provenance attestation on the package page.
+# There is no publishing token any more. `id-token: write` gives this workflow a
+# short-lived, cryptographically signed identity that npm trusts because the
+# package names this repository and this filename as a trusted publisher.
+#
+# Nothing long-lived to leak, rotate, or forget to revoke — and the credential
+# cannot be extracted or replayed, because it is minted per run.
+#
+# Renaming this file breaks publishing until the trusted publisher is updated to
+# match. That is the point: the filename is part of the identity.
 permissions:
   contents: write
   pull-requests: write
@@ -28,7 +34,15 @@ jobs:
         with:
           node-version: '24'
           cache: npm
+          # Required for OIDC: npm only looks for a trusted-publisher identity
+          # when it knows which registry it is talking to.
           registry-url: https://registry.npmjs.org
+
+      # OIDC needs npm 11.5.1 or newer, and staged publishing 11.15. Pinning it
+      # explicitly rather than inheriting whatever Node happens to bundle keeps
+      # the release from breaking on a Node patch release.
+      - run: npm install -g npm@^11.15
+      - run: npm --version
 
       - run: npm ci
 
@@ -57,7 +71,7 @@ jobs:
           commit: 'chore: version packages'
           title: 'chore: version packages'
         env:
+          # GITHUB_TOKEN is for opening the version pull request, not for npm.
+          # npm authenticates over OIDC, and publishes provenance by default
+          # when it does — so no token and no --provenance flag.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: 'true'
