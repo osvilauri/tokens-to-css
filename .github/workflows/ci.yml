@@ -47,7 +47,13 @@ jobs:
   changeset:
     # A release must be deliberate: every pull request that touches src/ or the
     # manifest declares its version impact, or says in writing that it has none.
-    if: github.event_name == 'pull_request'
+    #
+    # Skipped on the release branch. That pull request is the one that *consumes*
+    # the changesets — it deletes them and bumps the version — so requiring one
+    # there would reject the release for the very act of releasing.
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.head_ref != 'changeset-release/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
