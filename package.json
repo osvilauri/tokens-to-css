@@ -1,6 +1,6 @@
 {
   "name": "tokens-to-css",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Convert design-token JSON into a CSS custom-properties stylesheet.",
   "keywords": [
     "design-tokens",
