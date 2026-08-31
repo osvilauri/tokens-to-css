@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { DIALECTS, normalizeDocument } from '../src/dialects/registry.js'
 import { emitStylesheet } from '../src/emit/css.js'
@@ -140,18 +140,44 @@ describe('expressions are refused, never evaluated (FR-17, NFR7)', () => {
   })
 })
 
-describe('nothing in the package can evaluate anything', () => {
-  const built = readFileSync(new URL('../dist/index.js', import.meta.url), 'utf8')
+/**
+ * Reads the built bundle, and skips rather than crashing when there is none.
+ *
+ * `npm test` on its own, without a build, is a reasonable thing to run — so
+ * this cannot throw at import time. The assertion still always runs where it
+ * matters: both workflows build before they test, and a test below checks that
+ * they still do.
+ */
+const bundlePath = new URL('../dist/index.js', import.meta.url)
+const isBuilt = existsSync(bundlePath)
+
+describe.skipIf(!isBuilt)('nothing in the package can evaluate anything', () => {
+  const built = (): string => readFileSync(bundlePath, 'utf8')
 
   it('ships no eval and no Function constructor', () => {
-    expect(built).not.toMatch(/\beval\s*\(/)
-    expect(built).not.toMatch(/new\s+Function\s*\(/)
+    expect(built()).not.toMatch(/\beval\s*\(/)
+    expect(built()).not.toMatch(/new\s+Function\s*\(/)
   })
 
   it('ships no expression parser', () => {
     for (const smell of ['parseExpression', 'evaluate(', 'tokenize(', 'mathjs']) {
-      expect(built, smell).not.toContain(smell)
+      expect(built(), smell).not.toContain(smell)
     }
+  })
+})
+
+describe('every workflow builds before it tests', () => {
+  // The reason the block above can skip. If a workflow ever tests first, that
+  // assertion would quietly stop running and nobody would notice — which for a
+  // check about `eval` reaching the published bundle is the worst way to lose a
+  // test.
+  it.each(['ci.yml', 'release.yml'])('%s', (file) => {
+    const workflow = readFileSync(new URL(`../.github/workflows/${file}`, import.meta.url), 'utf8')
+    const build = workflow.indexOf('npm run build')
+    const test = workflow.indexOf('npm test')
+    expect(build, `${file} never builds`).toBeGreaterThan(-1)
+    expect(test, `${file} never tests`).toBeGreaterThan(-1)
+    expect(build, `${file} tests before it builds`).toBeLessThan(test)
   })
 })
 
