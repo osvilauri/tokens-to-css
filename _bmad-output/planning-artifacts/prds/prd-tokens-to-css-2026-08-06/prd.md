@@ -458,6 +458,108 @@ notation, two reject fixtures (non-CSS unit, malformed colour), and the
 `composite-object-color` reject fixture retired because it is no longer a
 rejection.
 
+## 12.6 Revision — Composite Tokens and Partial Conversion (2026-09-02)
+
+The revision `addendum.md` said composites would need, taken up after release.
+Emission design in `composites-2026-09-02.md`; measurement in
+`survey-2026-09-02/`.
+
+**The finding.** The corpus that produced §12.5 has grown from thirteen files to
+**98, across seven design systems, 6,086 tokens**. Measured against 1.0.0:
+**29 of 98 convert.** Eleven more are blocked by `COMPOSITE_VALUE` alone, and
+three of those eleven are not composites at all — they are `fontFamily` written
+as an array of names and `cubicBezier` written as four numbers. Both describe
+exactly one CSS value, and both are refused for being arrays in the same way
+object-form colours were refused for being objects before FR-23. §12.5 fixed the
+notation it happened to look at.
+
+**The decision, in three parts.**
+
+*Composites are accepted, by asking one question of the type: does it describe
+one CSS property, or several?* Shadow, border, transition, gradient and the
+string form of strokeStyle describe one, and emit one custom property. Typography
+and the object form of strokeStyle describe several, and expand — one custom
+property per sub-property, named `path + sub-key` through the existing FR-9 rule,
+so no new naming vocabulary is frozen. Where the shorthand would silently drop a
+sub-value (`font` dropping `letterSpacing`) it is not used, and where the token
+does not say something (a gradient axis, the property a transition animates) it
+is not invented: the emitted value is the part the token did state, and the
+consumer supplies the rest.
+
+*Array-form scalars are accepted*, on §12.5's own reasoning, extended to the
+notation it missed.
+
+*Conversion becomes partial.* This is the part that changes the product rather
+than the format coverage, and it is the largest change in this revision.
+
+**FR-24 (new): a token that cannot be written as CSS is skipped, not fatal.**
+Previously any such token failed the whole document, so a system with two hundred
+good colours and one malformed typography token produced no stylesheet at all.
+Now the token is omitted, the rest converts, and the omission is announced in two
+places: `skipped` on the result, machine-readable and carrying the same
+`FailureCode` vocabulary; and a comment block above `:root` naming every skipped
+token and why. The second is what makes it safe — the stylesheet is a generated
+file in a repository, so the omission appears in the diff of the next pull
+request rather than only in a return value most callers ignore.
+
+Three rules keep partial from becoming lossy, and each is a reject fixture:
+a conversion that would declare **zero** custom properties fails rather than
+writing an empty stylesheet; a **reference to a skipped token is dangling** and
+still fatal, which follows from skips happening in normalization and the alias
+graph being validated after it; and a document with **nothing skipped emits no
+comment block**, so every conversion that succeeds today is byte-identical.
+
+**What it moves.** 29 of 98 → **40 of 98**, projected structurally and to be
+re-confirmed against the implementation. Of the 58 that still fail, **53 are
+cross-file references** — a design system split across files. That is now the
+dominant blocker in published token files by an order of magnitude, and it is
+the multi-file merge capability deferred since v1, not anything this revision
+touches.
+
+**What this amends elsewhere in this document.** Partial conversion contradicts
+several sentences written when refusal was the only outcome:
+
+| Where | Was | Now |
+| --- | --- | --- |
+| §2.3 UJ-1 edge cases | composite listed among failures that "must fail clearly, never as a silent or partial success" | composite removed from that list; it is a skip, and it is not silent |
+| §3 Glossary, *Composite Token* | "Rejected in v1 (FR-20)" | accepted per FR-25; the glossary gains *Skipped Token* |
+| §4.2 rejection triggers | "composite `$value` (FR-20)" | removed as a trigger |
+| §4.2 DTCG subset | composites out of subset | in subset |
+| §4.2 | "A DTCG document containing a composite `$value` is rejected per FR-20, **not partially converted**" | replaced: it *is* partially converted, per FR-24 |
+| §4.4 shared consequences | "**No Styles File is written on any failure**" | unchanged for failures; a skip is not a failure |
+| §6.2 Out of Scope for MVP | composite support out | in, as of this revision |
+| §8 Public Surface | result returns no payload beyond the write | result carries `skipped`; the comment block is emitted bytes; both are semver-public |
+| §9 Reliability | "no partial file" | disambiguated: no **partially written file** (atomicity, unchanged); a **partially converted document** is a complete, valid file that declares fewer properties and says so |
+
+FR-20 is not deleted. Its sentence — *no `[object Object]`, and no silent drop of
+the offending token on a success path* — is the load-bearing one, and it survives
+intact: the word doing the work was always **silent**.
+
+**FR-25 (new): composite tokens are accepted.** Per-type emission, component
+order for the single-value types, the `fontWeight` alias table, the `fontFamily`
+quoting rule and the refusal to approximate what CSS cannot express are
+normative in `composites-2026-09-02.md` and semver-public.
+
+**FR-26 (new): array-form scalars are accepted** — `fontFamily` as an array of
+names, `cubicBezier` as four numbers — shape-driven, without consulting `$type`.
+
+**Exhaustiveness stops being optional.** `pipeline.ts` states that each pass is
+exhaustive within its class (AD-5); the alias graph and collision passes honour
+it, normalization does not — it throws on the first unrepresentable token, so a
+file with eleven reports one. Under FR-24 every skipped token must be collected
+before the stylesheet is written, because they all appear in the comment block.
+The AD-5 gap closes as a consequence of the feature, not as a separate fix.
+
+**Fixtures land in the same change**, per SM-C3, and the corpus gains a third
+category: `partial/` — input, golden stylesheet including its comment block, and
+the expected `skipped` array — because `accept/` and `reject/` cannot express
+this outcome.
+
+**Not done here.** Multi-file merge, despite now being the dominant blocker.
+Property-level references (spec §7.3.3), which the expansion makes addressable
+for the first time. Skipping anything that is not a single unrepresentable
+token — dangling references stay fatal.
+
 ## 13. Review Disposition (2026-08-07 reviews → 2026-08-27)
 
 Reviews: `review-rubric.md`, `review-adversarial-general.md`. PM disposition: recommended package accepted.

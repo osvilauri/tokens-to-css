@@ -27,7 +27,10 @@ FR-7 are retired IDs that must never be reused (PRD §4.2.0 / §13 H1B).
 
 ### Functional Requirements
 
-19 live FRs. Retired: FR-5, FR-6, FR-7.
+19 live FRs at 1.0.0. Retired: FR-5, FR-6, FR-7.
+
+*Added after this inventory was written:* FR-23 by PRD §12.5 (2026-08-30); FR-24, FR-25 and FR-26
+by PRD §12.6 (2026-09-02). Twenty-three live.
 
 FR-1: Load Token JSON from a Token Source — remote URL or single local file path; post-load parity; relative paths resolve against `process.cwd()` unless a base directory is supplied; directory/glob sources are rejected.
 FR-2: Write the Styles File to disk on successful Conversion — atomic replace, overwrite by default.
@@ -45,9 +48,13 @@ FR-16: Install via package manager; the Main Entry is importable from applicatio
 FR-17: Normalize the Tokens Studio Vendor Dialect (A3 subset); `$themes`/`$metadata` ignored; math/expression values rejected.
 FR-18: Normalize the Style Dictionary legacy Vendor Dialect (A2, `value`/`type` without `$`); post-normalization parity with A1.
 FR-19: Fail clearly on Styles File write failure; no temp file left behind, pre-existing file untouched.
-FR-20: Reject composite and non-scalar token values, identifying the offending token path and type.
+FR-20: Never emit `[object Object]`, and never drop an unrepresentable token **silently** on a success path. *Amended 2026-09-02 (PRD §12.6): the token is skipped and announced, not fatal — see FR-24.*
 FR-21: Fail clearly on custom-property name collision, listing the colliding token paths and the shared name.
 FR-22: Fail clearly on dangling aliases, naming the referring token and the missing target, distinguishably from FR-15.
+FR-23: Accept object-form scalars — a colour as `{colorSpace, components, alpha?}` and a dimension as `{value, unit}` — recognized by shape, without consulting `$type`. *(PRD §12.5.)*
+FR-24: A token that cannot be written as CSS is skipped rather than fatal; every skipped token is reported both on the result and in a comment block above `:root`; zero emitted properties is a failure, not an empty stylesheet; a reference to a skipped token stays dangling and fatal. *(PRD §12.6.)*
+FR-25: Accept composite tokens — typography, shadow, border, transition, gradient, strokeStyle — emitting one custom property where the type describes one CSS property and expanding, `path + sub-key`, where it describes several; never approximating what CSS cannot express and never inventing what the token did not say. *(PRD §12.6.)*
+FR-26: Accept array-form scalars — `fontFamily` as an array of names, `cubicBezier` as four numbers — recognized by shape, without consulting `$type`. *(PRD §12.6.)*
 
 ### NonFunctional Requirements
 
@@ -136,9 +143,10 @@ satisfied in Epic 3.
 
 ## Epic List
 
-Three epics. The architecture spine is final and no direction change is expected between them,
-so these are few and large by design rather than sliced per technical layer. Each one leaves the
-library in a shippable state.
+Three epics to 1.0.0, plus **Epic 4, added 2026-09-02** for the first release after it. The
+architecture spine is final and no direction change is expected between them, so these are few and
+large by design rather than sliced per technical layer. Each one leaves the library in a shippable
+state.
 
 **Reviewed 2026-08-29** by four independent reviewers (product, architecture, quality,
 development), then dispositioned by the product owner. Adopted: the SM-5 performance measurement
@@ -754,3 +762,194 @@ So that adopting it costs one command.
 **Given** a change to an emitted name, a failure code, the default output path or filename, or a removal from the allowlist
 **When** it is released
 **Then** it ships as a major version, enforced by the changeset required on that pull request
+
+---
+
+## Epic 4: Convert the files that carry typography, shadows and motion
+
+*Added 2026-09-02. Realizes PRD §12.6 — FR-24, FR-25, FR-26. Design in
+`prds/prd-tokens-to-css-2026-08-06/composites-2026-09-02.md`; measurement in
+`survey-2026-09-02/`.*
+
+A developer whose design system keeps its type scale, its elevation and its motion curves in the
+same token files as its colours converts all of it, instead of converting the colours and being
+told the file is unusable. Where a token genuinely cannot be written as CSS, that token is left
+out and said out loud — in the result and in the stylesheet — while the rest of the file converts.
+
+Measured against the published corpus this moves **29 of 98 files to a projected 40**. The story
+order runs foundation-first: partial conversion lands before the types that rely on it, so no
+golden is written twice.
+
+Two things this epic does not touch, both larger than it: cross-file references, which the survey
+found to be the dominant blocker in published files (53 of the 58 that still fail), and
+property-level references, which expansion makes addressable for the first time.
+
+### Story 4.1: A token that cannot be written is skipped, not fatal
+
+As a developer whose token file has one token this library cannot express,
+I want the other two hundred converted anyway,
+So that one malformed entry does not cost me the whole stylesheet.
+
+**Acceptance Criteria:**
+
+**Given** a document containing a token whose value cannot be written as CSS
+**When** it is converted
+**Then** the stylesheet is written without that token, and the run succeeds
+**And** `GenerateCssResult.skipped` lists it with its dotted path, a `FailureCode`, and a human reason
+
+**Given** the same document
+**When** the stylesheet is written
+**Then** a comment block above `:root` names every skipped token and why it was skipped
+**And** that block is the reason an omission is visible in a pull request diff rather than only in a return value
+
+**Given** a document in which **every** token is skipped
+**When** it is converted
+**Then** it fails, rather than writing a stylesheet that declares nothing
+
+**Given** a token that references a token that was skipped
+**When** the alias graph is validated
+**Then** it fails with `ALIAS_DANGLING`, because skips happen in normalization and the graph is validated after it
+
+**Given** a document with eleven unrepresentable tokens
+**When** it is converted
+**Then** all eleven are collected and reported in one pass, honouring AD-5 — normalization stops throwing on the first
+
+**Given** any document that converts under 1.0.0
+**When** it is converted after this story
+**Then** its stylesheet is byte-identical, with no comment block and an empty `skipped`
+
+**Given** the corpus
+**When** this story lands
+**Then** it carries a third category, `partial/` — input, golden stylesheet including its comment block, and the expected `skipped` array — because `accept/` and `reject/` cannot express this outcome
+
+### Story 4.2: Scalars written as arrays
+
+As a developer whose font stacks and easing curves are arrays,
+I want them converted like any other single value,
+So that a notation choice does not decide whether my file works.
+
+**Acceptance Criteria:**
+
+**Given** a `fontFamily` token whose value is an array of names
+**When** it is converted
+**Then** it emits one custom property, the names joined with `, `
+
+**Given** a `cubicBezier` token whose value is four numbers
+**When** it is converted
+**Then** it emits `cubic-bezier(a, b, c, d)` as one custom property
+
+**Given** each of the four `fontFamily` notations the 2026-09-02 survey found — an array of names, an array of one name, a string holding a whole pre-quoted stack, and an array whose single element is a whole stack
+**When** each is converted
+**Then** each produces valid CSS, and no rule ever wraps an entire stack in quotes to make one bogus font name
+
+**Given** a name that needs quoting and a generic family that must not be quoted
+**When** they appear in the same array
+**Then** the first is quoted and the second is not
+
+**Given** an array that is neither of these shapes — empty, or mixed
+**When** it is converted
+**Then** the token is skipped per FR-24, naming what was unrecognized
+
+**Given** the recognition rule
+**When** it decides
+**Then** it reads the array's shape and never the declared `$type`, exactly as FR-23 does for objects
+
+### Story 4.3: Composites that fit one CSS value
+
+As a developer with elevation, borders and motion in my tokens,
+I want each one to become a custom property I can drop into a rule,
+So that I use them the way I use every other token.
+
+**Acceptance Criteria:**
+
+**Given** shadow, border, transition and gradient tokens
+**When** they are converted
+**Then** each emits one custom property, in the component order frozen by the design document
+**And** that order is documented in `docs/formats.md` as public contract, alongside the naming rule
+
+**Given** a shadow token whose value is an array of shadows
+**When** it is converted
+**Then** the shadows join with `, ` and stay one value
+
+**Given** a transition token, which never says which property it animates, and a gradient token, which never says its axis
+**When** they are converted
+**Then** what is emitted is the part the token stated, usable as `transition: opacity var(--…)` and `linear-gradient(to right, var(--…))`
+**And** nothing supplies the missing part on the token's behalf
+
+**Given** a border whose `style` is a strokeStyle object
+**When** it is converted
+**Then** the token is skipped, naming the sub-property, because `dashArray` is SVG geometry a CSS border cannot carry
+**And** the "closest approximation" the spec permits is not produced
+
+**Given** a composite missing a sub-property the spec marks `MUST`
+**When** it is converted
+**Then** the token is skipped, naming the absent sub-property, and no value is defaulted in its place
+
+**Given** a sub-value that is a reference
+**When** it is emitted
+**Then** it is written `var(--target)`, never the target's literal value
+
+### Story 4.4: Composites that need more than one property
+
+As a developer with a type scale in my tokens,
+I want each typography token to become the properties it actually describes,
+So that my type styles come from the same source as my colours.
+
+**Acceptance Criteria:**
+
+**Given** a typography token
+**When** it is converted
+**Then** it emits one custom property per sub-property, named `path + sub-key` through the existing FR-9 rule
+**And** no new naming vocabulary is introduced — the suffix is the spec's sub-property name, kebab-cased by the rule that already exists
+
+**Given** a strokeStyle token in object form
+**When** it is converted
+**Then** it expands to its dash array and line cap by the same mechanism
+
+**Given** an expanded name that collides with a real token's name
+**When** the collision pass runs
+**Then** it fails with `NAME_COLLISION`, because that pass already runs after naming
+
+**Given** a `fontWeight` written as a word
+**When** it is converted
+**Then** it is translated through the spec's closed alias table, and a word outside that table skips the token rather than emitting `font-weight: regular`
+
+**Given** `letterSpacing` in each of its three notations — object form, a plain string, and a bare number
+**When** each is converted
+**Then** all three work, and all three are in the corpus
+
+**Given** a `lineHeight` with no unit
+**When** it is emitted
+**Then** it is written as it was, because the unitless number inherits as a ratio and adding a unit would change behaviour
+
+**Given** the `font` shorthand would fit on one line
+**When** typography is emitted
+**Then** it is not used, not even as an extra convenience property, because used alone it drops `letter-spacing` in silence
+
+### Story 4.5: Prove it against files nobody here wrote
+
+As the product owner,
+I want the claim measured on published token files rather than on fixtures written for us,
+So that this epic ends with a number instead of a conviction.
+
+**Acceptance Criteria:**
+
+**Given** the harness in `survey-2026-09-02/` and the corpus it names
+**When** it is re-run against the implementation rather than against a structural projection
+**Then** the result is recorded, and PRD §12.6's "40 of 98" is confirmed or replaced by what was actually measured
+
+**Given** any gap between the projection and the measurement
+**When** it is found
+**Then** it is explained in writing before this epic closes — a projection that was wrong is a finding, not an embarrassment
+
+**Given** the emitted names, the component orders, the `fontWeight` table and the `fontFamily` quoting rule
+**When** this epic closes
+**Then** every one of them is documented in `docs/formats.md`, and the semver clause covering emitted names covers them too
+
+**Given** a change to any of them afterwards
+**When** it is released
+**Then** it ships as a major version, enforced by the changeset required on that pull request
+
+**Given** the release
+**When** it is versioned
+**Then** it is a **minor**: every input this epic accepts is one that used to fail, and no conversion that succeeded before produces different bytes

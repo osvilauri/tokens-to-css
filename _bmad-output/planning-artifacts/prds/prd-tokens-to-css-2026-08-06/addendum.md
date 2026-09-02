@@ -77,6 +77,12 @@ Depth that belongs in architecture / solution design / later phases — not the 
   **If it is picked up:** expansion (option 1), not the shorthand — losing `letterSpacing`
   quietly contradicts everything else here. It needs its own PRD revision, with a survey
   and fixtures in the same change, the way FR-23 did.
+
+  **Picked up 2026-09-02.** Expansion confirmed, and the scope widened to every
+  composite type. The emission design — which types expand and which stay one value,
+  the naming rule under expansion, component order, and the refusals — is settled in
+  [`composites-2026-09-02.md`](./composites-2026-09-02.md), which supersedes the three
+  options above. The survey, the fixtures and PRD §12.6 are still owed.
 - Tokens Studio expressions / math and multi-file Studio sets.
 - In-memory CSS return from the Main Entry (disk write is the only v1 success path).
 - Taxonomy diagnostics: reporting the recognized hierarchy model, confidence, or model override.
