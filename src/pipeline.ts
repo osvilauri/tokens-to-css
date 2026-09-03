@@ -10,6 +10,7 @@
  * stylesheet is intact" the same sentence.
  */
 import { emitStylesheet } from './emit/css.js'
+import type { SkippedToken } from './errors.js'
 import { DEFAULTS, type GenerateCssOptions, type GenerateCssResult } from './options.js'
 import { normalizeDocument } from './dialects/registry.js'
 import { parseTokenJson, readTokenFile } from './source/file.js'
@@ -19,10 +20,11 @@ import { validateAliasGraph } from './validate/alias-graph.js'
 import { validateNoCollisions } from './validate/collisions.js'
 import { writeStylesheet } from './write/atomic.js'
 
-/** A converted document: the stylesheet text and how many properties it declares. */
+/** A converted document: the stylesheet text, how many properties it declares, and what it left out. */
 export interface Converted {
   readonly css: string
   readonly tokenCount: number
+  readonly skipped: readonly SkippedToken[]
 }
 
 /**
@@ -34,13 +36,19 @@ export interface Converted {
  * divergence the fixed order exists to prevent.
  */
 export function convertDocument(raw: unknown, source: string): Converted {
-  const doc = normalizeDocument(raw, source)
+  const { doc, skipped } = normalizeDocument(raw, source)
 
-  // A fixed order, each pass exhaustive within its class (AD-5).
+  // A fixed order, each pass exhaustive within its class (AD-5). Both run after
+  // normalization, which is what makes a reference to a skipped token dangling
+  // and fatal: skipping cannot quietly hollow out a token that survived (FR-24).
   validateAliasGraph(doc, source)
   validateNoCollisions(doc, source)
 
-  return { css: emitStylesheet(doc, source), tokenCount: doc.tokens.length }
+  return {
+    css: emitStylesheet(doc, skipped, source),
+    tokenCount: doc.tokens.length,
+    skipped,
+  }
 }
 
 export async function runConversion(
@@ -60,7 +68,7 @@ export async function runConversion(
   const raw = parseTokenJson(text, display)
 
   // 2-5. detect, normalize, validate, emit — the complete stylesheet, in memory
-  const { css, tokenCount } = convertDocument(raw, display)
+  const { css, tokenCount, skipped } = convertDocument(raw, display)
 
   // 6. write — the first and only time the output path is opened
   const outputPath = resolveOutputPath(
@@ -70,5 +78,5 @@ export async function runConversion(
   )
   await writeStylesheet(outputPath, css, display)
 
-  return { outputPath, tokenCount }
+  return { outputPath, tokenCount, skipped }
 }

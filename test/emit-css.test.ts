@@ -4,7 +4,7 @@ import { literal, ref, token, type TokenDoc } from '../src/model/index.js'
 import { compareGolden } from './support/corpus.js'
 
 const SOURCE = 'design/tokens.json'
-const emit = (doc: TokenDoc): string => emitStylesheet(doc, SOURCE)
+const emit = (doc: TokenDoc): string => emitStylesheet(doc, [], SOURCE)
 
 /** The catalogue the fixture corpus will use, built here by hand. */
 const CATALOGUE: TokenDoc = {

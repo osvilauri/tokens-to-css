@@ -1,0 +1,7 @@
+{
+  "skipped": [
+    { "path": "type.body", "code": "COMPOSITE_VALUE" },
+    { "path": "border.focus", "code": "COMPOSITE_VALUE" },
+    { "path": "motion.ease", "code": "COMPOSITE_VALUE" }
+  ]
+}

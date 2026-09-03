@@ -5,8 +5,8 @@ import { FailureCode, TokenCssError } from '../src/index.js'
 
 const SOURCE = 'design/tokens.json'
 const value = (json: string): string => {
-  const doc = normalizeDocument(JSON.parse(`{ "t": { "$value": ${json} } }`), SOURCE)
-  return emitStylesheet(doc, SOURCE).match(/--t: (.+);/)![1]!
+  const { doc, skipped } = normalizeDocument(JSON.parse(`{ "t": { "$value": ${json} } }`), SOURCE)
+  return emitStylesheet(doc, skipped, SOURCE).match(/--t: (.+);/)![1]!
 }
 const failure = (json: string): TokenCssError => {
   try {
@@ -113,17 +113,31 @@ describe('colours written as objects', () => {
 })
 
 describe('what stays a composite', () => {
-  it('still refuses typography, which is not one custom property', () => {
-    const err = failure(`{ "fontFamily": "Inter", "fontSize": "16px", "lineHeight": 1.4 }`)
-    expect(err.code).toBe(FailureCode.COMPOSITE_VALUE)
+  // FR-23 narrowed FR-20 to values describing more than one CSS property; these
+  // are still those. What changed with FR-24 is only what it costs: the token is
+  // left out and reported, rather than taking the document down with it.
+  const skipOf = (json: string): { path: string; code: string } => {
+    const { skipped } = normalizeDocument(
+      JSON.parse(`{ "keep": { "$value": "1px" }, "t": { "$value": ${json} } }`),
+      SOURCE,
+    )
+    expect(skipped).toHaveLength(1)
+    return { path: skipped[0]!.path, code: skipped[0]!.code }
+  }
+
+  it('still declines typography, which is not one custom property', () => {
+    expect(skipOf(`{ "fontFamily": "Inter", "fontSize": "16px", "lineHeight": 1.4 }`)).toEqual({
+      path: 't',
+      code: FailureCode.COMPOSITE_VALUE,
+    })
   })
 
-  it('still refuses shadow lists', () => {
-    expect(failure(`[{ "offsetY": "2px" }]`).code).toBe(FailureCode.COMPOSITE_VALUE)
+  it('still declines shadow lists', () => {
+    expect(skipOf(`[{ "offsetY": "2px" }]`).code).toBe(FailureCode.COMPOSITE_VALUE)
   })
 
-  it('still refuses an object that is neither a colour nor a dimension', () => {
-    expect(failure(`{ "duration": "200ms", "delay": "0ms" }`).code).toBe(FailureCode.COMPOSITE_VALUE)
+  it('still declines an object that is neither a colour nor a dimension', () => {
+    expect(skipOf(`{ "duration": "200ms", "delay": "0ms" }`).code).toBe(FailureCode.COMPOSITE_VALUE)
   })
 })
 
@@ -135,7 +149,7 @@ describe('nothing is inferred from $type', () => {
       JSON.parse(`{ "t": { "$value": { "value": 16, "unit": "px" }, "$type": "color" } }`),
       SOURCE,
     )
-    expect(emitStylesheet(asColor, SOURCE)).toContain('--t: 16px;')
+    expect(emitStylesheet(asColor.doc, asColor.skipped, SOURCE)).toContain('--t: 16px;')
   })
 
   it('leaves a plain number a plain number', () => {

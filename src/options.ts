@@ -1,3 +1,5 @@
+import type { SkippedToken } from './errors.js'
+
 /**
  * What a caller passes in and gets back.
  *
@@ -36,6 +38,15 @@ export interface GenerateCssResult {
   readonly outputPath: string
   /** How many custom properties it declares. */
   readonly tokenCount: number
+  /**
+   * Tokens the document contained that the stylesheet could not (FR-24).
+   *
+   * Empty on a conversion that lost nothing, which is the ordinary case. A
+   * caller that wants a conversion to be all-or-nothing checks this and decides
+   * for itself; the library's own answer is to convert what it can and say what
+   * it could not.
+   */
+  readonly skipped: readonly SkippedToken[]
 }
 
 /** The defaults a conversion uses when the caller says nothing. */

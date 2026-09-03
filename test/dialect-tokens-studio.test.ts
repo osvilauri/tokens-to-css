@@ -3,12 +3,14 @@ import { describe, expect, it } from 'vitest'
 import { DIALECTS, normalizeDocument } from '../src/dialects/registry.js'
 import { emitStylesheet } from '../src/emit/css.js'
 import { FailureCode, TokenCssError } from '../src/index.js'
-import { literal, ref, token } from '../src/model/index.js'
+import { literal, ref, token, type TokenDoc } from '../src/model/index.js'
 
 const SOURCE = 'design/tokens.json'
-const read = (json: string): ReturnType<typeof normalizeDocument> =>
-  normalizeDocument(JSON.parse(json), SOURCE)
-const css = (json: string): string => emitStylesheet(read(json), SOURCE)
+const read = (json: string): TokenDoc => normalizeDocument(JSON.parse(json), SOURCE).doc
+const css = (json: string): string => {
+  const { doc, skipped } = normalizeDocument(JSON.parse(json), SOURCE)
+  return emitStylesheet(doc, skipped, SOURCE)
+}
 
 const failure = (json: string): TokenCssError => {
   try {

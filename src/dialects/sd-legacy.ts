@@ -11,7 +11,7 @@
  * representation, same validation, same stylesheet, byte for byte. The dialect
  * is an input shape, never a mode.
  */
-import type { TokenDoc } from '../model/index.js'
+import type { Normalized } from './registry.js'
 import { isPlainObject, walkTokenTree, type JsonObject, type TokenReader } from './walk.js'
 
 /**
@@ -46,8 +46,9 @@ export function looksLikeSdLegacy(root: JsonObject): boolean {
 }
 
 /** Normalizes a Style Dictionary legacy document into the internal representation. */
-export function normalizeSdLegacy(root: JsonObject, source: string): TokenDoc {
-  return { tokens: walkTokenTree(root, source, reader) }
+export function normalizeSdLegacy(root: JsonObject, source: string): Normalized {
+  const { tokens, skipped } = walkTokenTree(root, source, reader)
+  return { doc: { tokens }, skipped }
 }
 
 /**

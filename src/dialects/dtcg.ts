@@ -6,7 +6,7 @@
  * `$description` because comments are not emitted in this version, and `$type`
  * because nothing downstream may infer from it (AD-2, AD-19).
  */
-import type { TokenDoc } from '../model/index.js'
+import type { Normalized } from './registry.js'
 import { isPlainObject, walkTokenTree, type JsonObject, type TokenReader } from './walk.js'
 
 /** Keys DTCG reserves. Inside a token node they are metadata; at group level, document metadata. */
@@ -62,6 +62,7 @@ export function looksLikeDtcg(root: JsonObject): boolean {
 }
 
 /** Normalizes a DTCG document into the internal representation. */
-export function normalizeDtcg(root: JsonObject, source: string): TokenDoc {
-  return { tokens: walkTokenTree(root, source, reader) }
+export function normalizeDtcg(root: JsonObject, source: string): Normalized {
+  const { tokens, skipped } = walkTokenTree(root, source, reader)
+  return { doc: { tokens }, skipped }
 }

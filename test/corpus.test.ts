@@ -25,6 +25,13 @@ const EXPECTED = {
    * classes against the scenario harness (AD-23). SM-4's claim is the union.
    */
   reject: 17,
+  /**
+   * Partial conversions (FR-24): a document that converts while leaving tokens
+   * out. Neither an accept nor a reject fixture can express one — the first
+   * would assert bytes without the skip report, the second a failure that did
+   * not happen.
+   */
+  partial: 3,
 } as const
 
 describe('the fixture corpus', () => {
@@ -36,6 +43,10 @@ describe('the fixture corpus', () => {
 
   it('holds exactly the number of reject fixtures we expect', () => {
     expect(corpus.reject.length, corpus.reject.map((f) => f.id).join(', ')).toBe(EXPECTED.reject)
+  })
+
+  it('holds exactly the number of partial fixtures we expect', () => {
+    expect(corpus.partial.length, corpus.partial.map((f) => f.id).join(', ')).toBe(EXPECTED.partial)
   })
 
   it('produces identical goldens for fixtures that differ only by dialect', () => {
@@ -55,7 +66,7 @@ describe('the fixture corpus', () => {
   })
 
   it('has no duplicate ids', () => {
-    const ids = [...corpus.accept, ...corpus.reject].map((f) => f.id)
+    const ids = [...corpus.accept, ...corpus.reject, ...corpus.partial].map((f) => f.id)
     expect(new Set(ids).size).toBe(ids.length)
   })
 
@@ -155,6 +166,46 @@ describe('every reject fixture fails with its expected code', () => {
     expect(caught!.code).toBe(fixture.expected.code)
     if (fixture.expected.tokenPaths) {
       expect(caught!.tokenPaths).toEqual(fixture.expected.tokenPaths)
+    }
+  })
+})
+
+describe('every partial fixture converts to its golden and reports what it left out', () => {
+  const corpus = discover()
+
+  it.each(corpus.partial.map((f) => [f.id, f] as const))('%s', (id, fixture) => {
+    const { css, skipped } = convertDocument(fixture.input, `fixtures/partial/${id}/input.json`)
+
+    // Both halves, or the fixture proves half of what happened: a stylesheet
+    // that is short and a report that says why it is short.
+    expect(skipped.map((s) => ({ path: s.path, code: s.code }))).toEqual(
+      fixture.expectedSkipped.map((s) => ({ path: s.path, code: s.code })),
+    )
+
+    if (goldenUpdatesAllowed()) {
+      writeGolden(fixture, css)
+      return
+    }
+
+    const mismatch = compareGolden(css, fixture.expectedCss)
+    if (mismatch) throw new Error(describeMismatch(id, mismatch))
+  })
+
+  it('every skipped token is named in the golden it belongs to', () => {
+    // The comment block is the half of the report humans see, so it is pinned
+    // by the golden rather than trusted to exist.
+    for (const fixture of corpus.partial) {
+      for (const skip of fixture.expectedSkipped) {
+        expect(fixture.expectedCss, fixture.id).toContain(`"${skip.path}"`)
+      }
+    }
+  })
+
+  it('no accept fixture carries a comment block', () => {
+    // The claim that keeps this release a minor: a document that loses nothing
+    // is byte-identical to what it produced before partial conversion existed.
+    for (const fixture of corpus.accept) {
+      expect(fixture.expectedCss.startsWith(':root {'), fixture.id).toBe(true)
     }
   })
 })

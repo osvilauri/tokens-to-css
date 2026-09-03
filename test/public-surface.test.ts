@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import * as api from '../src/index.js'
 import { FailureCode, TokenCssError } from '../src/index.js'
-import type { GenerateCssOptions, GenerateCssResult, HttpOptions } from '../src/index.js'
+import type { GenerateCssOptions, GenerateCssResult, HttpOptions, SkippedToken } from '../src/index.js'
 
 /**
  * What this package promises the outside world. Every assertion here is a
@@ -20,7 +20,7 @@ describe('the exported surface', () => {
 })
 
 describe('FailureCode', () => {
-  it('has exactly the eight failure classes', () => {
+  it('has exactly the nine failure classes', () => {
     expect(Object.keys(FailureCode)).toEqual([
       'SOURCE_UNREADABLE',
       'SOURCE_INVALID_JSON',
@@ -30,6 +30,7 @@ describe('FailureCode', () => {
       'COMPOSITE_VALUE',
       'NAME_COLLISION',
       'OUTPUT_WRITE_FAILED',
+      'NOTHING_EMITTED',
     ])
   })
 
@@ -111,15 +112,15 @@ describe('the Main Entry contract', () => {
     }>()
   })
 
-  it('returns where it wrote and how much — never the CSS itself', () => {
+  it('returns where it wrote, how much, and what it left out — never the CSS itself', () => {
     expectTypeOf<GenerateCssResult>().toEqualTypeOf<{
       readonly outputPath: string
       readonly tokenCount: number
+      readonly skipped: readonly SkippedToken[]
     }>()
-    expect(Object.keys(({ outputPath: '', tokenCount: 0 }) satisfies GenerateCssResult)).toEqual([
-      'outputPath',
-      'tokenCount',
-    ])
+    expect(
+      Object.keys(({ outputPath: '', tokenCount: 0, skipped: [] }) satisfies GenerateCssResult),
+    ).toEqual(['outputPath', 'tokenCount', 'skipped'])
   })
 
   it('documents the defaults the PRD fixes', () => {

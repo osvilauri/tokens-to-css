@@ -150,9 +150,10 @@ deferred, not forgotten.
   There is no evaluator in this package. `calc()` and `clamp()` are valid CSS
   and pass through untouched.
 - **Convert composite tokens.** Typography, shadow, border, gradient and
-  transition are refused: a typography token is five CSS properties, and
-  accepting it would change what "one token, one custom property" means.
-  Deferred to a version after this one.
+  transition are not written yet: a typography token is five CSS properties.
+  Such a token is **skipped** — left out of the stylesheet, listed in `skipped`
+  on the result, and named in a comment above `:root` — while the rest of the
+  file converts.
 - **Pick a winner on a collision.** Two token paths that produce the same
   custom-property name fail the conversion rather than one quietly overwriting
   the other.

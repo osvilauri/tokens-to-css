@@ -1,0 +1,4 @@
+{
+  "type": { "body": { "$value": { "fontSize": "16px" }, "$type": "typography" } },
+  "heading": { "$value": "{type.body}" }
+}

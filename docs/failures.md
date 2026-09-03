@@ -22,9 +22,10 @@ merging or removing one is a major release.
 | `FORMAT_NOT_ALLOWED` | The document is not a shape this version accepts. |
 | `ALIAS_CYCLE` | Aliases reference each other in a loop. |
 | `ALIAS_DANGLING` | An alias points at a token that does not exist. |
-| `COMPOSITE_VALUE` | A value is an object, array, boolean, or null rather than a scalar. |
+| `COMPOSITE_VALUE` | A value is an object, array, boolean, or null rather than a scalar — reported as a skipped token, not a failure. |
 | `NAME_COLLISION` | Two or more tokens would emit the same custom-property name. |
 | `OUTPUT_WRITE_FAILED` | The stylesheet could not be written. |
+| `NOTHING_EMITTED` | Every token was skipped, so the stylesheet would declare nothing (FR-24). |
 
 ## What an error carries
 
@@ -32,7 +33,7 @@ merging or removing one is a major release.
 try {
   await generateCss('design/tokens.json')
 } catch (error) {
-  error.code        // one of the 8 above
+  error.code        // one of the 9 above
   error.source      // the Token Source, as you passed it
   error.tokenPaths  // the offending tokens — empty when the failure is not token-scoped
 }
