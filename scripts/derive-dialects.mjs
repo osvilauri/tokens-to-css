@@ -29,7 +29,7 @@ const check = process.argv.includes('--check')
  * Style Dictionary legacy has no such notation, and rendering it there would
  * invent a dialect nobody publishes.
  */
-const DTCG_ONLY = new Set(['object-values', 'array-values'])
+const DTCG_ONLY = new Set(['object-values', 'array-values', 'composites'])
 
 /** DTCG to Style Dictionary legacy: the same tree with the dollars taken off. */
 function toLegacy(node) {

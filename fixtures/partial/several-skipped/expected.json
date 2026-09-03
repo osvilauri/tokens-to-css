@@ -2,6 +2,6 @@
   "skipped": [
     { "path": "type.body", "code": "COMPOSITE_VALUE" },
     { "path": "border.focus", "code": "COMPOSITE_VALUE" },
-    { "path": "gradient.hero", "code": "COMPOSITE_VALUE" }
+    { "path": "elevation.low", "code": "COMPOSITE_VALUE" }
   ]
 }

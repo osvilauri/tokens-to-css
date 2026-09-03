@@ -1,0 +1,41 @@
+{
+  "$description": "Composites that fit one CSS value (FR-25): shadow, border, transition, gradient. Sub-values appear both as literals and as references, because an aliased sub-value staying an alias is the point.",
+  "color": {
+    "shadow": { "$value": { "colorSpace": "srgb", "components": [0, 0, 0], "alpha": 0.15 }, "$type": "color" },
+    "focus": { "$value": "#5A4FCF", "$type": "color" }
+  },
+  "size": {
+    "px2": { "$value": { "value": 2, "unit": "px" }, "$type": "dimension" }
+  },
+  "elevation": {
+    "low": {
+      "$type": "shadow",
+      "$value": { "color": "{color.shadow}", "offsetX": { "value": 0, "unit": "px" }, "offsetY": { "value": 2, "unit": "px" }, "blur": { "value": 6, "unit": "px" }, "spread": { "value": 0, "unit": "px" } }
+    },
+    "inner": {
+      "$type": "shadow",
+      "$value": { "color": "#0000000d", "offsetX": "0px", "offsetY": "1px", "blur": "2px", "spread": "0px", "inset": true }
+    },
+    "stacked": {
+      "$type": "shadow",
+      "$value": [
+        { "color": "#00000014", "offsetX": "0px", "offsetY": "1px", "blur": "2px", "spread": "0px" },
+        { "color": "{color.shadow}", "offsetX": "0px", "offsetY": "8px", "blur": "16px", "spread": "-4px" }
+      ]
+    }
+  },
+  "border": {
+    "focus": { "$type": "border", "$value": { "color": "{color.focus}", "width": "{size.px2}", "style": "solid" } },
+    "muted": { "$type": "border", "$value": { "color": "#00000026", "width": "1px", "style": "dashed" } }
+  },
+  "motion": {
+    "emphasized": { "$type": "transition", "$value": { "duration": { "value": 200, "unit": "ms" }, "delay": { "value": 0, "unit": "ms" }, "timingFunction": [0.2, 0, 0, 1] } }
+  },
+  "gradient": {
+    "hero": { "$type": "gradient", "$value": [{ "color": "{color.focus}", "position": 0 }, { "color": "#FBFAFD", "position": 1 }] },
+    "midpoint": { "$type": "gradient", "$value": [{ "color": "#000", "position": 0 }, { "color": "#888", "position": 0.35 }, { "color": "#fff", "position": 1 }] }
+  },
+  "stroke": {
+    "dashed": { "$type": "strokeStyle", "$value": "dashed" }
+  }
+}

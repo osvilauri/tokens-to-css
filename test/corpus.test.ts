@@ -17,11 +17,10 @@ import { compareGolden, describeMismatch, discover, goldenUpdatesAllowed, writeG
 const EXPECTED = {
   /**
    * 9 at the Epic 2 freeze: 3 dialects × 3 hierarchies (AD-16). Plus the
-   * notation fixtures, which sit outside the matrix because neither legacy nor
-   * Tokens Studio has the concept: `object-values` (FR-23) and `array-values`
-   * (FR-26).
+   * fixtures outside it, which no other dialect can express: `object-values`
+   * (FR-23), `array-values` (FR-26) and `composites` (FR-25).
    */
-  accept: 11,
+  accept: 12,
   /**
    * One per document-shaped rejection trigger and failure class (SM-4).
    *
@@ -39,8 +38,14 @@ const EXPECTED = {
   partial: 3,
 } as const
 
-/** Accept fixtures that are not part of the dialect × hierarchy matrix. */
-const NOTATION = ['dtcg/object-values', 'dtcg/array-values']
+/**
+ * Accept fixtures outside the dialect × hierarchy matrix.
+ *
+ * Each exercises something only DTCG expresses, so it has no legacy or Tokens
+ * Studio counterpart and cannot take part in the byte-identical comparison the
+ * matrix rests on.
+ */
+const OUTSIDE_MATRIX = ['dtcg/object-values', 'dtcg/array-values', 'dtcg/composites']
 
 describe('the fixture corpus', () => {
   const corpus = discover()
@@ -62,7 +67,7 @@ describe('the fixture corpus', () => {
     // mode. Two files saying the same thing in different notations must emit
     // exactly the same stylesheet.
     const byHierarchy = new Map<string, string[]>()
-    for (const f of corpus.accept.filter((x) => !NOTATION.includes(x.id))) {
+    for (const f of corpus.accept.filter((x) => !OUTSIDE_MATRIX.includes(x.id))) {
       const hierarchy = f.id.split('/')[1]!
       byHierarchy.set(hierarchy, [...(byHierarchy.get(hierarchy) ?? []), f.expectedCss])
     }
@@ -101,7 +106,7 @@ describe('the accept matrix is complete and consistent', () => {
     // the current DTCG spec writes colours and dimensions, and the scalars it
     // writes as arrays. Neither has a legacy or Tokens Studio counterpart,
     // because neither dialect has the concept.
-    expect(corpus.accept.map((f) => f.id).sort()).toEqual([...matrix, ...NOTATION].sort())
+    expect(corpus.accept.map((f) => f.id).sort()).toEqual([...matrix, ...OUTSIDE_MATRIX].sort())
   })
 
   it('says the same thing in all nine, however it is spelled or arranged', () => {
@@ -117,7 +122,7 @@ describe('the accept matrix is complete and consistent', () => {
       }
     }
 
-    const matrix = corpus.accept.filter((f) => !NOTATION.includes(f.id))
+    const matrix = corpus.accept.filter((f) => !OUTSIDE_MATRIX.includes(f.id))
     const shapes = matrix.map((f) => shapeOf(f.expectedCss))
     for (const shape of shapes) expect(shape).toEqual(shapes[0])
   })

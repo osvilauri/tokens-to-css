@@ -7,8 +7,9 @@
  * three dialects cannot disagree about it.
  */
 import { FailureCode, TokenCssError, type SkippedToken } from '../errors.js'
-import { formatPath, literal, ref, token, type TokenNode, type TokenValue } from '../model/index.js'
+import { composite, formatPath, literal, ref, token, type TokenNode, type TokenValue } from '../model/index.js'
 import { assertScalar } from '../emit/literal.js'
+import { compositeToParts } from './composites.js'
 import { scalarToCss } from './values.js'
 
 /** A JSON object, as it comes out of `JSON.parse`. */
@@ -83,6 +84,22 @@ export function toTokenValue(raw: unknown, path: readonly string[], source: stri
   // other way (FR-23, FR-26).
   const asScalar = scalarToCss(raw, path, source)
   if (asScalar !== null) return literal(asScalar)
+
+  // Shadow, border, transition and gradient describe several sub-values that
+  // CSS writes as one property (FR-25). They keep their pieces apart rather
+  // than being flattened, so an aliased sub-value stays an edge in the graph.
+  const asComposite = compositeToParts(raw)
+  if (asComposite.kind === 'parts') return composite(asComposite.parts)
+  if (asComposite.kind === 'unwritable') {
+    // Recognized, and unwritable for a reason worth naming. Carrying
+    // COMPOSITE_VALUE keeps it a skip rather than a failure, while the message
+    // says which sub-property is the problem instead of "it is an object".
+    throw new TokenCssError(`token "${formatPath(path)}" is a composite, but ${asComposite.reason}`, {
+      code: FailureCode.COMPOSITE_VALUE,
+      source,
+      tokenPaths: [formatPath(path)],
+    })
+  }
 
   return literal(assertScalar(raw, path, source))
 }

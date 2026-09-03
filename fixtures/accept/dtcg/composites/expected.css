@@ -1,0 +1,14 @@
+:root {
+  --color-shadow: rgb(0 0 0 / 0.15);
+  --color-focus: #5A4FCF;
+  --size-px2: 2px;
+  --elevation-low: 0px 2px 6px 0px var(--color-shadow);
+  --elevation-inner: inset 0px 1px 2px 0px #0000000d;
+  --elevation-stacked: 0px 1px 2px 0px #00000014, 0px 8px 16px -4px var(--color-shadow);
+  --border-focus: var(--size-px2) solid var(--color-focus);
+  --border-muted: 1px dashed #00000026;
+  --motion-emphasized: 200ms cubic-bezier(0.2, 0, 0, 1) 0ms;
+  --gradient-hero: var(--color-focus) 0%, #FBFAFD 100%;
+  --gradient-midpoint: #000 0%, #888 35%, #fff 100%;
+  --stroke-dashed: dashed;
+}
