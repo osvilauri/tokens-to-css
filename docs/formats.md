@@ -138,11 +138,44 @@ A string goes out verbatim, unquoted. A number goes out as its digits.
 `16px`, whatever its `$type` says. If you meant a length, write the unit in the
 token — either as `"16px"` or as `{ "value": 16, "unit": "px" }`.
 
+## Composite tokens
+
+**Shadow, border, transition and gradient become one custom property each.** The
+component order below is part of the public contract: changing it is a major
+version.
+
+| Type | Emitted as | Example |
+| --- | --- | --- |
+| shadow | `offsetX offsetY blur spread color`, `inset` in front when true | `0px 2px 6px 0px rgb(0 0 0 / 0.15)` |
+| border | `width style color` | `2px solid var(--color-focus)` |
+| transition | `duration timingFunction delay` | `200ms cubic-bezier(0.2, 0, 0, 1) 0ms` |
+| gradient | the stops, no axis | `var(--color-focus) 0%, #FBFAFD 100%` |
+
+A list of shadows joins with `, ` and stays one value.
+
+**An aliased sub-value stays an alias.** A shadow built on `{color.shadow}`
+emits `var(--color-shadow)` inside the larger value, so the shadow still moves
+when the colour does.
+
+**Two of them are deliberately partial**, because the token does not say the
+whole thing. A transition never says *which* property it animates, and a DTCG
+gradient is stops with no direction — so you supply the missing part:
+
+```css
+.panel { transition: opacity var(--motion-emphasized); }
+.hero  { background: linear-gradient(to right, var(--gradient-hero)); }
+```
+
+Inventing `to bottom`, or a property name, would be putting words in the token's
+mouth.
+
 ## What is skipped
 
 | What | Why |
 | --- | --- |
-| Composite tokens — typography, shadow, border, gradient, transition, stroke-style | Five CSS properties are not one custom property. Support is coming; until then the token is left out rather than guessed at. |
+| Typography, and stroke styles written as an object | These are several CSS properties, not one. Support is coming; until then the token is left out rather than guessed at. |
+| A composite missing a sub-property the spec marks required — a shadow with no `spread`, a transition with no `delay` | Defaulting it would be this product's first inference. The message names which one is absent. |
+| A border whose `style` is an object | `dashArray` is SVG geometry a CSS border cannot carry. The spec permits a "closest approximation"; approximating in silence is what this product does not do. |
 
 **A skipped token does not stop the document.** The rest of the file converts,
 and the omission is reported twice: in `skipped` on the result, and in a comment

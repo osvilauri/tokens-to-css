@@ -100,8 +100,7 @@ describe('an array that is neither is skipped, not guessed at', () => {
     ['mixed types', `["a", 1]`],
     ['three numbers', `[0, 0, 1]`],
     ['five numbers', `[0, 0, 1, 1, 1]`],
-    ['a shadow list', `[{ "offsetY": "2px" }]`],
-    ['gradient stops', `[{ "color": "#000", "position": 0 }]`],
+    ['a list of objects that is no composite', `[{ "nonsense": 1 }]`],
     ['an empty name', `["Monaco", ""]`],
   ])('skips %s', (_kind, json) => {
     expect(skip(json)).toEqual({ path: 't', code: FailureCode.COMPOSITE_VALUE })

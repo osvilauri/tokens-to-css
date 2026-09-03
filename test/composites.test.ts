@@ -50,28 +50,108 @@ describe('an object-form scalar is not a composite', () => {
   })
 })
 
-describe('every DTCG composite type is skipped, not written (FR-24)', () => {
-  const composites = {
-    typography: `{ "fontFamily": "Helvetica", "fontSize": "16px", "lineHeight": 1.4 }`,
-    shadow: `{ "color": "#000", "offsetX": "0", "offsetY": "2px", "blur": "4px" }`,
-    'shadow list': `[{ "offsetY": "2px" }, { "offsetY": "4px" }]`,
-    border: `{ "color": "#000", "width": "1px", "style": "solid" }`,
-    gradient: `[{ "color": "#000", "position": 0 }, { "color": "#fff", "position": 1 }]`,
-    transition: `{ "duration": "200ms", "delay": "0ms", "timingFunction": [0.5, 0, 1, 1] }`,
-    'stroke style': `{ "dashArray": ["2px", "4px"], "lineCap": "round" }`,
-  }
+describe('composites that fit one CSS value are written (FR-25)', () => {
+  const emit = (value: string): string => read(value).css.match(/--t: (.+);/)![1]!
 
-  it.each(Object.entries(composites))('skips a %s value', (_kind, value) => {
-    const skipped = skip(value)
-    expect(skipped.code).toBe(FailureCode.COMPOSITE_VALUE)
-    expect(skipped.path).toBe('t')
-    expect(skipped.reason).toMatch(/an (object|array)/)
+  it('writes a shadow as offsetX offsetY blur spread color', () => {
+    expect(
+      emit(`{ "color": "#000", "offsetX": "0px", "offsetY": "2px", "blur": "6px", "spread": "0px" }`),
+    ).toBe('0px 2px 6px 0px #000')
   })
 
-  it('names the token and what it found', () => {
-    const skipped = skip(`{ "fontSize": "16px" }`)
-    expect(skipped.reason).toContain('"t"')
-    expect(skipped.reason).toContain('an object')
+  it('puts inset in front when the shadow is an inner one', () => {
+    expect(
+      emit(`{ "color": "#000", "offsetX": "0px", "offsetY": "1px", "blur": "2px", "spread": "0px", "inset": true }`),
+    ).toBe('inset 0px 1px 2px 0px #000')
+  })
+
+  it('joins a list of shadows with a comma and keeps it one value', () => {
+    expect(
+      emit(`[
+        { "color": "#000", "offsetX": "0px", "offsetY": "1px", "blur": "2px", "spread": "0px" },
+        { "color": "#111", "offsetX": "0px", "offsetY": "4px", "blur": "8px", "spread": "0px" }
+      ]`),
+    ).toBe('0px 1px 2px 0px #000, 0px 4px 8px 0px #111')
+  })
+
+  it('writes a border as width style color', () => {
+    expect(emit(`{ "color": "#000", "width": "1px", "style": "solid" }`)).toBe('1px solid #000')
+  })
+
+  it('writes a transition as duration, timing function, delay', () => {
+    // Not the order the object is written in: in the CSS shorthand the first
+    // time is the duration and the second is the delay.
+    expect(
+      emit(`{ "duration": "200ms", "delay": "50ms", "timingFunction": [0.2, 0, 0, 1] }`),
+    ).toBe('200ms cubic-bezier(0.2, 0, 0, 1) 50ms')
+  })
+
+  it('writes a gradient as its stops, with no axis invented', () => {
+    // The token says nothing about direction, so the consumer supplies it:
+    // background: linear-gradient(to right, var(--t)).
+    expect(
+      emit(`[{ "color": "#000", "position": 0 }, { "color": "#fff", "position": 1 }]`),
+    ).toBe('#000 0%, #fff 100%')
+  })
+
+  it('clamps a stop position outside 0–1, as the spec requires', () => {
+    expect(emit(`[{ "color": "#000", "position": -9 }, { "color": "#fff", "position": 42 }]`)).toBe(
+      '#000 0%, #fff 100%',
+    )
+  })
+
+  it('keeps an aliased sub-value an alias', () => {
+    // The promise the whole product rests on, applied piecewise: a shadow still
+    // moves when the colour it was built from moves.
+    const { css } = read(
+      `{ "color": "{keep}", "offsetX": "0px", "offsetY": "2px", "blur": "6px", "spread": "0px" }`,
+    )
+    expect(css).toContain('--t: 0px 2px 6px 0px var(--keep);')
+  })
+
+  it('accepts sub-values in every notation the spec allows, and invents no unit', () => {
+    // The colour and three of the lengths are objects, the spread is a bare
+    // number — and it stays `0`, not `0px`. Adding the unit would be the same
+    // inference the product refuses everywhere else.
+    expect(
+      emit(`{ "color": { "colorSpace": "srgb", "components": [0, 0, 0] },
+              "offsetX": { "value": 0, "unit": "px" }, "offsetY": { "value": 2, "unit": "px" },
+              "blur": { "value": 6, "unit": "px" }, "spread": 0 }`),
+    ).toBe('0px 2px 6px 0 rgb(0 0 0)')
+  })
+})
+
+describe('a composite the spec calls incomplete is skipped, and says what is missing', () => {
+  it('names the absent sub-property rather than calling it "an object"', () => {
+    const skipped = skip(`{ "color": "#000", "offsetX": "0px", "offsetY": "2px", "blur": "6px" }`)
+    expect(skipped.code).toBe(FailureCode.COMPOSITE_VALUE)
+    expect(skipped.reason).toContain('"spread"')
+  })
+
+  it('skips a transition with no delay, which the spec marks required', () => {
+    expect(skip(`{ "duration": "200ms", "timingFunction": [0, 0, 1, 1] }`).reason).toContain('"delay"')
+  })
+
+  it('skips a border whose style is written as an object', () => {
+    // The spec's own focusring example. `dashArray` is SVG geometry a CSS
+    // border cannot carry, and the "closest approximation" the spec permits is
+    // exactly the silent guess this product does not make.
+    const skipped = skip(
+      `{ "color": "#000", "width": "1px", "style": { "dashArray": ["2px"], "lineCap": "round" } }`,
+    )
+    expect(skipped.reason).toContain('object')
+  })
+
+  it('skips typography, which is not one CSS property', () => {
+    expect(skip(`{ "fontFamily": "Helvetica", "fontSize": "16px", "lineHeight": 1.4 }`).code).toBe(
+      FailureCode.COMPOSITE_VALUE,
+    )
+  })
+
+  it('skips an object-form stroke style, which is two SVG properties', () => {
+    expect(skip(`{ "dashArray": ["2px", "4px"], "lineCap": "round" }`).code).toBe(
+      FailureCode.COMPOSITE_VALUE,
+    )
   })
 
   it('skips null and booleans, scalars in JSON but not in CSS', () => {

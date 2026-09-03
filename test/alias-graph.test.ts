@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { validateAliasGraph } from '../src/validate/alias-graph.js'
 import { FailureCode, TokenCssError } from '../src/index.js'
-import { literal, ref, token, type TokenDoc } from '../src/model/index.js'
+import { composite, literal, ref, token, type TokenDoc, type TokenNode } from '../src/model/index.js'
 
 const SOURCE = 'design/tokens.json'
 const doc = (...tokens: TokenDoc['tokens']): TokenDoc => ({ tokens })
@@ -185,5 +185,95 @@ describe('the two failures are told apart by code alone', () => {
       ),
     )
     expect(err.code).toBe(FailureCode.ALIAS_DANGLING)
+  })
+})
+
+/**
+ * Composites made a token able to point at several others at once (FR-25).
+ * Both passes read the graph through `referencesOf`, but the cycle sweep had to
+ * become a depth-first walk: following one edge per token finds every cycle
+ * only while a token can make one reference.
+ */
+describe('a token with several outgoing edges', () => {
+  const shadow = (...refs: string[][]): TokenNode =>
+    token(['shadow'], composite(['0px 2px 6px 0px ', ...refs.map((r) => ref(r))]))
+
+  it('reports every sub-reference that points nowhere, not just the first', () => {
+    const err = failure(
+      doc(
+        token(['shadow'], composite([ref(['gone']), ' 2px ', ref(['alsoGone'])])),
+        token(['keep'], literal('1px')),
+      ),
+    )
+    expect(err.code).toBe(FailureCode.ALIAS_DANGLING)
+    expect(err.message).toContain('"gone"')
+    expect(err.message).toContain('"alsoGone"')
+    expect(err.message).toContain('2 references point nowhere')
+  })
+
+  it('names the offending token once however many of its sub-values are broken', () => {
+    const err = failure(
+      doc(token(['shadow'], composite([ref(['gone']), ' ', ref(['alsoGone'])]))),
+    )
+    expect(err.tokenPaths).toEqual(['shadow'])
+  })
+
+  it('accepts a composite whose sub-references all resolve', () => {
+    expect(() =>
+      validateAliasGraph(
+        doc(token(['color'], literal('#000')), shadow(['color'])),
+        SOURCE,
+      ),
+    ).not.toThrow()
+  })
+
+  it('finds a cycle that runs through a composite', () => {
+    // shadow → color → shadow. A sweep following one edge per token would have
+    // walked out of the composite by the shortest path and missed it.
+    const err = failure(doc(shadow(['color']), token(['color'], ref(['shadow']))))
+    expect(err.code).toBe(FailureCode.ALIAS_CYCLE)
+    expect(err.message).toContain('shadow')
+    expect(err.message).toContain('color')
+  })
+
+  it('finds a cycle on the second edge, not only the first', () => {
+    // The first sub-reference is a dead end that settles; the cycle is behind
+    // the second one, and only a walk that backtracks reaches it.
+    const err = failure(
+      doc(
+        token(['a'], composite([ref(['leaf']), ' ', ref(['b'])])),
+        token(['leaf'], literal('1px')),
+        token(['b'], ref(['a'])),
+      ),
+    )
+    expect(err.code).toBe(FailureCode.ALIAS_CYCLE)
+  })
+
+  it('reports a cycle once even when several tokens lead into it', () => {
+    const err = failure(
+      doc(
+        token(['entry'], ref(['a'])),
+        token(['other'], ref(['b'])),
+        token(['a'], ref(['b'])),
+        token(['b'], ref(['a'])),
+      ),
+    )
+    expect(err.message).toContain('1 alias cycle found')
+  })
+
+  it('does not mistake a diamond for a cycle', () => {
+    // Two paths reaching the same token is not a loop, and a walk that marked
+    // nodes visited without settling them would call it one.
+    expect(() =>
+      validateAliasGraph(
+        doc(
+          token(['top'], composite([ref(['left']), ' ', ref(['right'])])),
+          token(['left'], ref(['base'])),
+          token(['right'], ref(['base'])),
+          token(['base'], literal('#000')),
+        ),
+        SOURCE,
+      ),
+    ).not.toThrow()
   })
 })

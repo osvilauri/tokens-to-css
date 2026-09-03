@@ -29,8 +29,24 @@ export interface TokenLiteral {
   readonly value: string | number
 }
 
-/** A token's value: either a reference to another token, or a literal. */
-export type TokenValue = TokenRef | TokenLiteral
+/**
+ * A token whose value is assembled from several pieces (FR-25).
+ *
+ * A shadow is one CSS value built from five sub-values, and any of them may be
+ * a reference: `0px 2px 6px 0px var(--color-shadow)`. Flattening that into a
+ * string at normalization would work and would be wrong — the reference would
+ * stop being an edge in the graph, so a sub-value pointing at a token that does
+ * not exist would emit `var(--nothing)` under a successful run. Keeping the
+ * pieces apart is what lets dangling detection still see them.
+ */
+export interface TokenComposite {
+  readonly kind: 'composite'
+  /** Literal text and references, in the order they are written out. */
+  readonly parts: readonly (string | TokenRef)[]
+}
+
+/** A token's value: a reference, a literal, or several of both joined together. */
+export type TokenValue = TokenRef | TokenLiteral | TokenComposite
 
 /** One token, identified by its path from the document root. */
 export interface TokenNode {
@@ -60,6 +76,11 @@ export function ref(path: readonly string[]): TokenRef {
   return { kind: 'ref', path }
 }
 
+/** Builds a value assembled from literal text and references. */
+export function composite(parts: readonly (string | TokenRef)[]): TokenComposite {
+  return { kind: 'composite', parts }
+}
+
 /** Builds a token node. */
 export function token(path: readonly string[], value: TokenValue): TokenNode {
   return { path, value }
@@ -73,6 +94,24 @@ export function isRef(value: TokenValue): value is TokenRef {
 /** Narrows a value to a literal. */
 export function isLiteral(value: TokenValue): value is TokenLiteral {
   return value.kind === 'literal'
+}
+
+/** Narrows a value to a composite. */
+export function isComposite(value: TokenValue): value is TokenComposite {
+  return value.kind === 'composite'
+}
+
+/**
+ * Every reference a token makes, in order.
+ *
+ * A scalar makes at most one; a composite makes as many as it has aliased
+ * sub-values. Both validators read the graph through this, so neither has to
+ * know that composites exist.
+ */
+export function referencesOf(value: TokenValue): readonly TokenRef[] {
+  if (isRef(value)) return [value]
+  if (isComposite(value)) return value.parts.filter((part): part is TokenRef => typeof part !== 'string')
+  return []
 }
 
 /**

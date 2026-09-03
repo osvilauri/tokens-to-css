@@ -11,7 +11,7 @@
  * the array it was handed, and that is document order.
  */
 import type { SkippedToken } from '../errors.js'
-import { isRef, type TokenDoc } from '../model/index.js'
+import { isComposite, isRef, type TokenDoc } from '../model/index.js'
 import { stringifyLiteral } from './literal.js'
 import { customPropertyName } from './name.js'
 
@@ -41,7 +41,9 @@ function skipComment(skipped: readonly SkippedToken[]): readonly string[] {
  * A token whose value points at another token is written as `var(--target)`,
  * never as the target's value. That is the whole point of the product: the
  * relationship the token file expressed survives into the CSS, so changing a
- * primitive still moves everything that referred to it.
+ * primitive still moves everything that referred to it. A composite is the same
+ * promise applied piecewise — an aliased sub-value stays `var(--target)` inside
+ * the larger value, so a shadow still moves when its colour does.
  *
  * A document carrying skipped tokens is preceded by a comment naming them, so
  * the stylesheet says what it is missing rather than quietly being short.
@@ -58,11 +60,17 @@ export function emitStylesheet(
   skipped: readonly SkippedToken[],
   source: string,
 ): string {
+  const reference = (path: readonly string[]): string => `var(${customPropertyName(path, source)})`
+
   const declarations = doc.tokens.map((node) => {
     const property = customPropertyName(node.path, source)
     const value = isRef(node.value)
-      ? `var(${customPropertyName(node.value.path, source)})`
-      : stringifyLiteral(node.value.value)
+      ? reference(node.value.path)
+      : isComposite(node.value)
+        ? node.value.parts
+            .map((part) => (typeof part === 'string' ? part : reference(part.path)))
+            .join('')
+        : stringifyLiteral(node.value.value)
     return `${INDENT}${property}: ${value};`
   })
 

@@ -10,16 +10,17 @@
  * confusing half-cycles, and a developer with a typo should be told about the
  * typo rather than about a loop that only exists because of it.
  *
- * Every token has at most one outgoing edge — a value is either a literal or a
- * single reference — so the graph is a chain per token, and one linear sweep
- * finds every cycle.
+ * A token has as many outgoing edges as its value has references: none for a
+ * literal, one for an alias, and one per aliased sub-value for a composite
+ * (FR-25). Both passes read those edges through `referencesOf`, so neither
+ * needs to know which kind of value produced them.
  */
 import { FailureCode, TokenCssError } from '../errors.js'
-import { formatPath, isRef, type TokenDoc, type TokenNode } from '../model/index.js'
+import { formatPath, referencesOf, type TokenDoc, type TokenNode } from '../model/index.js'
 
-/** Where a token's reference points, or `undefined` when it holds a literal. */
-function targetOf(node: TokenNode): string | undefined {
-  return isRef(node.value) ? formatPath(node.value.path) : undefined
+/** Every token this one points at, as dotted paths, in order. */
+function targetsOf(node: TokenNode): string[] {
+  return referencesOf(node.value).map((r) => formatPath(r.path))
 }
 
 /**
@@ -35,18 +36,21 @@ function checkDangling(doc: TokenDoc, byPath: Map<string, TokenNode>, source: st
   const offenders: string[] = []
 
   for (const node of doc.tokens) {
-    const target = targetOf(node)
-    if (target === undefined || byPath.has(target)) continue
-
     const from = formatPath(node.path)
-    offenders.push(from)
+    for (const target of targetsOf(node)) {
+      if (byPath.has(target)) continue
 
-    const isGroup = [...byPath.keys()].some((known) => known.startsWith(`${target}.`))
-    problems.push(
-      isGroup
-        ? `"${from}" references "${target}", which is a group of tokens rather than a token`
-        : `"${from}" references "${target}", which does not exist`,
-    )
+      // A composite can point nowhere more than once; each is reported, and the
+      // token is named once however many of its sub-values are broken.
+      if (!offenders.includes(from)) offenders.push(from)
+
+      const isGroup = [...byPath.keys()].some((known) => known.startsWith(`${target}.`))
+      problems.push(
+        isGroup
+          ? `"${from}" references "${target}", which is a group of tokens rather than a token`
+          : `"${from}" references "${target}", which does not exist`,
+      )
+    }
   }
 
   if (problems.length > 0) {
@@ -65,6 +69,11 @@ const SETTLED = 2
 /**
  * Reports every cycle in the reference graph.
  *
+ * Depth-first with three colours: a node still on the current path that is
+ * reached again closes a cycle. This replaced a linear sweep when composites
+ * arrived — the sweep followed one edge per token, which is correct only while
+ * a token can make at most one reference, and a composite makes several.
+ *
  * Iterative rather than recursive: a document is allowed to be a chain of ten
  * thousand tokens, and that is a stack overflow rather than a clear failure if
  * this walks itself.
@@ -72,25 +81,49 @@ const SETTLED = 2
 function checkCycles(doc: TokenDoc, byPath: Map<string, TokenNode>, source: string): void {
   const state = new Map<string, number>()
   const cycles: string[][] = []
+  const seen = new Set<string>()
 
   for (const start of doc.tokens) {
     const startKey = formatPath(start.path)
-    if (state.get(startKey) !== undefined) continue
+    if ((state.get(startKey) ?? UNVISITED) !== UNVISITED) continue
 
-    const chain: string[] = []
-    let cursor: string | undefined = startKey
+    // `path` is the chain of nodes currently being explored; `frames` holds, for
+    // each of them, the edges not yet followed.
+    const path: string[] = [startKey]
+    const frames: string[][] = [[...targetsOf(byPath.get(startKey)!)].reverse()]
+    state.set(startKey, ON_PATH)
 
-    while (cursor !== undefined && (state.get(cursor) ?? UNVISITED) === UNVISITED) {
-      state.set(cursor, ON_PATH)
-      chain.push(cursor)
-      const node = byPath.get(cursor)
-      cursor = node === undefined ? undefined : targetOf(node)
+    while (path.length > 0) {
+      const edges = frames[frames.length - 1]!
+      const next = edges.pop()
+
+      if (next === undefined) {
+        state.set(path.pop()!, SETTLED)
+        frames.pop()
+        continue
+      }
+
+      // Dangling ran first, so every target exists; this is belt and braces.
+      const node = byPath.get(next)
+      if (node === undefined) continue
+
+      if (state.get(next) === ON_PATH) {
+        const cycle = path.slice(path.indexOf(next))
+        // One cycle can be met from several entry points. Recording it by its
+        // members rather than by its starting node keeps it reported once.
+        const key = [...cycle].sort().join('\u0000')
+        if (!seen.has(key)) {
+          seen.add(key)
+          cycles.push(cycle)
+        }
+        continue
+      }
+      if (state.get(next) === SETTLED) continue
+
+      state.set(next, ON_PATH)
+      path.push(next)
+      frames.push([...targetsOf(node)].reverse())
     }
-
-    if (cursor !== undefined && state.get(cursor) === ON_PATH) {
-      cycles.push(chain.slice(chain.indexOf(cursor)))
-    }
-    for (const key of chain) state.set(key, SETTLED)
   }
 
   if (cycles.length > 0) {
