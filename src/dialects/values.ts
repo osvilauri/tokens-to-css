@@ -1,15 +1,18 @@
 /**
- * Object-form scalar values (FR-23).
+ * Scalars the spec writes in an expanded notation (FR-23, FR-26).
  *
- * The current DTCG spec writes a colour and a dimension as objects rather than
- * strings:
+ * Four values in this format are one CSS value each, written as an object or an
+ * array rather than a string:
  *
  *   { "colorSpace": "srgb", "components": [0, 0, 0], "alpha": 1, "hex": "#000" }
  *   { "value": 0.25, "unit": "rem" }
+ *   ["Monaco", "Consolas", "monospace"]
+ *   [0, 0, 1, 1]
  *
- * Both still describe **one** CSS value. They are scalars written with more
- * ceremony, not composites, and refusing them meant refusing every design
- * system published against the current spec.
+ * All four are scalars written with more ceremony, not composites. FR-23
+ * accepted the two written as objects, because refusing them meant refusing
+ * every design system published against the current spec; the 2026-09-02 survey
+ * found the same mistake still standing for the two written as arrays.
  *
  * Two properties of this module matter more than the conversion itself:
  *
@@ -142,22 +145,78 @@ function colorToCss(raw: Record<string, unknown>, path: readonly string[], sourc
 }
 
 /**
- * Converts an object-form scalar into stylesheet text.
- *
- * @returns The CSS value, or `null` when the object is not a scalar in object
- * form — a typography or shadow block, which stays a composite and is refused
- * by the caller.
- * @throws {TokenCssError} `FORMAT_NOT_ALLOWED` when the object *is* one of these
- * shapes but is malformed or unusable in CSS.
+ * Families CSS resolves itself. Quoting one turns the generic family into the
+ * name of a font that does not exist, so these are never quoted.
  */
-export function objectValueToCss(
-  raw: unknown,
-  path: readonly string[],
-  source: string,
-): string | null {
-  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return null
-  const record = raw as Record<string, unknown>
+const GENERIC_FAMILIES = new Set([
+  'serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'system-ui',
+  'ui-serif', 'ui-sans-serif', 'ui-monospace', 'ui-rounded', 'math', 'emoji', 'fangsong',
+])
 
+/** Quoted, or they are read as the keyword rather than as a family name. */
+const CSS_WIDE_KEYWORDS = new Set(['inherit', 'initial', 'unset', 'revert', 'revert-layer', 'default'])
+
+/** A name that needs no quotes: one identifier, no spaces, not starting with a digit. */
+const BARE_NAME = /^-?[a-zA-Z_][a-zA-Z0-9_-]*$/
+
+/** A comma or a quote means the author already wrote CSS here, not one font name. */
+const ALREADY_CSS = /[,'"]/
+
+/**
+ * Renders one entry of a font family list.
+ *
+ * The 2026-09-02 survey found four notations in the wild, and two of them —
+ * Microsoft Fluent's and GitHub Primer's — put an entire pre-quoted stack where
+ * the spec says one name goes. A quoting rule applied to those would wrap the
+ * whole stack in quotes and produce a single bogus font name, in silence. So an
+ * entry that already contains a comma or a quote is passed through as written:
+ * it is CSS the author wrote, and it is correct as it stands.
+ */
+function fontFamilyEntry(name: string): string {
+  if (ALREADY_CSS.test(name)) return name
+  if (GENERIC_FAMILIES.has(name.toLowerCase())) return name
+  if (CSS_WIDE_KEYWORDS.has(name.toLowerCase())) return `"${name}"`
+  return BARE_NAME.test(name) ? name : `"${name}"`
+}
+
+/** An array of names — every element a non-empty string with no reference in it. */
+function isFontFamily(raw: readonly unknown[]): boolean {
+  return (
+    raw.length > 0 &&
+    raw.every((n) => typeof n === 'string' && n.trim() !== '' && !/[{}]/.test(n))
+  )
+}
+
+/** Four finite numbers, and nothing else in DTCG is written that way. */
+function isCubicBezier(raw: readonly unknown[]): boolean {
+  return raw.length === 4 && raw.every((n) => typeof n === 'number' && Number.isFinite(n))
+}
+
+/**
+ * Converts a scalar written in an expanded notation into stylesheet text.
+ *
+ * Recognition reads the **shape** and never the declared `$type`, which is what
+ * keeps "a `16` never becomes `16px`" true: `{colorSpace, components}` can only
+ * be a colour, `{value, unit}` can only be a dimension, an array of names can
+ * only be a font family, and four numbers can only be a curve.
+ *
+ * @returns The CSS value, or `null` when this is not a scalar in disguise — a
+ * typography block, a shadow list, an array holding a reference. The caller
+ * skips those (FR-24) rather than guessing at them.
+ * @throws {TokenCssError} `FORMAT_NOT_ALLOWED` when the value *is* one of these
+ * shapes but is malformed or unusable in CSS, which is a different thing from
+ * being unrecognized and gets its own message.
+ */
+export function scalarToCss(raw: unknown, path: readonly string[], source: string): string | null {
+  if (typeof raw !== 'object' || raw === null) return null
+
+  if (Array.isArray(raw)) {
+    if (isFontFamily(raw)) return (raw as string[]).map(fontFamilyEntry).join(', ')
+    if (isCubicBezier(raw)) return `cubic-bezier(${(raw as number[]).join(', ')})`
+    return null
+  }
+
+  const record = raw as Record<string, unknown>
   if (isColor(record)) return colorToCss(record, path, source)
   if (isDimension(record)) return dimensionToCss(record, path, source)
   return null

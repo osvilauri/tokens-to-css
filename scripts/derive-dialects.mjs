@@ -25,10 +25,11 @@ const check = process.argv.includes('--check')
  * Hierarchies that exist only as DTCG.
  *
  * `object-values` writes colours and dimensions the way the current DTCG spec
- * does. Style Dictionary legacy has no such notation, and rendering it there
- * would invent a dialect nobody publishes.
+ * does, and `array-values` writes font families and easing curves the same way.
+ * Style Dictionary legacy has no such notation, and rendering it there would
+ * invent a dialect nobody publishes.
  */
-const DTCG_ONLY = new Set(['object-values'])
+const DTCG_ONLY = new Set(['object-values', 'array-values'])
 
 /** DTCG to Style Dictionary legacy: the same tree with the dollars taken off. */
 function toLegacy(node) {

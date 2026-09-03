@@ -1,0 +1,12 @@
+:root {
+  --font-family-mono: Monaco, Consolas, "Lucida Console", monospace;
+  --font-family-system: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-family-display: "SF Pro";
+  --font-family-prequoted: 'Mona Sans VF', Helvetica, sans-serif;
+  --font-family-string: 'Segoe UI', -apple-system, sans-serif;
+  --easing-linear: cubic-bezier(0, 0, 1, 1);
+  --easing-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --easing-overshoot: cubic-bezier(0.5, -0.5, 0.5, 1.5);
+  --semantic-code: var(--font-family-mono);
+  --semantic-motion: var(--easing-emphasized);
+}
