@@ -16,7 +16,20 @@ accept/<dialect>/<hierarchy>/
 reject/<trigger>/
   input.json      the token document
   expected.json   { "code": "...", "tokenPaths": ["..."] }
+
+partial/<case>/
+  input.json      the token document
+  expected.css    the golden, comment block included
+  expected.json   { "skipped": [{ "path": "...", "code": "..." }] }
 ```
+
+**Why there is a third category.** A partial conversion (FR-24) is neither of
+the other two: the document converts, so it is not a rejection, and the
+stylesheet is deliberately missing tokens, so an accept fixture would assert
+only half of what happened. A partial fixture pins both halves — the bytes, and
+the skip report — because either one alone can be right while the other is
+wrong. A `partial/` fixture whose `skipped` list is empty is refused by the
+harness: that is an accept fixture that wandered into the wrong directory.
 
 Network failures are not shaped like a file — a timeout is a response, not a
 document — so they live in `network/scenarios.ts` instead (AD-23), served by an

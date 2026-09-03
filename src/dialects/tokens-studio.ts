@@ -13,6 +13,7 @@
  */
 import { FailureCode, TokenCssError } from '../errors.js'
 import { formatPath, type TokenDoc, type TokenNode } from '../model/index.js'
+import type { Normalized } from './registry.js'
 import { isPlainObject, walkTokenTree, type JsonObject, type TokenReader } from './walk.js'
 
 /** The plugin's own keys, read and ignored. */
@@ -69,7 +70,7 @@ function refuseExpressions(node: TokenNode, source: string): void {
  * @throws {TokenCssError} `FORMAT_NOT_ALLOWED` when the export holds more than
  * one token set, or when a value is an expression.
  */
-export function normalizeTokensStudio(root: JsonObject, source: string): TokenDoc {
+export function normalizeTokensStudio(root: JsonObject, source: string): Normalized {
   const setNames = Object.keys(root).filter((key) => !BOOKKEEPING.has(key))
 
   if (setNames.length === 0) {
@@ -98,7 +99,9 @@ export function normalizeTokensStudio(root: JsonObject, source: string): TokenDo
 
   // Walked from inside the set, so the wrapper never becomes a path segment.
   // Everything below the top level is an ordinary group (AD-22).
-  const tokens = walkTokenTree(set, source, reader)
+  const { tokens, skipped } = walkTokenTree(set, source, reader)
+  // FR-17 is a rejection, not a skip: an expression is a shape this version
+  // refuses to read at all, and reading half of one is worse than reading none.
   for (const node of tokens) refuseExpressions(node, source)
-  return { tokens }
+  return { doc: { tokens }, skipped }
 }

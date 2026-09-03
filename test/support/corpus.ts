@@ -11,6 +11,13 @@
  *
  *   fixtures/accept/<dialect>/<hierarchy>/{input.json,expected.css}
  *   fixtures/reject/<trigger>/{input.json,expected.json}
+ *   fixtures/partial/<case>/{input.json,expected.css,expected.json}
+ *
+ * The third category exists because partial conversion (FR-24) is neither of
+ * the other two: the document converts, so it is not a rejection, and the
+ * stylesheet is deliberately missing tokens, so an accept fixture would assert
+ * only half of what happened. A partial fixture pins both halves — the bytes,
+ * comment block included, and the skip report.
  */
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
@@ -37,9 +44,29 @@ export interface RejectFixture {
   readonly expected: { readonly code: string; readonly tokenPaths?: readonly string[] }
 }
 
+/** One skipped token, as a fixture declares it. */
+export interface ExpectedSkip {
+  readonly path: string
+  readonly code: string
+}
+
+/** An input that converts while leaving tokens out, and everything that must be true of it. */
+export interface PartialFixture {
+  /** Path-derived name, e.g. `composite-typography`. */
+  readonly id: string
+  readonly dir: string
+  readonly input: unknown
+  /** The golden, compared byte for byte — comment block and all. */
+  readonly expectedCss: string
+  readonly goldenPath: string
+  /** Every token the conversion must report as skipped, in order. */
+  readonly expectedSkipped: readonly ExpectedSkip[]
+}
+
 export interface Corpus {
   readonly accept: readonly AcceptFixture[]
   readonly reject: readonly RejectFixture[]
+  readonly partial: readonly PartialFixture[]
 }
 
 /** Thrown when the corpus itself is malformed. Never swallowed, never skipped. */
@@ -110,7 +137,30 @@ export function discover(root: string = CORPUS_ROOT): Corpus {
     return { id: idOf(dir, 'reject'), dir, input: readJson(dir, 'input.json'), expected }
   })
 
-  return { accept, reject }
+  const partial = leafDirs(join(root, 'partial')).map((dir): PartialFixture => {
+    const expected = readJson(dir, 'expected.json') as { skipped?: readonly ExpectedSkip[] }
+    if (!Array.isArray(expected?.skipped) || expected.skipped.length === 0) {
+      throw new CorpusError(
+        `fixture "${dir}" has no non-empty "skipped" in expected.json — a partial fixture ` +
+          `that skips nothing is an accept fixture`,
+      )
+    }
+    for (const skip of expected.skipped) {
+      if (typeof skip?.path !== 'string' || typeof skip?.code !== 'string') {
+        throw new CorpusError(`fixture "${dir}" has a "skipped" entry without a path and a code`)
+      }
+    }
+    return {
+      id: idOf(dir, 'partial'),
+      dir,
+      input: readJson(dir, 'input.json'),
+      expectedCss: read(dir, 'expected.css'),
+      goldenPath: join(dir, 'expected.css'),
+      expectedSkipped: expected.skipped,
+    }
+  })
+
+  return { accept, reject, partial }
 }
 
 export interface GoldenMismatch {
@@ -181,7 +231,7 @@ export function goldenUpdatesAllowed(env: NodeJS.ProcessEnv = process.env): bool
 }
 
 /** Rewrites one golden. Only reachable when {@link goldenUpdatesAllowed} is true. */
-export function writeGolden(fixture: AcceptFixture, css: string): void {
+export function writeGolden(fixture: { readonly goldenPath: string }, css: string): void {
   if (!goldenUpdatesAllowed()) {
     throw new CorpusError('refusing to rewrite a golden: set UPDATE_GOLDEN=1, and never in CI')
   }

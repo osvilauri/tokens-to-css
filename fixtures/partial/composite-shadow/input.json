@@ -1,0 +1,4 @@
+{
+  "color": { "shadow": { "$value": "#00000026" } },
+  "elevation": { "low": { "$value": [{ "offsetY": "2px", "blur": "4px" }], "$type": "shadow" } }
+}

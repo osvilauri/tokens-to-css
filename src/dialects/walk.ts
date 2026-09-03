@@ -6,7 +6,7 @@
  * syntax, refusing to drop things silently — is identical, and lives here so
  * three dialects cannot disagree about it.
  */
-import { FailureCode, TokenCssError } from '../errors.js'
+import { FailureCode, TokenCssError, type SkippedToken } from '../errors.js'
 import { formatPath, literal, ref, token, type TokenNode, type TokenValue } from '../model/index.js'
 import { assertScalar } from '../emit/literal.js'
 import { objectValueToCss } from './values.js'
@@ -86,24 +86,55 @@ export function toTokenValue(raw: unknown, path: readonly string[], source: stri
   return literal(assertScalar(raw, path, source))
 }
 
+/** What a walk produced: the tokens it could read, and the ones it could not (FR-24). */
+export interface WalkResult {
+  readonly tokens: TokenNode[]
+  readonly skipped: SkippedToken[]
+}
+
 /**
  * Walks a token document into a flat, ordered list of tokens.
  *
- * Nothing is dropped quietly. A scalar sitting where a group should be is a
- * failure, not a skipped entry, because a token that vanishes between the file
- * and the stylesheet is the silent breakage the Reliability requirement forbids.
+ * Nothing is dropped quietly, but not everything is fatal any more (FR-24).
+ * One code is skippable and the rest are not:
+ *
+ * **`COMPOSITE_VALUE`** — the value is an object, an array, a boolean or null,
+ * so there is no CSS to write for it. That is scoped to one token and says
+ * nothing about the document around it, so the token is left out and recorded
+ * while the rest converts.
+ *
+ * **Everything else stays fatal**, including the token-scoped ones: a non-CSS
+ * unit, a reference buried in a larger string, Tokens Studio arithmetic. Each
+ * of those has its own message explaining the specific thing that is wrong, and
+ * folding them into a generic skip would replace an explanation with a shrug —
+ * arithmetic would be reported as an embedded reference, which is true and
+ * useless. A document whose shape this version does not accept is refused by
+ * name, the way it always has been.
+ *
+ * The line is drawn on the code rather than on where the failure was raised.
+ * Raising position is an implementation detail that moves; the code is public
+ * surface that cannot.
  *
  * @throws {TokenCssError} `FORMAT_NOT_ALLOWED` for unsafe keys, stray scalars,
- * and malformed references. Multi-file constructs are caught earlier, by the
- * registry, because they can appear in a document no dialect claims.
+ * malformed references and values this version does not accept. Multi-file
+ * constructs are caught earlier, by the registry, because they can appear in a
+ * document no dialect claims.
  */
-export function walkTokenTree(root: JsonObject, source: string, reader: TokenReader): TokenNode[] {
+export function walkTokenTree(root: JsonObject, source: string, reader: TokenReader): WalkResult {
   const tokens: TokenNode[] = []
+  const skipped: SkippedToken[] = []
 
   const visit = (node: JsonObject, path: readonly string[]): void => {
     const value = reader.read(node)
     if (value.found) {
-      tokens.push(token(path, toTokenValue(value.raw, path, source)))
+      try {
+        tokens.push(token(path, toTokenValue(value.raw, path, source)))
+      } catch (err) {
+        if (!(err instanceof TokenCssError) || err.code !== FailureCode.COMPOSITE_VALUE) throw err
+        // Collected, not rethrown: the walk continues so one pass reports every
+        // unwritable token rather than the first (AD-5).
+        skipped.push({ path: formatPath(path), code: err.code, reason: err.message })
+      }
       return
     }
 
@@ -134,5 +165,5 @@ export function walkTokenTree(root: JsonObject, source: string, reader: TokenRea
   }
 
   visit(root, [])
-  return tokens
+  return { tokens, skipped }
 }

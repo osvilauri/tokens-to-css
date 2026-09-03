@@ -64,7 +64,7 @@ describe('discovery', () => {
   })
 
   it('returns an empty corpus rather than throwing when nothing exists yet', () => {
-    expect(discover(root)).toEqual({ accept: [], reject: [] })
+    expect(discover(root)).toEqual({ accept: [], reject: [], partial: [] })
   })
 
   it('is deterministic in order, so failures are reproducible', () => {

@@ -1,0 +1,10 @@
+/* 3 tokens were skipped:
+ *   token "type.body" has an object as its value, but this version writes one custom property per scalar token
+ *   token "border.focus" has an object as its value, but this version writes one custom property per scalar token
+ *   token "motion.ease" has an array as its value, but this version writes one custom property per scalar token
+ */
+:root {
+  --color-brand: #5A4FCF;
+  --color-alias: var(--color-brand);
+  --spacing-md: 16px;
+}

@@ -1,0 +1,7 @@
+/* 1 token was skipped:
+ *   token "type.heading" has an object as its value, but this version writes one custom property per scalar token
+ */
+:root {
+  --color-text: #161616;
+  --spacing-md: 16px;
+}

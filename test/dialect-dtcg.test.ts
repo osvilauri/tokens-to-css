@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { DIALECTS, normalizeDocument } from '../src/dialects/registry.js'
 import { FailureCode, TokenCssError } from '../src/index.js'
-import { literal, ref, token } from '../src/model/index.js'
+import { literal, ref, token, type TokenDoc } from '../src/model/index.js'
 
 const SOURCE = 'design/tokens.json'
-const read = (json: string): ReturnType<typeof normalizeDocument> =>
-  normalizeDocument(JSON.parse(json), SOURCE)
+const read = (json: string): TokenDoc => normalizeDocument(JSON.parse(json), SOURCE).doc
 
 const failure = (json: string): TokenCssError => {
   try {
@@ -120,10 +119,17 @@ describe('rejections that are structural', () => {
     expect(err.message).toMatch(/single self-contained file/)
   })
 
-  it('refuses a composite value rather than stringifying it', () => {
-    const err = failure(`{ "shadow": { "$value": { "offsetX": "0", "blur": "4px" } } }`)
-    expect(err.code).toBe(FailureCode.COMPOSITE_VALUE)
-    expect(err.tokenPaths).toEqual(['shadow'])
+  it('skips a composite value rather than stringifying it', () => {
+    // The refusal to write `[object Object]` is unchanged. What changed with
+    // FR-24 is that it costs the token rather than the document.
+    const { doc, skipped } = normalizeDocument(
+      JSON.parse(`{ "a": { "$value": "1px" }, "shadow": { "$value": { "offsetX": "0", "blur": "4px" } } }`),
+      SOURCE,
+    )
+    expect(doc.tokens.map((t) => t.path)).toEqual([['a']])
+    expect(skipped).toHaveLength(1)
+    expect(skipped[0]!.path).toBe('shadow')
+    expect(skipped[0]!.code).toBe(FailureCode.COMPOSITE_VALUE)
   })
 })
 

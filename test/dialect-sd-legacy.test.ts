@@ -2,13 +2,15 @@ import { describe, expect, it } from 'vitest'
 import { DIALECTS, normalizeDocument } from '../src/dialects/registry.js'
 import { emitStylesheet } from '../src/emit/css.js'
 import { FailureCode, TokenCssError } from '../src/index.js'
-import { literal, ref, token } from '../src/model/index.js'
+import { literal, ref, token, type TokenDoc } from '../src/model/index.js'
 
 const SOURCE = 'design/tokens.json'
-const read = (json: string): ReturnType<typeof normalizeDocument> =>
-  normalizeDocument(JSON.parse(json), SOURCE)
+const read = (json: string): TokenDoc => normalizeDocument(JSON.parse(json), SOURCE).doc
 
-const css = (json: string): string => emitStylesheet(read(json), SOURCE)
+const css = (json: string): string => {
+  const { doc, skipped } = normalizeDocument(JSON.parse(json), SOURCE)
+  return emitStylesheet(doc, skipped, SOURCE)
+}
 
 const failure = (json: string): TokenCssError => {
   try {
@@ -140,7 +142,7 @@ describe('a Tokens Studio export is not read as legacy', () => {
 
   it('emits --color-brand rather than --global-color-brand', () => {
     const doc = read(`{ "$metadata": {}, "global": { "color": { "brand": { "value": "#000" } } } }`)
-    expect(emitStylesheet(doc, SOURCE)).toContain('--color-brand: #000;')
+    expect(emitStylesheet(doc, [], SOURCE)).toContain('--color-brand: #000;')
   })
 })
 
@@ -155,10 +157,16 @@ describe('the registry', () => {
     expect(err.message).toContain('Style Dictionary legacy documents using value/type')
   })
 
-  it('refuses a composite legacy value rather than walking into it', () => {
-    const err = failure(`{ "shadow": { "value": { "offsetY": "2px" }, "type": "shadow" } }`)
-    expect(err.code).toBe(FailureCode.COMPOSITE_VALUE)
-    expect(err.tokenPaths).toEqual(['shadow'])
+  it('skips a composite legacy value rather than walking into it', () => {
+    // The danger this guards is specific to the legacy dialect: a composite
+    // `value` must reach the composite check, not be walked into as a group.
+    const { doc, skipped } = normalizeDocument(
+      JSON.parse(`{ "a": { "value": "1px" }, "shadow": { "value": { "offsetY": "2px" }, "type": "shadow" } }`),
+      SOURCE,
+    )
+    expect(doc.tokens.map((t) => t.path)).toEqual([['a']])
+    expect(skipped[0]!.path).toBe('shadow')
+    expect(skipped[0]!.code).toBe(FailureCode.COMPOSITE_VALUE)
   })
 
   it('refuses an embedded reference in a legacy value', () => {

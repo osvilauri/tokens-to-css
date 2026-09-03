@@ -120,11 +120,34 @@ A string goes out verbatim, unquoted. A number goes out as its digits.
 `16px`, whatever its `$type` says. If you meant a length, write the unit in the
 token — either as `"16px"` or as `{ "value": 16, "unit": "px" }`.
 
+## What is skipped
+
+| What | Why |
+| --- | --- |
+| Composite tokens — typography, shadow, border, gradient, transition, stroke-style | Five CSS properties are not one custom property. Support is coming; until then the token is left out rather than guessed at. |
+
+**A skipped token does not stop the document.** The rest of the file converts,
+and the omission is reported twice: in `skipped` on the result, and in a comment
+above `:root` in the stylesheet itself — so a token that stopped being emitted
+shows up in the diff of your next pull request.
+
+```css
+/* 1 token was skipped:
+ *   token "type.heading" has an object as its value, but this version writes one custom property per scalar token
+ */
+:root {
+  --color-text: #161616;
+```
+
+If **every** token is skipped, that is a failure (`NOTHING_EMITTED`), not an
+empty stylesheet. And a reference pointing at a skipped token is a dangling
+reference, which still fails the whole document — skipping cannot quietly hollow
+out a token that survived.
+
 ## What is refused
 
 | What | Why |
 | --- | --- |
-| Composite tokens — typography, shadow, border, gradient, transition, stroke-style | Five CSS properties are not one custom property. Deferred to a version after the first release. |
 | Expressions — `{spacing.md} * 2`, `16 * 2`, `roundTo(…)` | Nothing here evaluates anything. Resolve them in Tokens Studio before exporting. `calc()` and `clamp()` are valid CSS and pass through untouched. |
 | Units CSS does not have — `dp`, `sp` | A browser ignores the declaration silently. |
 | More than one token set in a Tokens Studio export | Merging would mean choosing a winner. |
@@ -132,13 +155,14 @@ token — either as `"16px"` or as `{ "value": 16, "unit": "px" }`.
 | A directory or a glob as the Token Source | One file at a time. |
 | `__proto__`, `constructor`, `prototype` as token keys | Refused outright. |
 
-**A refusal stops the whole document.** One composite token in a file of two
-hundred stops the conversion — there is no partial output, because a stylesheet
-missing a token while reporting success is worse than no stylesheet.
+**A refusal stops the whole document.** Unlike a skip, everything in the table
+above says the file is not what it appears to be, and there is no partial answer
+to give: no stylesheet is written at all, and an existing one is left untouched.
 
 ## The fixtures are the specification
 
 Everything above is proved by files in [`fixtures/`](../fixtures/README.md):
-nine that must convert to a stored stylesheet byte for byte, and seventeen that
-must fail with a named code. If the documentation and the fixtures ever
-disagree, the fixtures are right.
+ten that must convert to a stored stylesheet byte for byte, seventeen that must
+fail with a named code, and three that must convert while leaving named tokens
+out. If the documentation and the fixtures ever disagree, the fixtures are
+right.

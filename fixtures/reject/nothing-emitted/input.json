@@ -1,0 +1,6 @@
+{
+  "type": {
+    "heading": { "$value": { "fontFamily": "Inter", "fontSize": "24px" }, "$type": "typography" },
+    "body": { "$value": { "fontFamily": "Inter", "fontSize": "16px" }, "$type": "typography" }
+  }
+}

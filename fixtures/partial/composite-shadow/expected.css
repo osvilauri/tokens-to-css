@@ -1,0 +1,6 @@
+/* 1 token was skipped:
+ *   token "elevation.low" has an array as its value, but this version writes one custom property per scalar token
+ */
+:root {
+  --color-shadow: #00000026;
+}
