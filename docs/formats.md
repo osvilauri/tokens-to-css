@@ -62,6 +62,24 @@ Recognized by `$value` anywhere in the document.
   A colour's optional `hex` is ignored: it is not always there, and output whose
   form depended on an optional field would be less predictable than output that
   never uses it.
+- **Font families and easing curves written as arrays are accepted**, on the same
+  reasoning: an array of names and four numbers are one CSS value each.
+
+  | In the file | In the stylesheet |
+  | --- | --- |
+  | `["Monaco", "Consolas", "monospace"]` | `Monaco, Consolas, monospace` |
+  | `["Monaco", "Lucida Console"]` | `Monaco, "Lucida Console"` |
+  | `["SF Pro"]` | `"SF Pro"` |
+  | `[0.2, 0, 0, 1]` | `cubic-bezier(0.2, 0, 0, 1)` |
+
+  A family name is quoted only when it needs to be — more than one word, a
+  leading digit, or a collision with a CSS-wide keyword. **A generic family is
+  never quoted**, because `"sans-serif"` in quotes is the name of a font that
+  does not exist rather than the generic family.
+
+  An entry that already contains a comma or a quote is written out untouched. It
+  is a whole stack rather than one name, which is what Microsoft Fluent and
+  GitHub Primer both publish, and quoting it would produce one bogus font name.
 
 ## 3. Style Dictionary legacy
 

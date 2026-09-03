@@ -2,6 +2,7 @@
   "color": { "brand": { "$value": "#5A4FCF" }, "alias": { "$value": "{color.brand}" } },
   "type": { "body": { "$value": { "fontSize": "16px" }, "$type": "typography" } },
   "border": { "focus": { "$value": { "width": "2px", "style": "solid" }, "$type": "border" } },
+  "gradient": { "hero": { "$value": [{ "color": "#000", "position": 0 }], "$type": "gradient" } },
   "motion": { "ease": { "$value": [0.2, 0, 0, 1], "$type": "cubicBezier" } },
   "spacing": { "md": { "$value": "16px" } }
 }
