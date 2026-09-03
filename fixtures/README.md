@@ -39,11 +39,21 @@ the union of both mechanisms.
 Adding a network case is a single-file change, the same way adding a fixture is
 a single-folder change.
 
-## The v1 freeze
+## The matrix, and what sits outside it
 
 Nine accept fixtures: three dialects (`dtcg`, `sd-legacy`, `tokens-studio`)
 across three hierarchies (`three-tier`, `cti`, `eightshapes`). **The matrix is
 complete and frozen.**
+
+Three more accept fixtures sit outside it, each covering something only DTCG can
+express, so none has a legacy or Tokens Studio counterpart and none takes part
+in the byte-identical comparison the matrix rests on:
+
+| Fixture | Covers |
+| --- | --- |
+| `dtcg/object-values` | Colours and dimensions written as objects (FR-23) |
+| `dtcg/array-values` | Font families and easing curves written as arrays (FR-26) |
+| `dtcg/composites` | Shadow, border, transition, gradient, typography, stroke style (FR-25) |
 
 Within a hierarchy the three dialects emit byte-identical stylesheets — asserted,
 not assumed. Across hierarchies the names differ, because the paths do: the same

@@ -509,8 +509,9 @@ still fatal, which follows from skips happening in normalization and the alias
 graph being validated after it; and a document with **nothing skipped emits no
 comment block**, so every conversion that succeeds today is byte-identical.
 
-**What it moves.** 29 of 98 → **40 of 98**, projected structurally and to be
-re-confirmed against the implementation. Of the 58 that still fail, **53 are
+**What it moves.** 29 of 98 → **40 of 98**. Projected structurally on
+2026-09-02 and **confirmed against the implementation on 2026-09-03** — the same
+total, and the same number for every one of the seven design systems. Of the 58 that still fail, **53 are
 cross-file references** — a design system split across files. That is now the
 dominant blocker in published token files by an order of magnitude, and it is
 the multi-file merge capability deferred since v1, not anything this revision

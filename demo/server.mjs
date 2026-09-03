@@ -46,7 +46,8 @@ const readBody = (request) =>
  * Converts, and reports the result the way the library reports it.
  *
  * A failure is not an error page here. The failure codes are half of what this
- * library is for, so the demo shows them the way a caller would see them.
+ * library is for, so the demo shows them the way a caller would see them — and
+ * so are the tokens a successful conversion left behind.
  */
 async function convert({ url, upload, fileName }) {
   const workspace = mkdtempSync(join(tmpdir(), 'tokens-to-css-demo-'))
@@ -72,6 +73,10 @@ async function convert({ url, upload, fileName }) {
       truncated: lines.length > PREVIEW_LINES,
       preview: lines.slice(0, PREVIEW_LINES).join('\n'),
       css,
+      // A conversion can succeed while leaving tokens out. Reporting only the
+      // count would make a partial conversion look like a whole one, which is
+      // the failure partial conversion was designed not to be.
+      skipped: result.skipped,
     }
   } catch (error) {
     return {

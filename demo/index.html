@@ -21,6 +21,8 @@
     --ok-bg:      #E4EFEB;
     --bad:        #9A3B22;
     --bad-bg:     #F8EAE4;
+    --warn:       #8A6212;
+    --warn-bg:    #F6EFDD;
 
     --f-ui:   "Archivo", "Helvetica Neue", Arial, sans-serif;
     --f-mono: "DM Mono", ui-monospace, Menlo, monospace;
@@ -33,6 +35,7 @@
       --accent: #5FC3AE; --accent-ink: #0C1512;
       --ok: #5FC3AE; --ok-bg: #172B27;
       --bad: #E8916F; --bad-bg: #2B1A13;
+      --warn: #D9B15F; --warn-bg: #2A2416;
     }
   }
 
@@ -130,14 +133,32 @@
     padding: 0.9rem 1.1rem; border-radius: 4px; margin-bottom: 1rem;
     font-family: var(--f-mono); font-size: 0.82rem;
   }
-  .status.ok  { background: var(--ok-bg);  color: var(--ok); }
-  .status.bad { background: var(--bad-bg); color: var(--bad); }
+  .status.ok      { background: var(--ok-bg);   color: var(--ok); }
+  .status.bad     { background: var(--bad-bg);  color: var(--bad); }
+  /* Not an error: the conversion succeeded and left something behind. */
+  .status.partial { background: var(--warn-bg); color: var(--warn); }
   .status .code { font-weight: 500; letter-spacing: 0.04em; }
   .status .detail { color: inherit; opacity: 0.85; }
 
   .paths {
     font-family: var(--f-mono); font-size: 0.78rem;
     color: var(--bad); margin: 0 0 1rem; padding-left: 1.1rem;
+  }
+
+  .skipped { list-style: none; margin: 0 0 0.7rem; padding: 0; }
+  .skipped li {
+    display: flex; gap: 0.7rem; flex-wrap: wrap; align-items: baseline;
+    padding: 0.5rem 0.8rem; border-left: 2px solid var(--warn);
+    background: var(--sunken); margin-bottom: 0.25rem;
+  }
+  .skipped code {
+    font-family: var(--f-mono); font-size: 0.78rem; color: var(--ink); font-weight: 500;
+  }
+  .skipped span { font-size: 0.8rem; color: var(--muted); }
+
+  .note {
+    font-size: 0.8rem; color: var(--muted); margin: 0 0 1.2rem;
+    max-width: 60ch; line-height: 1.5;
   }
 
   .toolbar {
@@ -218,22 +239,69 @@
   const result = document.getElementById('result')
   const go = document.getElementById('go')
 
+  const RAW = 'https://raw.githubusercontent.com/terrazzoapp/dtcg-examples/main/'
+
+  /**
+   * Not every interesting case exists as a published file. This one is written
+   * here: a document whose typography is missing `letterSpacing`, which the
+   * spec marks required — the shape GitHub Primer publishes. It converts, minus
+   * that token, and says so.
+   */
+  const PARTIAL = { name: 'parcial.json', body: JSON.stringify({
+    color: { text: { $value: '#161616' } },
+    type: {
+      heading: { $type: 'typography', $value: {
+        fontFamily: ['Inter', 'system-ui', 'sans-serif'],
+        fontSize: { value: 1.5, unit: 'rem' },
+        fontWeight: 'semi-bold',
+        letterSpacing: '0px',
+        lineHeight: 1.25,
+      } },
+      body: { $type: 'typography', $value: {
+        fontFamily: ['Inter', 'sans-serif'],
+        fontSize: { value: 1, unit: 'rem' },
+        fontWeight: 400,
+        lineHeight: 1.5,
+      } },
+    },
+    elevation: { low: { $type: 'shadow', $value: {
+      color: '#00000026', offsetX: '0px', offsetY: '2px', blur: '6px', spread: '0px',
+    } } },
+    motion: { ease: { $type: 'cubicBezier', $value: [0.2, 0, 0, 1] } },
+  }, null, 2) }
+
+
   const SAMPLES = [
-    ['IBM Carbon · colores', 'https://raw.githubusercontent.com/terrazzoapp/dtcg-examples/main/ibm-carbon/colors.tokens.json'],
-    ['Adobe Spectrum · tema claro', 'https://raw.githubusercontent.com/terrazzoapp/dtcg-examples/main/adobe-spectrum/theme-light.tokens.json'],
-    ['Figma SDS · tamaños', 'https://raw.githubusercontent.com/terrazzoapp/dtcg-examples/main/figma-sds/size.tokens.json'],
+    ['IBM Carbon · colores', RAW + 'ibm-carbon/colors.tokens.json'],
+    ['IBM Carbon · tipografía', RAW + 'ibm-carbon/typography.tokens.json'],
+    ['Microsoft Fluent · sombras', RAW + 'microsoft-fluent/effects.tokens.json'],
+    ['Shopify Polaris · fuentes', RAW + 'shopify-polaris/font.tokens.json'],
     ['Style Dictionary · legacy', 'https://raw.githubusercontent.com/amzn/style-dictionary/main/examples/complete/tokens/color/base.json'],
-    ['IBM Carbon · tipografía (falla)', 'https://raw.githubusercontent.com/terrazzoapp/dtcg-examples/main/ibm-carbon/typography.tokens.json'],
+    ['Conversión parcial', PARTIAL],
+    ['Adobe Spectrum · base (falla)', RAW + 'adobe-spectrum/base.tokens.json'],
   ]
 
   const samples = document.getElementById('samples')
-  for (const [label, url] of SAMPLES) {
+  for (const [label, target] of SAMPLES) {
     const button = document.createElement('button')
     button.type = 'button'
     button.textContent = label
     button.addEventListener('click', () => {
-      urlInput.value = url
-      run(() => fetch(`/convert?url=${encodeURIComponent(url)}`, { method: 'POST' }))
+      // A sample is either a URL or a document written into this page. The
+      // second reuses the upload path, so the demo gains no endpoint for it.
+      if (typeof target === 'string') {
+        urlInput.value = target
+        run(() => fetch(`/convert?url=${encodeURIComponent(target)}`, { method: 'POST' }))
+        return
+      }
+      urlInput.value = ''
+      fileName.innerHTML = `<b>${escape(target.name)}</b>`
+      run(() =>
+        fetch(`/convert?name=${encodeURIComponent(target.name)}`, {
+          method: 'POST',
+          body: target.body,
+        }),
+      )
     })
     samples.append(button)
   }
@@ -259,11 +327,25 @@
     }
 
     objectUrl = URL.createObjectURL(new Blob([outcome.css], { type: 'text/css' }))
+    const skipped = outcome.skipped ?? []
     result.innerHTML = `
-      <div class="status ok">
+      <div class="status ${skipped.length ? 'partial' : 'ok'}">
         <span class="code">${outcome.tokenCount} custom properties</span>
-        <span class="detail">${outcome.totalLines} líneas</span>
+        <span class="detail">${outcome.totalLines} líneas${
+          skipped.length
+            ? ` · ${skipped.length} token${skipped.length === 1 ? '' : 's'} sin escribir`
+            : ''
+        }</span>
       </div>
+      ${skipped.length
+        ? `<ul class="skipped">${skipped
+            .map(
+              (s) =>
+                `<li><code>${escape(s.path)}</code><span>${escape(s.reason)}</span></li>`,
+            )
+            .join('')}</ul>
+           <p class="note">La conversión no falló. Estos tokens no se pueden escribir como CSS, así que se quedaron fuera — y la hoja lo dice en un comentario, para que se vea en el diff del próximo commit.</p>`
+        : ''}
       <div class="toolbar">
         <span>Vista previa${outcome.truncated ? ' · primeras 200 líneas' : ''}</span>
         <a href="${objectUrl}" download="tokens.css"><button type="button" class="quiet">Descargar tokens.css</button></a>
