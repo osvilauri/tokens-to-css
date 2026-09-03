@@ -227,3 +227,132 @@ export function compositeToParts(raw: unknown): CompositeResult {
     throw err
   }
 }
+
+/**
+ * Sub-property to name suffix — public contract, seven entries.
+ *
+ * The 2026-09-02 design claimed the suffix would fall out of the existing
+ * naming rule for free. It does not: that rule lowercases and splits on
+ * non-alphanumerics, so `fontSize` becomes `fontsize`, and teaching it to split
+ * camelCase would rename every token already emitted — a major version.
+ *
+ * So there is a table, and each entry is the **CSS property the sub-value
+ * feeds**, which is the one mapping that is not arbitrary: the token is spelled
+ * the way the declaration that uses it is spelled.
+ *
+ *   font-size: var(--type-body-font-size);
+ *
+ * Adding an entry later is additive. Changing one is a major version.
+ */
+const CSS_PROPERTY: Readonly<Record<string, string>> = Object.freeze({
+  fontFamily: 'font-family',
+  fontSize: 'font-size',
+  fontWeight: 'font-weight',
+  letterSpacing: 'letter-spacing',
+  lineHeight: 'line-height',
+  dashArray: 'dash-array',
+  lineCap: 'line-cap',
+})
+
+/**
+ * The spec's closed alias table for font weights.
+ *
+ * A word outside it skips the token. Passing it through would emit
+ * `font-weight: regular`, which is invalid CSS a browser ignores in silence —
+ * and inventing a number for an unknown word would be worse.
+ */
+const FONT_WEIGHTS: Readonly<Record<string, number>> = Object.freeze({
+  thin: 100, hairline: 100,
+  'extra-light': 200, 'ultra-light': 200,
+  light: 300,
+  normal: 400, regular: 400, book: 400,
+  medium: 500,
+  'semi-bold': 600, 'demi-bold': 600,
+  bold: 700,
+  'extra-bold': 800, 'ultra-bold': 800,
+  black: 900, heavy: 900,
+  'extra-black': 950, 'ultra-black': 950,
+})
+
+/** One custom property an expanded composite produces. */
+export interface Expanded {
+  /** Appended to the token's path, so the name follows the ordinary rule. */
+  readonly suffix: string
+  readonly parts: readonly Part[]
+}
+
+/** A font weight: a number, a reference, or one of the spec's words. */
+function fontWeight(raw: unknown): Part[] {
+  if (typeof raw === 'string' && !WHOLE_REFERENCE.test(raw.trim())) {
+    const mapped = FONT_WEIGHTS[raw.toLowerCase()]
+    if (mapped === undefined) {
+      unwritable(`its font weight is "${raw}", which is not a weight the spec defines`)
+    }
+    return [String(mapped)]
+  }
+  return [sub(raw, 'font weight')]
+}
+
+/**
+ * Typography: five CSS properties, so five custom properties.
+ *
+ * The `font` shorthand is not emitted, not even as an extra convenience
+ * property. Used alone it drops `letter-spacing` in silence, which is the exact
+ * failure this product exists to prevent.
+ */
+function typographyToExpansion(raw: Record<string, unknown>): Expanded[] {
+  require_(raw, ['fontFamily', 'fontSize', 'fontWeight', 'letterSpacing', 'lineHeight'], 'typography')
+  return [
+    { suffix: CSS_PROPERTY['fontFamily']!, parts: [sub(raw['fontFamily'], 'font family')] },
+    { suffix: CSS_PROPERTY['fontSize']!, parts: [sub(raw['fontSize'], 'font size')] },
+    { suffix: CSS_PROPERTY['fontWeight']!, parts: fontWeight(raw['fontWeight']) },
+    { suffix: CSS_PROPERTY['letterSpacing']!, parts: [sub(raw['letterSpacing'], 'letter spacing')] },
+    { suffix: CSS_PROPERTY['lineHeight']!, parts: [sub(raw['lineHeight'], 'line height')] },
+  ]
+}
+
+/** Stroke style in object form: two SVG properties, so two custom properties. */
+function strokeStyleToExpansion(raw: Record<string, unknown>): Expanded[] {
+  require_(raw, ['dashArray', 'lineCap'], 'stroke style')
+  const dashes = raw['dashArray']
+  if (!Array.isArray(dashes) || dashes.length === 0) {
+    unwritable('its dash array is not a list of lengths')
+  }
+  return [
+    {
+      suffix: CSS_PROPERTY['dashArray']!,
+      parts: join((dashes as unknown[]).map((d) => [sub(d, 'dash length')]), ' '),
+    },
+    { suffix: CSS_PROPERTY['lineCap']!, parts: [sub(raw['lineCap'], 'line cap')] },
+  ]
+}
+
+/** What reading a composite that needs several properties produced. */
+export type ExpansionResult =
+  | { readonly kind: 'expanded'; readonly expanded: readonly Expanded[] }
+  | { readonly kind: 'unwritable'; readonly reason: string }
+  | { readonly kind: 'unrecognized' }
+
+/**
+ * Converts a composite that describes more than one CSS property (FR-25).
+ *
+ * Recognition is by shape, as everywhere else: only typography has a font size
+ * and a line height, and only an object-form stroke style has a dash array.
+ */
+export function compositeToExpansion(raw: unknown): ExpansionResult {
+  if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) return { kind: 'unrecognized' }
+  const record = raw as Record<string, unknown>
+
+  try {
+    if ('fontFamily' in record || 'fontSize' in record || 'lineHeight' in record) {
+      return { kind: 'expanded', expanded: typographyToExpansion(record) }
+    }
+    if ('dashArray' in record || 'lineCap' in record) {
+      return { kind: 'expanded', expanded: strokeStyleToExpansion(record) }
+    }
+    return { kind: 'unrecognized' }
+  } catch (err) {
+    if (err instanceof Unwritable) return { kind: 'unwritable', reason: err.message }
+    throw err
+  }
+}

@@ -11,4 +11,18 @@
   --gradient-hero: var(--color-focus) 0%, #FBFAFD 100%;
   --gradient-midpoint: #000 0%, #888 35%, #fff 100%;
   --stroke-dashed: dashed;
+  --stroke-focusring-dash-array: 0.5rem 0.25rem;
+  --stroke-focusring-line-cap: round;
+  --font-sans: Inter, system-ui, sans-serif;
+  --font-weight-bold: 700;
+  --type-body-font-family: var(--font-sans);
+  --type-body-font-size: 0.875rem;
+  --type-body-font-weight: 400;
+  --type-body-letter-spacing: 0.16px;
+  --type-body-line-height: 1.42857;
+  --type-heading-font-family: Georgia, serif;
+  --type-heading-font-size: 2rem;
+  --type-heading-font-weight: 600;
+  --type-heading-letter-spacing: 0;
+  --type-heading-line-height: 1.2;
 }

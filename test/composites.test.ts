@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { normalizeDocument } from '../src/dialects/registry.js'
+import { convertDocument } from '../src/pipeline.js'
 import { emitStylesheet } from '../src/emit/css.js'
-import { FailureCode } from '../src/index.js'
+import { FailureCode, TokenCssError } from '../src/index.js'
 import type { SkippedToken } from '../src/errors.js'
 
 const SOURCE = 'design/tokens.json'
@@ -142,16 +143,11 @@ describe('a composite the spec calls incomplete is skipped, and says what is mis
     expect(skipped.reason).toContain('object')
   })
 
-  it('skips typography, which is not one CSS property', () => {
-    expect(skip(`{ "fontFamily": "Helvetica", "fontSize": "16px", "lineHeight": 1.4 }`).code).toBe(
-      FailureCode.COMPOSITE_VALUE,
-    )
-  })
-
-  it('skips an object-form stroke style, which is two SVG properties', () => {
-    expect(skip(`{ "dashArray": ["2px", "4px"], "lineCap": "round" }`).code).toBe(
-      FailureCode.COMPOSITE_VALUE,
-    )
+  it('skips typography missing sub-properties the spec marks required', () => {
+    // GitHub Primer publishes typography without letterSpacing; the spec marks
+    // all five MUST, and defaulting one would be the first inference.
+    expect(skip(`{ "fontFamily": "Helvetica", "fontSize": "16px", "lineHeight": 1.4 }`).reason)
+      .toContain('"fontWeight", "letterSpacing"')
   })
 
   it('skips null and booleans, scalars in JSON but not in CSS', () => {
@@ -189,5 +185,129 @@ describe('nothing composite ever reaches a stylesheet', () => {
     expect(css).not.toContain('--bad')
     expect(skipped.map((s) => s.path)).toEqual(['bad'])
     expect(css).toContain('1 token was skipped:')
+  })
+})
+
+describe('composites that need more than one property expand (FR-25)', () => {
+  const emit = (value: string): Record<string, string> => {
+    const { css } = read(value)
+    return Object.fromEntries(
+      [...css.matchAll(/^ {2}--t-([\w-]+): (.+);$/gm)].map((m) => [m[1]!, m[2]!]),
+    )
+  }
+
+  it('writes one custom property per sub-property of a typography token', () => {
+    expect(
+      emit(`{ "fontFamily": ["system-ui", "sans-serif"], "fontSize": { "value": 0.875, "unit": "rem" },
+              "fontWeight": 400, "letterSpacing": "0.16px", "lineHeight": 1.42857 }`),
+    ).toEqual({
+      'font-family': 'system-ui, sans-serif',
+      'font-size': '0.875rem',
+      'font-weight': '400',
+      'letter-spacing': '0.16px',
+      'line-height': '1.42857',
+    })
+  })
+
+  it('names each one after the CSS property it feeds', () => {
+    // The suffix is a table of seven, not the DTCG key: the existing naming
+    // rule does not split camelCase, and teaching it to would rename every
+    // token already emitted. So the token is spelled the way the declaration
+    // that uses it is spelled — font-size: var(--t-font-size).
+    const emitted = Object.keys(emit(`{ "fontFamily": "Inter", "fontSize": "16px",
+      "fontWeight": 400, "letterSpacing": 0, "lineHeight": 1.5 }`))
+    expect(emitted).toEqual([
+      'font-family',
+      'font-size',
+      'font-weight',
+      'letter-spacing',
+      'line-height',
+    ])
+  })
+
+  it('keeps an aliased sub-value an alias', () => {
+    const { css } = read(`{ "fontFamily": "{keep}", "fontSize": "{keep}", "fontWeight": "{keep}",
+      "letterSpacing": 0, "lineHeight": 1 }`)
+    expect(css).toContain('--t-font-family: var(--keep);')
+    expect(css).toContain('--t-font-size: var(--keep);')
+  })
+
+  it('never emits the font shorthand, not even as a convenience', () => {
+    // Used alone it drops letter-spacing in silence, which is the exact failure
+    // this product exists to prevent. Six properties would be five plus a trap.
+    const { css } = read(`{ "fontFamily": "Inter", "fontSize": "16px", "fontWeight": 400,
+      "letterSpacing": "0.16px", "lineHeight": 1.5 }`)
+    expect(css).not.toContain('--t-font:')
+  })
+
+  it('translates a font weight written as a word through the spec table', () => {
+    const weights: [string, string][] = [
+      ['thin', '100'], ['regular', '400'], ['semi-bold', '600'], ['bold', '700'],
+      ['heavy', '900'], ['ultra-black', '950'],
+    ]
+    for (const [word, number] of weights) {
+      expect(
+        emit(`{ "fontFamily": "Inter", "fontSize": "16px", "fontWeight": "${word}",
+                "letterSpacing": 0, "lineHeight": 1.5 }`)['font-weight'],
+      ).toBe(number)
+    }
+  })
+
+  it('skips a font weight outside the table rather than emitting invalid CSS', () => {
+    // `font-weight: regular` is ignored by a browser in silence. So is anything
+    // else that is not a number or a keyword.
+    expect(
+      skip(`{ "fontFamily": "Inter", "fontSize": "16px", "fontWeight": "kinda bold",
+              "letterSpacing": 0, "lineHeight": 1.5 }`).reason,
+    ).toContain('not a weight the spec defines')
+  })
+
+  it('accepts letterSpacing in all three notations published files use', () => {
+    const spacing = (json: string): string =>
+      emit(`{ "fontFamily": "Inter", "fontSize": "16px", "fontWeight": 400,
+              "letterSpacing": ${json}, "lineHeight": 1.5 }`)['letter-spacing']!
+    expect(spacing(`{ "value": 0.16, "unit": "px" }`)).toBe('0.16px')
+    expect(spacing(`"0.16px"`)).toBe('0.16px')
+    expect(spacing(`0`)).toBe('0')
+  })
+
+  it('leaves a unitless line height unitless', () => {
+    // The unitless number is semantic in CSS: it inherits as a ratio rather
+    // than as a computed length, so adding a unit would change behaviour.
+    expect(
+      emit(`{ "fontFamily": "Inter", "fontSize": "16px", "fontWeight": 400,
+              "letterSpacing": 0, "lineHeight": 1.42857 }`)['line-height'],
+    ).toBe('1.42857')
+  })
+
+  it('expands an object-form stroke style into its two SVG properties', () => {
+    expect(
+      emit(`{ "dashArray": [{ "value": 0.5, "unit": "rem" }, { "value": 0.25, "unit": "rem" }],
+              "lineCap": "round" }`),
+    ).toEqual({ 'dash-array': '0.5rem 0.25rem', 'line-cap': 'round' })
+  })
+})
+
+describe('an expanded name collides like any other name', () => {
+  it('fails with NAME_COLLISION when a real token would emit the same property', () => {
+    // The collision pass already runs after naming, so expansion needed nothing
+    // added to it — but the case is worth pinning, because it is the one way
+    // expansion can take a name that was already spoken for.
+    let caught: TokenCssError | undefined
+    try {
+      convertDocument(
+        JSON.parse(`{
+          "type": { "body": { "$value": { "fontFamily": "Inter", "fontSize": "16px",
+            "fontWeight": 400, "letterSpacing": 0, "lineHeight": 1.5 } } },
+          "type-body-font-size": { "$value": "99px" }
+        }`),
+        SOURCE,
+      )
+    } catch (err) {
+      caught = err as TokenCssError
+    }
+    expect(caught?.code).toBe(FailureCode.NAME_COLLISION)
+    expect(caught?.message).toContain('--type-body-font-size')
+    expect(caught?.tokenPaths).toEqual(['type.body.font-size', 'type-body-font-size'])
   })
 })

@@ -1,5 +1,5 @@
 /* 3 tokens were skipped:
- *   token "type.body" has an object as its value, but this version writes one custom property per scalar token
+ *   token "type.body" is a composite, but its typography is missing "fontFamily", "fontWeight", "letterSpacing", "lineHeight"
  *   token "border.focus" is a composite, but its border is missing "color"
  *   token "elevation.low" is a composite, but its shadow is missing "spread"
  */
