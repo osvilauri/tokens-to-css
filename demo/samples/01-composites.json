@@ -1,0 +1,46 @@
+{
+  "$description": "Composites que caben en un valor · sombra, borde, transición y gradiente. Fíjate en que los sub-valores con alias siguen siendo var(--…) dentro del valor mayor.",
+  "color": {
+    "shadow": { "$type": "color", "$value": { "colorSpace": "srgb", "components": [0, 0, 0], "alpha": 0.15 } },
+    "brand": { "$type": "color", "$value": "#5A4FCF" },
+    "paper": { "$type": "color", "$value": "#FBFAFD" }
+  },
+  "size": {
+    "hairline": { "$type": "dimension", "$value": { "value": 1, "unit": "px" } },
+    "focus": { "$type": "dimension", "$value": { "value": 2, "unit": "px" } }
+  },
+  "elevation": {
+    "resting": {
+      "$type": "shadow",
+      "$value": { "color": "{color.shadow}", "offsetX": "0px", "offsetY": "1px", "blur": "2px", "spread": "0px" }
+    },
+    "raised": {
+      "$description": "Dos sombras apiladas siguen siendo un valor.",
+      "$type": "shadow",
+      "$value": [
+        { "color": "{color.shadow}", "offsetX": "0px", "offsetY": "4px", "blur": "8px", "spread": "-2px" },
+        { "color": "#00000014", "offsetX": "0px", "offsetY": "1px", "blur": "2px", "spread": "0px" }
+      ]
+    },
+    "inset": {
+      "$type": "shadow",
+      "$value": { "color": "#0000000d", "offsetX": "0px", "offsetY": "1px", "blur": "2px", "spread": "0px", "inset": true }
+    }
+  },
+  "border": {
+    "hairline": { "$type": "border", "$value": { "color": "{color.shadow}", "width": "{size.hairline}", "style": "solid" } },
+    "focus": { "$type": "border", "$value": { "color": "{color.brand}", "width": "{size.focus}", "style": "dashed" } }
+  },
+  "motion": {
+    "quick": { "$type": "transition", "$value": { "duration": { "value": 120, "unit": "ms" }, "delay": { "value": 0, "unit": "ms" }, "timingFunction": [0.2, 0, 0, 1] } },
+    "deliberate": { "$type": "transition", "$value": { "duration": { "value": 400, "unit": "ms" }, "delay": { "value": 60, "unit": "ms" }, "timingFunction": [0.4, 0, 0.2, 1] } }
+  },
+  "gradient": {
+    "brand": { "$type": "gradient", "$value": [{ "color": "{color.brand}", "position": 0 }, { "color": "{color.paper}", "position": 1 }] },
+    "fade": { "$type": "gradient", "$value": [{ "color": "#000000", "position": 0 }, { "color": "#00000080", "position": 0.6 }, { "color": "#00000000", "position": 1 }] }
+  },
+  "stroke": {
+    "dotted": { "$type": "strokeStyle", "$value": "dotted" },
+    "focusRing": { "$type": "strokeStyle", "$value": { "dashArray": [{ "value": 0.5, "unit": "rem" }, { "value": 0.25, "unit": "rem" }], "lineCap": "round" } }
+  }
+}

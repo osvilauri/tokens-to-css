@@ -28,7 +28,38 @@ new design **statically** — they check every composite against the rules in
 yet. The projected column is therefore a structural claim, not an execution
 result, and must be re-run against the implementation before §12.6 is final.
 
-## Result
+## Measured against the implementation, 2026-09-03
+
+Story 4.5 re-ran this against the built library rather than against the
+structural projection. **40 of 98 — the projected number exactly.**
+
+| System | Before Epic 4 | Projected | Measured |
+| --- | ---: | ---: | ---: |
+| adobe-spectrum | 4 | 4 | 4 |
+| apple-hig | 4 | 5 | 5 |
+| figma-sds | 2 | 3 | 3 |
+| github-primer | 13 | 15 | 15 |
+| ibm-carbon | 2 | 6 | **6** |
+| microsoft-fluent | 2 | 4 | 4 |
+| shopify-polaris | 2 | 3 | 3 |
+| **Total** | **29** | **40** | **40** |
+
+Per system as well as in total. That the classifier modelled the rules closely
+enough to predict every row is the reason to give weight to what it says about
+what is *left*: 53 of the 58 files that still fail do so for cross-file
+references.
+
+**No file converts partially any more.** Two did after story 4.1 — figma-sds
+typography and microsoft-fluent effects — and both convert whole now that
+composites are written. Partial conversion did not become unnecessary; it became
+the thing that catches what published files get wrong, rather than what this
+library had not implemented yet.
+
+One number worth recording because it was predicted a month earlier: the
+addendum estimated IBM Carbon's 58 typography tokens would become "roughly 290
+declarations". They become **290**.
+
+## Result (projection, 2026-09-02)
 
 | System | Files | Tokens | Convert today | Projected |
 | --- | ---: | ---: | ---: | ---: |

@@ -42,6 +42,37 @@ and guessing would be worse than being predictable.
 **The rule is lossy.** `café` becomes `--caf` because the accent is outside
 `[a-z0-9]`. That is deliberate, and it has a consequence.
 
+## Tokens that become more than one property
+
+A typography token describes five CSS properties, and an object-form stroke
+style describes two. Each sub-value becomes its own custom property, named by
+appending a suffix to the token's path — so the rule above still decides the
+name, and the suffix is the only thing added:
+
+```
+type.body  +  fontSize   →  --type-body-font-size
+```
+
+| Sub-property | Suffix |
+| --- | --- |
+| `fontFamily` | `-font-family` |
+| `fontSize` | `-font-size` |
+| `fontWeight` | `-font-weight` |
+| `letterSpacing` | `-letter-spacing` |
+| `lineHeight` | `-line-height` |
+| `dashArray` | `-dash-array` |
+| `lineCap` | `-line-cap` |
+
+**These seven are public contract**, like everything else on this page. The
+suffix is the CSS property the sub-value feeds, not the DTCG key — the rule
+above lowercases and splits on non-alphanumerics, so `fontSize` would otherwise
+become `fontsize`, and the token would be spelled differently from the
+declaration that uses it.
+
+An expanded name collides like any other. A document holding both a `type.body`
+typography token and a `type-body-font-size` token claims `--type-body-font-size`
+twice, and fails exactly as below.
+
 ## Collisions
 
 Because the rule is lossy, two different token paths can arrive at the same

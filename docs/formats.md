@@ -248,7 +248,7 @@ to give: no stylesheet is written at all, and an existing one is left untouched.
 ## The fixtures are the specification
 
 Everything above is proved by files in [`fixtures/`](../fixtures/README.md):
-ten that must convert to a stored stylesheet byte for byte, seventeen that must
-fail with a named code, and three that must convert while leaving named tokens
-out. If the documentation and the fixtures ever disagree, the fixtures are
+twelve that must convert to a stored stylesheet byte for byte, seventeen that
+must fail with a named code, and three that must convert while leaving named
+tokens out. If the documentation and the fixtures ever disagree, the fixtures are
 right.

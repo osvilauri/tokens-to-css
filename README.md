@@ -57,6 +57,25 @@ stylesheet — the relationship survived instead of being flattened to `#191627`
 Change the primitive and everything pointing at it moves, which is the reason to
 keep tokens in a hierarchy at all.
 
+Composite tokens work too. Shadow, border, transition and gradient become one
+custom property each, and typography becomes one per property it describes:
+
+```css
+  --elevation-low: 0px 2px 6px 0px var(--color-shadow);
+  --motion-emphasized: 200ms cubic-bezier(0.2, 0, 0, 1) 0ms;
+  --type-body-font-size: 0.875rem;
+  --type-body-letter-spacing: 0.16px;
+```
+
+An aliased sub-value stays an alias there too, so a shadow still moves when its
+colour does. And where the token genuinely does not say something — a transition
+never says *which* property it animates — the missing part is yours to supply
+rather than ours to invent:
+
+```css
+.panel { transition: opacity var(--motion-emphasized); }
+```
+
 A URL works wherever a path does:
 
 ```js
@@ -136,7 +155,7 @@ addresses refused — including when the URL names one literally.
 | [Getting started](docs/getting-started.md) | Five steps from install to a stylesheet, including breaking it on purpose |
 | [What it accepts](docs/formats.md) | The three shapes, the order they are checked, and everything refused |
 | [The naming rule](docs/naming.md) | How `color.brand` becomes `--color-brand`, and why that is a promise |
-| [Failure codes](docs/failures.md) | The eight codes and what each one means |
+| [Failure codes](docs/failures.md) | The nine codes and what each one means |
 
 ## What it will not do
 
@@ -149,11 +168,14 @@ deferred, not forgotten.
 - **Evaluate expressions.** `{spacing.md} * 2` is refused rather than computed.
   There is no evaluator in this package. `calc()` and `clamp()` are valid CSS
   and pass through untouched.
-- **Convert composite tokens.** Typography, shadow, border, gradient and
-  transition are not written yet: a typography token is five CSS properties.
-  Such a token is **skipped** — left out of the stylesheet, listed in `skipped`
-  on the result, and named in a comment above `:root` — while the rest of the
-  file converts.
+- **Guess at a token it cannot write.** A composite missing a sub-property the
+  spec marks required, a border whose style is SVG geometry, a font weight that
+  is not a weight — each is **skipped**: left out of the stylesheet, listed in
+  `skipped` on the result, and named in a comment above `:root`, while the rest
+  of the file converts.
+- **Emit the `font` shorthand.** Used alone it drops `letter-spacing` in
+  silence, so a typography token becomes five properties rather than five plus a
+  trap.
 - **Pick a winner on a collision.** Two token paths that produce the same
   custom-property name fail the conversion rather than one quietly overwriting
   the other.

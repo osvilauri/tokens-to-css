@@ -1,0 +1,38 @@
+{
+  "$description": "Tipografía · cada token describe cinco propiedades CSS, así que sale como cinco custom properties. Los sub-valores apuntan a primitivos, y siguen apuntando después de convertir.",
+  "font": {
+    "family": {
+      "sans": { "$type": "fontFamily", "$value": ["Inter", "system-ui", "sans-serif"] },
+      "mono": { "$type": "fontFamily", "$value": ["JetBrains Mono", "ui-monospace", "monospace"] }
+    },
+    "size": {
+      "sm": { "$type": "dimension", "$value": { "value": 0.875, "unit": "rem" } },
+      "md": { "$type": "dimension", "$value": { "value": 1, "unit": "rem" } },
+      "xl": { "$type": "dimension", "$value": { "value": 2, "unit": "rem" } }
+    },
+    "weight": {
+      "regular": { "$type": "fontWeight", "$value": 400 },
+      "bold": { "$type": "fontWeight", "$value": 700 }
+    }
+  },
+  "type": {
+    "body": {
+      "$type": "typography",
+      "$value": { "fontFamily": "{font.family.sans}", "fontSize": "{font.size.md}", "fontWeight": "{font.weight.regular}", "letterSpacing": "0px", "lineHeight": 1.5 }
+    },
+    "caption": {
+      "$description": "letterSpacing y lineHeight en notaciones distintas: string y número pelado.",
+      "$type": "typography",
+      "$value": { "fontFamily": "{font.family.sans}", "fontSize": "{font.size.sm}", "fontWeight": "{font.weight.regular}", "letterSpacing": "0.16px", "lineHeight": 1.42857 }
+    },
+    "display": {
+      "$description": "El peso va escrito como palabra; se traduce por la tabla cerrada del spec.",
+      "$type": "typography",
+      "$value": { "fontFamily": "{font.family.sans}", "fontSize": "{font.size.xl}", "fontWeight": "semi-bold", "letterSpacing": { "value": -0.02, "unit": "em" }, "lineHeight": 1.2 }
+    },
+    "code": {
+      "$type": "typography",
+      "$value": { "fontFamily": "{font.family.mono}", "fontSize": "{font.size.sm}", "fontWeight": "{font.weight.regular}", "letterSpacing": 0, "lineHeight": 1.6 }
+    }
+  }
+}
