@@ -99,7 +99,7 @@ describe('the omission is announced twice', () => {
       "a": { "$value": { "fontSize": "16px" } }
     }`)
     expect(css.startsWith('/* 1 token was skipped:\n')).toBe(true)
-    expect(css).toMatch(/^ \*   token "a" has an object as its value/m)
+    expect(css).toMatch(/^ \*   token "a" /m)
     expect(css).toContain(' */\n:root {')
   })
 

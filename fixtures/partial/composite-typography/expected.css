@@ -1,7 +1,12 @@
 /* 1 token was skipped:
- *   token "type.heading" has an object as its value, but this version writes one custom property per scalar token
+ *   token "type.body" is a composite, but its typography is missing "letterSpacing"
  */
 :root {
   --color-text: #161616;
+  --type-heading-font-family: Inter;
+  --type-heading-font-size: 24px;
+  --type-heading-font-weight: 600;
+  --type-heading-letter-spacing: 0px;
+  --type-heading-line-height: 1.25;
   --spacing-md: 16px;
 }

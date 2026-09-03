@@ -9,7 +9,7 @@
 import { FailureCode, TokenCssError, type SkippedToken } from '../errors.js'
 import { composite, formatPath, literal, ref, token, type TokenNode, type TokenValue } from '../model/index.js'
 import { assertScalar } from '../emit/literal.js'
-import { compositeToParts } from './composites.js'
+import { compositeToExpansion, compositeToParts } from './composites.js'
 import { scalarToCss } from './values.js'
 
 /** A JSON object, as it comes out of `JSON.parse`. */
@@ -104,6 +104,32 @@ export function toTokenValue(raw: unknown, path: readonly string[], source: stri
   return literal(assertScalar(raw, path, source))
 }
 
+/**
+ * Reads one token node into the custom properties it becomes.
+ *
+ * Almost always one. A composite that describes several CSS properties becomes
+ * several (FR-25), each named by appending the sub-property's suffix to the
+ * token's path — so naming, collision detection and the alias graph all keep
+ * working on ordinary paths and never learn that expansion exists.
+ *
+ * @throws {TokenCssError} `COMPOSITE_VALUE` when the value cannot be written,
+ * which the caller turns into a skip.
+ */
+function readToken(raw: unknown, path: readonly string[], source: string): TokenNode[] {
+  const expansion = compositeToExpansion(raw)
+  if (expansion.kind === 'expanded') {
+    return expansion.expanded.map((one) => token([...path, one.suffix], composite(one.parts)))
+  }
+  if (expansion.kind === 'unwritable') {
+    throw new TokenCssError(`token "${formatPath(path)}" is a composite, but ${expansion.reason}`, {
+      code: FailureCode.COMPOSITE_VALUE,
+      source,
+      tokenPaths: [formatPath(path)],
+    })
+  }
+  return [token(path, toTokenValue(raw, path, source))]
+}
+
 /** What a walk produced: the tokens it could read, and the ones it could not (FR-24). */
 export interface WalkResult {
   readonly tokens: TokenNode[]
@@ -146,7 +172,7 @@ export function walkTokenTree(root: JsonObject, source: string, reader: TokenRea
     const value = reader.read(node)
     if (value.found) {
       try {
-        tokens.push(token(path, toTokenValue(value.raw, path, source)))
+        tokens.push(...readToken(value.raw, path, source))
       } catch (err) {
         if (!(err instanceof TokenCssError) || err.code !== FailureCode.COMPOSITE_VALUE) throw err
         // Collected, not rethrown: the walk continues so one pass reports every

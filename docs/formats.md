@@ -169,11 +169,46 @@ gradient is stops with no direction — so you supply the missing part:
 Inventing `to bottom`, or a property name, would be putting words in the token's
 mouth.
 
+**Typography and object-form stroke styles expand**, because they describe more
+than one CSS property. Each sub-value becomes its own custom property, named by
+appending the property it feeds:
+
+```css
+  --type-body-font-family: var(--font-sans);
+  --type-body-font-size: 0.875rem;
+  --type-body-font-weight: 400;
+  --type-body-letter-spacing: 0.16px;
+  --type-body-line-height: 1.42857;
+```
+
+| Sub-property | Suffix |
+| --- | --- |
+| `fontFamily` | `-font-family` |
+| `fontSize` | `-font-size` |
+| `fontWeight` | `-font-weight` |
+| `letterSpacing` | `-letter-spacing` |
+| `lineHeight` | `-line-height` |
+| `dashArray` | `-dash-array` |
+| `lineCap` | `-line-cap` |
+
+The suffix is the CSS property the sub-value feeds, so the token is spelled the
+way the declaration that uses it is spelled. These suffixes are public contract.
+
+**The `font` shorthand is never emitted**, not even as an extra convenience
+property: used alone it drops `letter-spacing` in silence.
+
+A `fontWeight` written as a word is translated through the spec's closed table
+(`thin`=100 … `ultra-black`=950). A word outside it skips the token, because
+`font-weight: regular` is invalid CSS a browser ignores without saying so.
+
+A `lineHeight` with no unit is emitted with no unit: the unitless number
+inherits as a ratio rather than as a length, so adding one would change what it
+does.
+
 ## What is skipped
 
 | What | Why |
 | --- | --- |
-| Typography, and stroke styles written as an object | These are several CSS properties, not one. Support is coming; until then the token is left out rather than guessed at. |
 | A composite missing a sub-property the spec marks required — a shadow with no `spread`, a transition with no `delay` | Defaulting it would be this product's first inference. The message names which one is absent. |
 | A border whose `style` is an object | `dashArray` is SVG geometry a CSS border cannot carry. The spec permits a "closest approximation"; approximating in silence is what this product does not do. |
 
