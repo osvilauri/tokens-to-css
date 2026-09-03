@@ -1,0 +1,16 @@
+{
+  "$description": "Escalares escritos como array · una familia tipográfica y una curva de easing son un valor CSS cada uno, aunque el spec los escriba como lista. Las cuatro notaciones de fontFamily que se encuentran en archivos publicados están aquí.",
+  "family": {
+    "nombres": { "$description": "Un nombre por elemento. Se cita solo el que lo necesita.", "$type": "fontFamily", "$value": ["Monaco", "Consolas", "Lucida Console", "monospace"] },
+    "unoSolo": { "$type": "fontFamily", "$value": ["SF Pro"] },
+    "vendor": { "$description": "Un identificador con guion inicial es válido sin comillas.", "$type": "fontFamily", "$value": ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"] },
+    "stackEnString": { "$description": "Microsoft Fluent lo escribe así: el stack entero, ya entrecomillado, en un string.", "$type": "fontFamily", "$value": "'Segoe UI', -apple-system, 'Helvetica Neue', sans-serif" },
+    "stackEnArray": { "$description": "GitHub Primer lo escribe así. Se pasa tal cual: citarlo produciría un nombre de fuente inexistente.", "$type": "fontFamily", "$value": ["'Mona Sans VF', Helvetica, Arial, sans-serif"] },
+    "digitoInicial": { "$description": "Un nombre que empieza por dígito sí necesita comillas.", "$type": "fontFamily", "$value": ["0xProto", "monospace"] }
+  },
+  "easing": {
+    "linear": { "$type": "cubicBezier", "$value": [0, 0, 1, 1] },
+    "standard": { "$type": "cubicBezier", "$value": [0.2, 0, 0, 1] },
+    "overshoot": { "$description": "Puntos de control negativos: legales, y sobrepasan a propósito.", "$type": "cubicBezier", "$value": [0.5, -0.5, 0.5, 1.5] }
+  }
+}

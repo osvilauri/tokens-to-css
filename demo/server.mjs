@@ -13,7 +13,7 @@
  *   npm run demo
  */
 import { createServer } from 'node:http'
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { generateCss } from '../dist/index.js'
@@ -23,6 +23,32 @@ const PREVIEW_LINES = 200
 const MAX_UPLOAD = 8 * 1024 * 1024
 
 const page = readFileSync(new URL('./index.html', import.meta.url))
+
+const SAMPLES_DIR = new URL('./samples/', import.meta.url).pathname
+
+/**
+ * The worked examples, read from `samples/` at startup.
+ *
+ * They live on disk rather than inside the page because they are the point:
+ * somebody reviewing what this library does with a composite should be able to
+ * open the file, change it, and reload. Each one documents itself in its own
+ * `$description`, which the converter reads and ignores.
+ *
+ * The list is also the allowlist. A request names a sample by id and the id has
+ * to be one of these, so no request can name a path.
+ */
+const SAMPLES = readdirSync(SAMPLES_DIR)
+  .filter((name) => name.endsWith('.json'))
+  .sort()
+  .map((name) => {
+    const id = name.replace(/\.json$/, '')
+    const text = readFileSync(join(SAMPLES_DIR, name), 'utf8')
+    // Each sample's `$description` opens with its own title, then a `·`, then
+    // what it is for. Splitting there means the file names the button and the
+    // caption in one place — the place a reader of the file already looks.
+    const [title, ...rest] = (JSON.parse(text).$description ?? id).split(' · ')
+    return { id, label: title.trim(), description: rest.join(' · ').trim(), text }
+  })
 
 /** Reads a request body, refusing anything absurd. */
 const readBody = (request) =>
@@ -49,11 +75,14 @@ const readBody = (request) =>
  * library is for, so the demo shows them the way a caller would see them — and
  * so are the tokens a successful conversion left behind.
  */
-async function convert({ url, upload, fileName }) {
+async function convert({ url, upload, fileName, sample }) {
   const workspace = mkdtempSync(join(tmpdir(), 'tokens-to-css-demo-'))
   try {
     let source = url
-    if (upload) {
+    if (sample) {
+      source = join(workspace, `${sample.id}.json`)
+      writeFileSync(source, sample.text)
+    } else if (upload) {
       source = join(workspace, fileName || 'tokens.json')
       writeFileSync(source, upload)
     }
@@ -77,6 +106,7 @@ async function convert({ url, upload, fileName }) {
       // count would make a partial conversion look like a whole one, which is
       // the failure partial conversion was designed not to be.
       skipped: result.skipped,
+      ...describe(sample),
     }
   } catch (error) {
     return {
@@ -84,11 +114,22 @@ async function convert({ url, upload, fileName }) {
       code: error.code ?? 'UNEXPECTED',
       message: error.message ?? String(error),
       tokenPaths: error.tokenPaths ?? [],
+      ...describe(sample),
     }
   } finally {
     rmSync(workspace, { recursive: true, force: true })
   }
 }
+
+/**
+ * The input and its caption, for a sample.
+ *
+ * Only for samples. An uploaded file is already in front of whoever uploaded
+ * it, and a remote one is a URL away — echoing either back would be filling the
+ * page with something the reader already has.
+ */
+const describe = (sample) =>
+  sample ? { input: sample.text, description: sample.description } : {}
 
 const server = createServer(async (request, response) => {
   const url = new URL(request.url ?? '/', `http://localhost:${PORT}`)
@@ -99,11 +140,22 @@ const server = createServer(async (request, response) => {
     return
   }
 
+  if (request.method === 'GET' && url.pathname === '/samples') {
+    response.writeHead(200, { 'content-type': 'application/json; charset=utf-8' })
+    response.end(JSON.stringify(SAMPLES.map(({ id, label, description }) => ({ id, label, description }))))
+    return
+  }
+
   if (request.method === 'POST' && url.pathname === '/convert') {
     try {
-      const remote = url.searchParams.get('url')
-      const body = remote ? null : await readBody(request)
+      const wanted = url.searchParams.get('sample')
+      const sample = wanted ? SAMPLES.find((s) => s.id === wanted) : undefined
+      if (wanted && !sample) throw new Error(`there is no sample called "${wanted}"`)
+
+      const remote = sample ? null : url.searchParams.get('url')
+      const body = sample || remote ? null : await readBody(request)
       const outcome = await convert({
+        sample,
         url: remote ?? undefined,
         upload: body?.length ? body : undefined,
         fileName: url.searchParams.get('name') ?? 'tokens.json',

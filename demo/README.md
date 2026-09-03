@@ -20,32 +20,42 @@ would.
 production one — https by default, internal addresses refused — so pointing it
 at `http://169.254.169.254/` gets refused here exactly as it would in a build.
 
-## The samples
+## Two kinds of example
 
-Seven one-click examples, chosen so that between them they show every outcome
-the library has.
+**Published files**, fetched over the network exactly as a build would fetch
+them. They prove the library against documents nobody here wrote — which is the
+lesson `docs/proceso/cero-de-trece.html` records, and the reason nine green
+fixtures once hid that thirteen real files all failed.
 
 | Sample | What it shows |
 | --- | --- |
-| IBM Carbon · colours | The ordinary case: object-form colours and references |
+| IBM Carbon · colours | Object-form colours and references |
 | IBM Carbon · typography | 58 typography tokens expanding into **290 custom properties** |
-| Microsoft Fluent · shadows | Composites that fit one value, including stacked shadows |
-| Shopify Polaris · fonts | Font stacks written as arrays, quoted only where they must be |
+| Microsoft Fluent · shadows | Stacked shadows from a real elevation scale |
+| Shopify Polaris · fonts | Font stacks written as arrays |
 | Style Dictionary · legacy | A dialect that never migrated to `$value` |
-| Partial conversion | A document that converts **while leaving a token out** |
-| Adobe Spectrum · base | **Fails on purpose** |
+| Adobe Spectrum · base | **Fails on purpose**: one token measured in `dp` |
 
-Two of those earn their place by not being the happy path.
+**Worked examples**, in [`samples/`](./samples). These are files on disk, shown
+next to the stylesheet they produce, so a conversion can be read against its
+source instead of taken on faith. Open one, change it, reload.
 
-**Partial conversion** is the one case with no published file to point at, so
-the document is written into the page itself: its typography is missing
-`letterSpacing`, which the spec marks required — the shape GitHub Primer
-publishes. It converts, minus that token, and the demo shows what was left out
-and why, next to the comment block the stylesheet itself carries.
+| File | What it shows |
+| --- | --- |
+| `01-composites` | Shadow, border, transition, gradient — including stacked and inset shadows, and aliased sub-values staying `var(--…)` |
+| `02-tipografia` | A type scale expanding into five properties each, built on primitives it keeps pointing at |
+| `03-arrays` | All four `fontFamily` notations found in published files, and easing curves |
+| `04-parcial` | Four tokens skipped for four different reasons, while the rest converts |
+| `05-sistema` | A small complete system: primitives → semantic → components, chained by reference |
+| `06-referencia-rota` | **Fails**: a shadow's colour points nowhere. Sub-references are real graph edges |
+| `07-colision` | **Fails**: an expanded name claims a property another token already claimed |
 
-**Adobe Spectrum's base file** fails, and is here for that. It contains one
-token measured in `dp`, an Android unit; emitting it would produce a
-declaration a browser ignores in silence. A demo that only showed conversions
+Each file names itself. Its `$description` opens with a title, then `·`, then
+what it is for — the server splits there to label the button and caption the
+result, so the file is the only place either is written. Adding an example is
+dropping a `.json` into `samples/`; there is no list to edit.
+
+Three of the thirteen fail on purpose. A demo that only showed conversions
 working would hide half of what makes the library worth using.
 
 ## Caveats

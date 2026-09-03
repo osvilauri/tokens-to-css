@@ -1,0 +1,39 @@
+{
+  "$description": "Conversión parcial · cuatro tokens que no se pueden escribir como CSS, cada uno por un motivo distinto. La conversión no falla: salen fuera y se dicen, y el resto del archivo convierte.",
+  "color": {
+    "text": { "$type": "color", "$value": "#161616" },
+    "brand": { "$type": "color", "$value": "#5A4FCF" }
+  },
+  "spacing": { "md": { "$type": "dimension", "$value": { "value": 16, "unit": "px" } } },
+  "type": {
+    "heading": {
+      "$description": "Completa: convierte.",
+      "$type": "typography",
+      "$value": { "fontFamily": ["Inter", "sans-serif"], "fontSize": { "value": 1.5, "unit": "rem" }, "fontWeight": 600, "letterSpacing": "0px", "lineHeight": 1.25 }
+    },
+    "body": {
+      "$description": "Sin letterSpacing, que el spec marca requerido. Es la forma que publica GitHub Primer.",
+      "$type": "typography",
+      "$value": { "fontFamily": ["Inter", "sans-serif"], "fontSize": { "value": 1, "unit": "rem" }, "fontWeight": 400, "lineHeight": 1.5 }
+    },
+    "quote": {
+      "$description": "Un peso que no está en la tabla del spec. Emitirlo daría font-weight: kinda bold, que el navegador ignora sin decir nada.",
+      "$type": "typography",
+      "$value": { "fontFamily": ["Georgia", "serif"], "fontSize": { "value": 1.25, "unit": "rem" }, "fontWeight": "kinda bold", "letterSpacing": "0px", "lineHeight": 1.4 }
+    }
+  },
+  "elevation": {
+    "low": {
+      "$description": "Sin spread, que el spec marca requerido. Asumir 0 sería la primera inferencia del producto.",
+      "$type": "shadow",
+      "$value": { "color": "{color.brand}", "offsetX": "0px", "offsetY": "2px", "blur": "6px" }
+    }
+  },
+  "border": {
+    "focus": {
+      "$description": "El estilo va en forma de objeto. dashArray es geometría SVG que un borde CSS no puede llevar, y aproximarlo en silencio es lo que este producto no hace.",
+      "$type": "border",
+      "$value": { "color": "{color.brand}", "width": "2px", "style": { "dashArray": [{ "value": 0.5, "unit": "rem" }], "lineCap": "round" } }
+    }
+  }
+}

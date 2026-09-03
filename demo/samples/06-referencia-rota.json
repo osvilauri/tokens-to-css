@@ -1,0 +1,12 @@
+{
+  "$description": "Referencia rota · la sombra apunta a un color que no existe. Las referencias dentro de un composite son aristas reales del grafo, así que esto se caza — en vez de emitir var(--color-que-no-existe) bajo una corrida con éxito.",
+  "color": {
+    "brand": { "$type": "color", "$value": "#5A4FCF" }
+  },
+  "elevation": {
+    "low": {
+      "$type": "shadow",
+      "$value": { "color": "{color.sombra}", "offsetX": "0px", "offsetY": "2px", "blur": "6px", "spread": "0px" }
+    }
+  }
+}

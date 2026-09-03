@@ -161,6 +161,25 @@
     max-width: 60ch; line-height: 1.5;
   }
 
+  .hint {
+    font-size: 0.78rem; color: var(--muted); margin: 0 0 0.7rem;
+    max-width: 62ch; line-height: 1.5;
+  }
+  .hint code { font-family: var(--f-mono); font-size: 0.92em; }
+
+  .caption {
+    font-size: 0.86rem; color: var(--ink); margin: 0 0 0.8rem;
+    max-width: 66ch; line-height: 1.55;
+  }
+
+  .source { margin-bottom: 1.1rem; }
+  .source summary {
+    font-family: var(--f-mono); font-size: 0.74rem; color: var(--muted);
+    cursor: pointer; padding: 0.2rem 0; user-select: none;
+  }
+  .source summary:hover { color: var(--ink); }
+  .source pre { margin-top: 0.5rem; max-height: 22rem; }
+
   .toolbar {
     display: flex; align-items: center; justify-content: space-between;
     gap: 1rem; flex-wrap: wrap; margin-bottom: 0.6rem;
@@ -208,6 +227,12 @@
         <input type="url" id="url" placeholder="https://…/tokens.json" autocomplete="off" spellcheck="false">
         <button type="submit" id="go">Convertir</button>
       </div>
+      <div class="samples" id="published"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Ejemplos</legend>
+      <p class="hint">Archivos de <code>demo/samples/</code>. Se muestran junto a la hoja que producen — ábrelos, cámbialos, recarga.</p>
       <div class="samples" id="samples"></div>
     </fieldset>
 
@@ -241,81 +266,76 @@
 
   const RAW = 'https://raw.githubusercontent.com/terrazzoapp/dtcg-examples/main/'
 
-  /**
-   * Not every interesting case exists as a published file. This one is written
-   * here: a document whose typography is missing `letterSpacing`, which the
-   * spec marks required — the shape GitHub Primer publishes. It converts, minus
-   * that token, and says so.
-   */
-  const PARTIAL = { name: 'parcial.json', body: JSON.stringify({
-    color: { text: { $value: '#161616' } },
-    type: {
-      heading: { $type: 'typography', $value: {
-        fontFamily: ['Inter', 'system-ui', 'sans-serif'],
-        fontSize: { value: 1.5, unit: 'rem' },
-        fontWeight: 'semi-bold',
-        letterSpacing: '0px',
-        lineHeight: 1.25,
-      } },
-      body: { $type: 'typography', $value: {
-        fontFamily: ['Inter', 'sans-serif'],
-        fontSize: { value: 1, unit: 'rem' },
-        fontWeight: 400,
-        lineHeight: 1.5,
-      } },
-    },
-    elevation: { low: { $type: 'shadow', $value: {
-      color: '#00000026', offsetX: '0px', offsetY: '2px', blur: '6px', spread: '0px',
-    } } },
-    motion: { ease: { $type: 'cubicBezier', $value: [0.2, 0, 0, 1] } },
-  }, null, 2) }
-
-
-  const SAMPLES = [
+  /** Published files, converted over the network exactly as a build would. */
+  const PUBLISHED = [
     ['IBM Carbon · colores', RAW + 'ibm-carbon/colors.tokens.json'],
     ['IBM Carbon · tipografía', RAW + 'ibm-carbon/typography.tokens.json'],
     ['Microsoft Fluent · sombras', RAW + 'microsoft-fluent/effects.tokens.json'],
     ['Shopify Polaris · fuentes', RAW + 'shopify-polaris/font.tokens.json'],
     ['Style Dictionary · legacy', 'https://raw.githubusercontent.com/amzn/style-dictionary/main/examples/complete/tokens/color/base.json'],
-    ['Conversión parcial', PARTIAL],
     ['Adobe Spectrum · base (falla)', RAW + 'adobe-spectrum/base.tokens.json'],
   ]
 
-  const samples = document.getElementById('samples')
-  for (const [label, target] of SAMPLES) {
+  const chip = (into, label, onClick) => {
     const button = document.createElement('button')
     button.type = 'button'
     button.textContent = label
-    button.addEventListener('click', () => {
-      // A sample is either a URL or a document written into this page. The
-      // second reuses the upload path, so the demo gains no endpoint for it.
-      if (typeof target === 'string') {
-        urlInput.value = target
-        run(() => fetch(`/convert?url=${encodeURIComponent(target)}`, { method: 'POST' }))
-        return
-      }
-      urlInput.value = ''
-      fileName.innerHTML = `<b>${escape(target.name)}</b>`
-      run(() =>
-        fetch(`/convert?name=${encodeURIComponent(target.name)}`, {
-          method: 'POST',
-          body: target.body,
-        }),
-      )
-    })
-    samples.append(button)
+    button.addEventListener('click', onClick)
+    into.append(button)
   }
+
+  const published = document.getElementById('published')
+  for (const [label, url] of PUBLISHED) {
+    chip(published, label, () => {
+      urlInput.value = url
+      run(() => fetch(`/convert?url=${encodeURIComponent(url)}`, { method: 'POST' }))
+    })
+  }
+
+  // The worked examples are files on disk, listed by the server. Adding one is
+  // dropping a .json into demo/samples/ — there is nothing here to edit.
+  const samples = document.getElementById('samples')
+  fetch('/samples')
+    .then((r) => r.json())
+    .then((list) => {
+      for (const { id, label } of list) {
+        chip(samples, label, () => {
+          urlInput.value = ''
+          run(() => fetch(`/convert?sample=${encodeURIComponent(id)}`, { method: 'POST' }))
+        })
+      }
+    })
+    .catch(() => {
+      samples.textContent = 'no se pudieron leer los ejemplos'
+    })
 
   const escape = (text) =>
     text.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c])
 
   let objectUrl = null
 
+  /**
+   * The source, for the worked examples.
+   *
+   * Reading a conversion without the file it came from means taking the output
+   * on faith. Shown for a sample on both outcomes: a failure is as worth
+   * reading against its source as a success is.
+   */
+  const source = (outcome) =>
+    outcome.input
+      ? `${outcome.description ? `<p class="caption">${escape(outcome.description)}</p>` : ''}
+         <details class="source" open>
+           <summary>El archivo de entrada</summary>
+           <pre><code>${escape(outcome.input)}</code></pre>
+         </details>`
+      : ''
+
   function render(outcome) {
     if (objectUrl) { URL.revokeObjectURL(objectUrl); objectUrl = null }
 
     if (!outcome.ok) {
       result.innerHTML = `
+        ${source(outcome)}
         <div class="status bad">
           <span class="code">${escape(outcome.code)}</span>
           <span class="detail">${escape(outcome.message)}</span>
@@ -329,6 +349,7 @@
     objectUrl = URL.createObjectURL(new Blob([outcome.css], { type: 'text/css' }))
     const skipped = outcome.skipped ?? []
     result.innerHTML = `
+      ${source(outcome)}
       <div class="status ${skipped.length ? 'partial' : 'ok'}">
         <span class="code">${outcome.tokenCount} custom properties</span>
         <span class="detail">${outcome.totalLines} líneas${

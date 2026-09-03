@@ -1,0 +1,10 @@
+{
+  "$description": "Colisión de nombres · la tipografía expandida reclama --type-body-font-size, y hay un token que ya lo reclamaba. Dos tokens no pueden emitir la misma custom property, y esta versión no elige ganador.",
+  "type": {
+    "body": {
+      "$type": "typography",
+      "$value": { "fontFamily": ["Inter", "sans-serif"], "fontSize": { "value": 1, "unit": "rem" }, "fontWeight": 400, "letterSpacing": "0px", "lineHeight": 1.5 }
+    }
+  },
+  "type-body-font-size": { "$type": "dimension", "$value": { "value": 99, "unit": "px" } }
+}
