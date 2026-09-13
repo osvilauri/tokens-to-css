@@ -41,6 +41,15 @@ Depth that belongs in architecture / solution design / later phases — not the 
 - Conversion CLI for CI (`build` / `analyze`).
 - In-memory Token JSON ingest (no Token Source file/URL).
 - Multi-file / directory merge Token Sources; DTCG Resolver 2025.10.
+
+  **Picked up 2026-09-12**, after the composite survey found cross-file references to be
+  53 of the 58 remaining failures. A Token Source becomes a list, and a resolver manifest
+  becomes a Token Source that expands into one; directory and glob stay refused, now with
+  a measurement behind the refusal. The input and merge design is settled in
+  [`merge-2026-09-12.md`](./merge-2026-09-12.md) and measured in
+  [`survey-2026-09-12/`](./survey-2026-09-12/); PRD §12.7 and Epic 5 carry it. Theme
+  selectors and multi-file CSS splits — the row below — stay deferred, and this revision
+  is deliberately shaped so that they are the next epic rather than this one.
 - Taxonomy confidence report + model override as a first-class product feature (beyond normalize-for-Conversion).
 - Theme selectors, multi-file CSS splits, Tailwind `@theme`.
 - **Composite tokens — deferred to the first version after release. Decided 2026-08-30.**

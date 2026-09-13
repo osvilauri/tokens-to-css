@@ -143,7 +143,8 @@ satisfied in Epic 3.
 
 ## Epic List
 
-Three epics to 1.0.0, plus **Epic 4, added 2026-09-02** for the first release after it. The
+Three epics to 1.0.0, plus **Epic 4, added 2026-09-02** and **Epic 5, added 2026-09-12**, for the
+releases after it. The
 architecture spine is final and no direction change is expected between them, so these are few and
 large by design rather than sliced per technical layer. Each one leaves the library in a shippable
 state.
@@ -953,3 +954,227 @@ So that this epic ends with a number instead of a conviction.
 **Given** the release
 **When** it is versioned
 **Then** it is a **minor**: every input this epic accepts is one that used to fail, and no conversion that succeeded before produces different bytes
+
+---
+
+## Epic 5: Convert a design system that lives in more than one file
+
+*Added 2026-09-12. Realizes PRD §12.7 — FR-27, FR-28, FR-29. Input and merge
+design in `prds/prd-tokens-to-css-2026-08-06/merge-2026-09-12.md`; measurement in
+`survey-2026-09-12/`.*
+
+A developer whose design system is a directory of token files — base colours in one, component
+tokens in twenty more, a theme layer on top — passes the list, or the resolver manifest their
+system already ships, and gets one stylesheet. The cross-file reference that made every one of
+those files unusable on its own is just a reference now, because the alias graph is validated over
+the merged document.
+
+Measured against the published corpus this moves **0 of 7 design systems to 4 of 7 on the merge
+alone, and 5 of 7 with the one skip this epic adds** — including the largest system in the corpus,
+where a single token in `dp` was costing 1,578 custom properties. Two more systems need one line
+naming a context, because their manifests decline to default.
+
+The story order is foundation-first: the list merges before the manifest that expands into one, and
+the goldens written early are not rewritten later.
+
+Three things this epic does not touch. **Themes** — one context per modifier, one `:root`; several
+contexts as several selectors is the epic after this one, and the reason this one stops where it
+does. **Embedded references** (`"inset 0 0 0 {borderWidth.thin}"`) — three of them hold GitHub
+Primer's 1,458 properties, which makes them the next measured blocker and a poor passenger here,
+since AD-20 is what would have to change. **Directory and glob sources**, still refused, now with a
+measurement behind the refusal.
+
+**FRs covered:** FR-27, FR-28, FR-29; FR-21 (vocabulary split, redefinition vs collision);
+FR-24 (skippable boundary widened)
+**NFRs:** NFR9 (a ratified bar for a merged conversion)
+**Architecture:** amends AD-15 (Main Entry shape), AD-21 (trigger ownership), AD-16 (a fourth
+fixture category). AD-1, AD-2, AD-5, AD-6, AD-10 and AD-12 hold unchanged — which is the claim the
+first story has to prove.
+
+### Story 5.1: A Token Source can be a list
+
+As a developer whose tokens live in five files,
+I want to pass all five,
+So that a reference from one to another is a reference rather than a dead end.
+
+**Acceptance Criteria:**
+
+**Given** a list of sources
+**When** it is converted
+**Then** each source is loaded, detected and normalized on its own, and the results are merged in list order
+
+**Given** two sources of different dialects — one DTCG, one Style Dictionary legacy
+**When** they are merged
+**Then** both convert, because detection ran per document and the merge happened on the internal representation
+
+**Given** a token in the second source that references a token defined in the first
+**When** the alias graph is validated
+**Then** it resolves, because the graph is validated once over the merged document
+
+**Given** a merged document
+**When** the stylesheet is emitted
+**Then** first appearance decides a token's position, and a redefinition updates the value in place rather than moving the property
+
+**Given** a source whose every token is skipped
+**When** it is one of several
+**Then** the conversion continues — "the stylesheet would declare nothing" is a question about the merged document, not about each part
+
+**Given** an empty list
+**When** it is converted
+**Then** it fails with `FORMAT_NOT_ALLOWED`, naming the call rather than the documents
+
+**Given** a list of one source, or a single source as before
+**When** it is converted
+**Then** the stylesheet is byte-identical to what 1.1.0 wrote, with `redefinitions` empty
+
+**Given** the corpus
+**When** this story lands
+**Then** it carries a fourth category, `merge/` — `sources.json`, the inputs, the golden, and the expected result metadata — because `accept/`, `reject/` and `partial/` each describe one input document
+
+**Given** `GenerateCssResult`
+**When** a conversion completes
+**Then** it carries `sources`: what was merged, in order, as resolved
+
+### Story 5.2: A redefinition is announced, an identical one is not
+
+As a developer who added a file to the list,
+I want to be told which tokens it took over,
+So that shadowing a token I did not mean to shadow shows up in the diff instead of in production.
+
+**Acceptance Criteria:**
+
+**Given** two sources defining the same token path with different values
+**When** they are merged
+**Then** the later value wins, and the redefinition is reported in `GenerateCssResult.redefinitions` with the path and both sources
+
+**Given** the same document set
+**When** the stylesheet is written
+**Then** the comment block above `:root` carries a merge header: the sources in order, and each value-changing redefinition with the source that won
+
+**Given** two sources defining the same token path with the **same** value — or the same source listed twice
+**When** they are merged
+**Then** nothing is announced, because nothing changed; this is the rule that keeps GitHub Primer's 98 identical re-applications out of the output
+
+**Given** two **different** token paths that would emit the same custom-property name
+**When** the merged document is validated
+**Then** it still fails with `NAME_COLLISION` — a collision is not a redefinition, and the two are not near-misses of each other
+
+**Given** a conversion from a single source
+**When** the stylesheet is written
+**Then** there is no merge header at all, and the bytes are unchanged
+
+### Story 5.3: A resolver manifest is a Token Source
+
+As a developer whose design system ships `system.resolver.json`,
+I want to pass that,
+So that I do not retype in my build script an order the manifest already states.
+
+**Acceptance Criteria:**
+
+**Given** a source whose content has `resolutionOrder` at its root
+**When** it is loaded
+**Then** it is read as a manifest and expanded to an ordered list of sources — detected by content, never by filename
+
+**Given** a manifest
+**When** its `$ref`s are resolved
+**Then** they resolve against the manifest's own location, not against `baseDir`, because a relative `$ref` is written by the manifest's author about their own directory
+
+**Given** a remote manifest
+**When** a `$ref` leaves its origin
+**Then** it is refused, for the reason the URL guard exists (NFR3–NFR6)
+
+**Given** a manifest whose `$ref` is an absolute filesystem path, or whose `resolutionOrder` names a set or modifier that does not exist, or whose sources include another manifest
+**When** it is expanded
+**Then** it fails with `FORMAT_NOT_ALLOWED`, naming which one — a `$ref` that resolves to nothing must never be applied as nothing
+
+**Given** a token document containing `$ref`
+**When** it is converted
+**Then** it is still refused exactly as it is today: a manifest is a Token Source, a `$ref` inside a token document is not
+
+**Given** a manifest that declares a set its `resolutionOrder` never names
+**When** it is expanded
+**Then** the set is applied to nothing, as the spec says, and is named in the result and in the comment block — the measured case is Apple HIG, which fails with 11 dangling references and converts whole the moment that set is included
+
+### Story 5.4: One context per modifier, chosen and never guessed
+
+As a developer converting a system with a light and a dark theme,
+I want to say which one this stylesheet is,
+So that the library never picks a theme for me.
+
+**Acceptance Criteria:**
+
+**Given** `options.contexts`
+**When** a manifest is expanded
+**Then** each modifier resolves to the named context
+
+**Given** a modifier the caller did not name
+**When** the manifest declares a `default` for it
+**Then** that default is applied
+
+**Given** a modifier with neither a caller's choice nor a default
+**When** the manifest is expanded
+**Then** it fails with `CONTEXT_REQUIRED`, naming the modifier, listing its contexts, and naming the option that selects them — three of the seven corpus manifests are in this state, and picking the first context would be this library choosing a team's theme
+
+**Given** a context naming a source that does not exist, or a context that composes another set
+**When** it is expanded
+**Then** it fails with `FORMAT_NOT_ALLOWED`, by name
+
+**Given** two contexts of the same modifier
+**When** a conversion is asked for
+**Then** it converts **one** — several selectors from several contexts is the theming epic, and nothing in this story pre-shapes for it
+
+### Story 5.5: A token in a non-CSS unit is skipped, not fatal
+
+As a developer whose token file carries one Android dimension,
+I want the other fifteen hundred properties,
+So that a token this library cannot express costs me that token and nothing else.
+
+**Acceptance Criteria:**
+
+**Given** an object-form scalar measured in a unit CSS does not have
+**When** it is normalized
+**Then** it is skipped rather than thrown, under a new code `UNSUPPORTED_UNIT`, and appears in `skipped` and in the comment block like any other skip
+
+**Given** the skippable boundary
+**When** this story lands
+**Then** it is a **set of codes** rather than the single `COMPOSITE_VALUE` check, and the set is stated in one place
+
+**Given** a malformed object-form scalar — a `{value, unit}` with no `unit`, a malformed colour
+**When** it is normalized
+**Then** it is still fatal, deliberately: that is a broken document rather than an unsupported one, and the corpus contains none
+
+**Given** the reject fixture for the non-CSS unit
+**When** this story lands
+**Then** it moves from `reject/` to `partial/`, because the outcome it describes changed
+
+**Given** Adobe Spectrum merged from its manifest
+**When** it is converted after this story
+**Then** it converts — 1,578 properties, one token skipped, which is the whole argument for this story in one line
+
+### Story 5.6: Prove it against the systems, not the files
+
+As the product owner,
+I want this epic to close on a measurement rather than on a conviction,
+So that the claim "a design system in twenty files converts" is something someone checked.
+
+**Acceptance Criteria:**
+
+**Given** the harness in `survey-2026-09-12/` and the corpus it names
+**When** it is re-run against the implementation rather than against the static projection
+**Then** the result is recorded, and PRD §12.7's "4 of 7, and 5 of 7 with FR-29" is confirmed or replaced by what was actually measured
+
+**Given** any gap between the projection and the measurement
+**When** it is found
+**Then** it is explained in writing before this epic closes — a projection that was wrong is a finding, not an embarrassment
+
+**Given** a merged conversion of the largest system in the corpus
+**When** its time is measured in CI
+**Then** a bar is ratified or replaced the way story 3.3 did for the single-document one, and enforced as a build failure rather than as a note
+
+**Given** the list source, the manifest subset, `contexts`, the two new codes and the merge header
+**When** this epic closes
+**Then** every one of them is documented in `docs/formats.md` and `docs/failures.md`, and the generated reference cannot drift from the code
+
+**Given** the release
+**When** it is versioned
+**Then** it is a **minor**: every call that type-checks today still type-checks, every conversion that succeeded produces the same bytes, and everything this epic adds is input that used to fail
