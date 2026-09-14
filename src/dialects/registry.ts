@@ -109,25 +109,16 @@ export function normalizeDocument(root: unknown, source: string): Normalized {
   for (const dialect of DIALECTS) {
     if (dialect.matches(root)) {
       const read = dialect.normalize(root, source)
-      if (read.doc.tokens.length === 0) {
-        // Nothing to emit — but *why* matters. A document whose tokens were all
-        // skipped was recognized and read; saying "no tokens were recognized"
-        // would throw that away and send the developer looking at the wrong
-        // thing. Writing `:root {}` instead is not an option either: an empty
-        // stylesheet is a no-op wearing the costume of a success (FR-24).
-        if (read.skipped.length > 0) {
-          throw new TokenCssError(
-            `every token in this document was skipped, so the stylesheet would declare nothing:\n` +
-              read.skipped.map((skip) => `  ${skip.reason}`).join('\n'),
-            {
-              code: FailureCode.NOTHING_EMITTED,
-              source,
-              tokenPaths: read.skipped.map((skip) => skip.path),
-            },
-          )
-        }
+      if (read.doc.tokens.length === 0 && read.skipped.length === 0) {
+        // Recognized as this dialect and holding nothing at all. Falling through
+        // to the message below is deliberate: "no tokens were recognized" is the
+        // true and useful sentence, and it is about *this* document.
         break
       }
+      // A document whose tokens were all skipped is returned, not refused. That
+      // the stylesheet would declare nothing is a question about the conversion,
+      // not about one of its inputs — under a merge this document may be one of
+      // five — so the pipeline asks it once, over the merged document (FR-27).
       return read
     }
   }

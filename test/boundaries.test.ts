@@ -56,6 +56,7 @@ describe('architecture boundary checker', () => {
       'src/dialects',
       'src/validate',
       'src/emit',
+      'src/merge',
       'src/model',
       'src/pipeline.ts',
     ])

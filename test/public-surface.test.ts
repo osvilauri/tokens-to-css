@@ -89,8 +89,12 @@ describe('TokenCssError', () => {
 })
 
 describe('the Main Entry contract', () => {
-  it('takes a path or a URL and resolves to a result', () => {
-    expectTypeOf(api.generateCss).parameter(0).toEqualTypeOf<string | URL>()
+  it('takes a path, a URL, or a list of either, and resolves to a result', () => {
+    // The list is additive (FR-27): every call that type-checked before this
+    // existed still type-checks, which is what keeps the widening a minor.
+    expectTypeOf(api.generateCss)
+      .parameter(0)
+      .toEqualTypeOf<string | URL | readonly (string | URL)[]>()
     expectTypeOf(api.generateCss).returns.toEqualTypeOf<Promise<GenerateCssResult>>()
   })
 
@@ -112,15 +116,18 @@ describe('the Main Entry contract', () => {
     }>()
   })
 
-  it('returns where it wrote, how much, and what it left out — never the CSS itself', () => {
+  it('returns where it wrote, how much, what it merged and what it left out — never the CSS itself', () => {
     expectTypeOf<GenerateCssResult>().toEqualTypeOf<{
       readonly outputPath: string
       readonly tokenCount: number
+      readonly sources: readonly string[]
       readonly skipped: readonly SkippedToken[]
     }>()
     expect(
-      Object.keys(({ outputPath: '', tokenCount: 0, skipped: [] }) satisfies GenerateCssResult),
-    ).toEqual(['outputPath', 'tokenCount', 'skipped'])
+      Object.keys(
+        ({ outputPath: '', tokenCount: 0, sources: [], skipped: [] }) satisfies GenerateCssResult,
+      ),
+    ).toEqual(['outputPath', 'tokenCount', 'sources', 'skipped'])
   })
 
   it('documents the defaults the PRD fixes', () => {

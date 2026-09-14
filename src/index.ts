@@ -29,14 +29,23 @@ export type { GenerateCssOptions, GenerateCssResult, HttpOptions } from './optio
  * unreadable source, a document shaped in a way this version does not accept,
  * an alias cycle, a dangling reference, a name collision — still fails whole.
  *
- * @param source Path to a single local file, or a URL.
+ * **Several sources merge into one stylesheet** (FR-27). Pass a list and each
+ * document is read on its own — so one system may mix dialects — and then
+ * merged in list order, where a later source wins. A reference from one
+ * document to a token defined in another is an ordinary reference: the alias
+ * graph is validated once, over the merged document. The stylesheet names the
+ * sources it was built from in a comment above `:root`; a conversion from a
+ * single source is byte-identical to what it has always produced.
+ *
+ * @param source Path to a local file, a URL, or a list of either. A list is
+ * merged in the order it is written; an empty list is refused.
  * @param options Output location and network policy.
- * @returns Where the stylesheet was written, how many properties it holds, and
- * which tokens it left out.
+ * @returns Where the stylesheet was written, how many properties it holds,
+ * which sources it merged, and which tokens it left out.
  * @throws {TokenCssError} With a `code` naming the failure class.
  */
 export function generateCss(
-  source: string | URL,
+  source: string | URL | readonly (string | URL)[],
   options?: GenerateCssOptions,
 ): Promise<GenerateCssResult> {
   return runConversion(source, options)

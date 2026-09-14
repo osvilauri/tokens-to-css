@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { convertDocument } from '../src/pipeline.js'
+import { convertDocument, convertDocuments } from '../src/pipeline.js'
 import { TokenCssError } from '../src/index.js'
 import { compareGolden, describeMismatch, discover, goldenUpdatesAllowed, writeGolden } from './support/corpus.js'
 
@@ -37,6 +37,13 @@ const EXPECTED = {
    * not happen.
    */
   partial: 3,
+  /**
+   * Merges (FR-27): several documents that become one stylesheet. The only
+   * category whose fixture is a *list*, which is why it needs one — every other
+   * category describes a single input document, so none of them can express
+   * merge order, a reference that crosses a file, or two dialects in one system.
+   */
+  merge: 4,
 } as const
 
 /**
@@ -63,6 +70,10 @@ describe('the fixture corpus', () => {
     expect(corpus.partial.length, corpus.partial.map((f) => f.id).join(', ')).toBe(EXPECTED.partial)
   })
 
+  it('holds exactly the number of merge fixtures we expect', () => {
+    expect(corpus.merge.length, corpus.merge.map((f) => f.id).join(', ')).toBe(EXPECTED.merge)
+  })
+
   it('produces identical goldens for fixtures that differ only by dialect', () => {
     // The point of the shared catalogue: a dialect is an input shape, never a
     // mode. Two files saying the same thing in different notations must emit
@@ -80,7 +91,9 @@ describe('the fixture corpus', () => {
   })
 
   it('has no duplicate ids', () => {
-    const ids = [...corpus.accept, ...corpus.reject, ...corpus.partial].map((f) => f.id)
+    const ids = [...corpus.accept, ...corpus.reject, ...corpus.partial, ...corpus.merge].map(
+      (f) => f.id,
+    )
     expect(new Set(ids).size).toBe(ids.length)
   })
 
@@ -218,6 +231,48 @@ describe('every partial fixture converts to its golden and reports what it left 
     // is byte-identical to what it produced before partial conversion existed.
     for (const fixture of corpus.accept) {
       expect(fixture.expectedCss.startsWith(':root {'), fixture.id).toBe(true)
+    }
+  })
+})
+
+describe('every merge fixture converts to its golden, in the order it names', () => {
+  const corpus = discover()
+
+  it.each(corpus.merge.map((f) => [f.id, f] as const))('%s', (id, fixture) => {
+    const { css, skipped } = convertDocuments(fixture.inputs)
+
+    expect(skipped.map((s) => ({ path: s.path, code: s.code }))).toEqual(
+      fixture.expectedSkipped.map((s) => ({ path: s.path, code: s.code })),
+    )
+
+    if (goldenUpdatesAllowed()) {
+      writeGolden(fixture, css)
+      return
+    }
+
+    const mismatch = compareGolden(css, fixture.expectedCss)
+    if (mismatch) throw new Error(describeMismatch(id, mismatch))
+  })
+
+  it('names every source, in order, in the golden it belongs to', () => {
+    // The merge block is the half of the provenance report that humans see, so
+    // it is pinned by the golden rather than trusted to exist. Order included:
+    // a block that listed the sources in some other order would still contain
+    // all of them, and would be wrong about the only thing it is for.
+    for (const fixture of corpus.merge) {
+      const listed = [...fixture.expectedCss.matchAll(/^ \*   (\S+)$/gm)].map((m) => m[1])
+      const sources = fixture.inputs.map((i) => i.source)
+      expect(listed.slice(0, sources.length), fixture.id).toEqual(sources)
+      expect(fixture.expectedCss.startsWith(`/* ${sources.length} sources merged, in order:`)).toBe(
+        true,
+      )
+    }
+  })
+
+  it('converts each fixture to the same bytes when its inputs are handed over twice', () => {
+    // Determinism across runs is AD-10's claim; this is the merge's share of it.
+    for (const fixture of corpus.merge) {
+      expect(convertDocuments(fixture.inputs).css).toBe(convertDocuments(fixture.inputs).css)
     }
   })
 })

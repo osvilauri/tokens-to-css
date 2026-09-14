@@ -16,6 +16,7 @@ export const RESTRICTED = [
   { path: 'src/dialects', reason: 'normalization is a pure stage (AD-1)' },
   { path: 'src/validate', reason: 'validation is a pure stage (AD-1)' },
   { path: 'src/emit', reason: 'emission is a pure stage (AD-1)' },
+  { path: 'src/merge', reason: 'merging is a pure stage (AD-1)' },
   { path: 'src/model', reason: 'the model imports nothing (AD-2)' },
   { path: 'src/pipeline.ts', reason: 'the orchestrator sequences stages but does no IO (AD-1)' },
 ]

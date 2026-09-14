@@ -39,6 +39,14 @@ export interface GenerateCssResult {
   /** How many custom properties it declares. */
   readonly tokenCount: number
   /**
+   * Every Token Source that was merged, in order, as each one resolved (FR-27).
+   *
+   * Absolute paths and URL hrefs, like `outputPath` — the resolved form is what
+   * a caller can act on. A conversion from one source returns one element, so a
+   * caller never has to branch on whether a merge happened.
+   */
+  readonly sources: readonly string[]
+  /**
    * Tokens the document contained that the stylesheet could not (FR-24).
    *
    * Empty on a conversion that lost nothing, which is the ordinary case. A

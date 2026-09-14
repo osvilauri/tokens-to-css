@@ -1,0 +1,6 @@
+{
+  "primitive": {
+    "purple": { "500": { "$value": "#5A4FCF", "$type": "color" } },
+    "size": { "4": { "$value": "16px", "$type": "dimension" } }
+  }
+}

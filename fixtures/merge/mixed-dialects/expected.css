@@ -1,0 +1,10 @@
+/* 2 sources merged, in order:
+ *   primitives.dtcg.json
+ *   semantic.legacy.json
+ */
+:root {
+  --primitive-purple-500: #5A4FCF;
+  --primitive-size-4: 16px;
+  --semantic-color-brand: var(--primitive-purple-500);
+  --semantic-space-md: var(--primitive-size-4);
+}
