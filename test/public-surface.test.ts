@@ -2,7 +2,13 @@ import { execFileSync } from 'node:child_process'
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import * as api from '../src/index.js'
 import { FailureCode, TokenCssError } from '../src/index.js'
-import type { GenerateCssOptions, GenerateCssResult, HttpOptions, SkippedToken } from '../src/index.js'
+import type {
+  GenerateCssOptions,
+  GenerateCssResult,
+  HttpOptions,
+  Redefinition,
+  SkippedToken,
+} from '../src/index.js'
 
 /**
  * What this package promises the outside world. Every assertion here is a
@@ -121,13 +127,28 @@ describe('the Main Entry contract', () => {
       readonly outputPath: string
       readonly tokenCount: number
       readonly sources: readonly string[]
+      readonly redefinitions: readonly Redefinition[]
       readonly skipped: readonly SkippedToken[]
     }>()
     expect(
       Object.keys(
-        ({ outputPath: '', tokenCount: 0, sources: [], skipped: [] }) satisfies GenerateCssResult,
+        ({
+          outputPath: '',
+          tokenCount: 0,
+          sources: [],
+          redefinitions: [],
+          skipped: [],
+        }) satisfies GenerateCssResult,
       ),
-    ).toEqual(['outputPath', 'tokenCount', 'sources', 'skipped'])
+    ).toEqual(['outputPath', 'tokenCount', 'sources', 'redefinitions', 'skipped'])
+  })
+
+  it('says what a redefinition is: one path, the source that lost and the source that won', () => {
+    expectTypeOf<Redefinition>().toEqualTypeOf<{
+      readonly path: string
+      readonly from: string
+      readonly to: string
+    }>()
   })
 
   it('documents the defaults the PRD fixes', () => {

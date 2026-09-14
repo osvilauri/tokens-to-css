@@ -115,6 +115,38 @@ export function referencesOf(value: TokenValue): readonly TokenRef[] {
 }
 
 /**
+ * Whether two values say the same thing (FR-27).
+ *
+ * The question a merge asks before announcing a redefinition: a later source
+ * that defines a token the same way has changed nothing, and saying so would be
+ * noise — the measured case is a design system that lists one of its own files
+ * twice, redefining 98 tokens with the values they already had.
+ *
+ * Structural, and deliberately strict: `16px` and `1rem` are different values
+ * here, because this module has no opinion about CSS and acquiring one would
+ * make it the wrong kind of module.
+ */
+export function valuesEqual(a: TokenValue, b: TokenValue): boolean {
+  if (a.kind !== b.kind) return false
+  if (isLiteral(a) && isLiteral(b)) return a.value === b.value
+  if (isRef(a) && isRef(b)) return samePath(a.path, b.path)
+  if (isComposite(a) && isComposite(b)) {
+    return (
+      a.parts.length === b.parts.length &&
+      a.parts.every((part, i) => {
+        const other = b.parts[i]!
+        if (typeof part === 'string' || typeof other === 'string') return part === other
+        return samePath(part.path, other.path)
+      })
+    )
+  }
+  return false
+}
+
+const samePath = (a: readonly string[], b: readonly string[]): boolean =>
+  a.length === b.length && a.every((segment, i) => segment === b[i])
+
+/**
  * Renders a path the way the token document wrote it, for humans.
  *
  * This is how a token is named in an error message — it is *not* the custom

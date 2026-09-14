@@ -12,6 +12,7 @@
  */
 import type { SkippedToken } from '../errors.js'
 import { isComposite, isRef, type TokenDoc } from '../model/index.js'
+import type { Redefinition } from '../options.js'
 import { stringifyLiteral } from './literal.js'
 import { customPropertyName } from './name.js'
 
@@ -35,8 +36,16 @@ function skipComment(skipped: readonly SkippedToken[]): readonly string[] {
   return [`/* ${heading}`, ...skipped.map((s) => ` *   ${s.reason}`), ' */']
 }
 
+/** Everything a merged conversion has to say about where its tokens came from. */
+export interface MergeReport {
+  /** Every source, in merge order, as the caller wrote it. */
+  readonly sources: readonly string[]
+  /** Tokens a later source took over from an earlier one, value-changing only. */
+  readonly redefinitions: readonly Redefinition[]
+}
+
 /**
- * The block that announces what was merged (FR-27).
+ * The block that announces what was merged, and what took over what (FR-27).
  *
  * Written only when there is more than one source, which is what keeps every
  * single-source conversion byte-identical to what it produced before merging
@@ -45,10 +54,29 @@ function skipComment(skipped: readonly SkippedToken[]): readonly string[] {
  * The sources are named as the caller wrote them, not as they resolved. An
  * absolute path would make the stylesheet depend on the machine that generated
  * it, and this file is checked into a repository.
+ *
+ * The redefinition lines are the half of that report humans read. A token
+ * quietly taken over by a file somebody added to the list is the way a merged
+ * stylesheet goes wrong while every test stays green — so it shows up here, in
+ * the diff, next to the value that won.
  */
-function mergeComment(sources: readonly string[]): readonly string[] {
+function mergeComment(report: MergeReport): readonly string[] {
+  const { sources, redefinitions } = report
   if (sources.length < 2) return []
-  return [`/* ${sources.length} sources merged, in order:`, ...sources.map((s) => ` *   ${s}`), ' */']
+
+  const lines = [
+    `/* ${sources.length} sources merged, in order:`,
+    ...sources.map((s) => ` *   ${s}`),
+  ]
+  if (redefinitions.length > 0) {
+    const heading =
+      redefinitions.length === 1 ? ' * 1 token was redefined:' : ` * ${redefinitions.length} tokens were redefined:`
+    lines.push(
+      heading,
+      ...redefinitions.map((r) => ` *   ${r.path}: ${r.to} wins over ${r.from}`),
+    )
+  }
+  return [...lines, ' */']
 }
 
 /**
@@ -64,24 +92,25 @@ function mergeComment(sources: readonly string[]): readonly string[] {
  * A document carrying skipped tokens is preceded by a comment naming them, so
  * the stylesheet says what it is missing rather than quietly being short.
  *
- * A stylesheet merged from several sources is preceded by a comment naming
- * them in order, so the file says where it came from — which is what somebody
- * reading the next pull request needs and what a return value cannot give them.
+ * A stylesheet merged from several sources is preceded by a comment naming them
+ * in order and naming every token one of them took over from another, so the
+ * file says where it came from — which is what somebody reading the next pull
+ * request needs and what a return value cannot give them.
  *
  * @param doc The normalized document, in document order.
  * @param skipped Tokens the document held that the stylesheet cannot, announced
  * in a comment above the rule. Empty for a document that lost nothing, and then
  * no comment is written at all.
  * @param source The Token Source, carried only so a naming failure can name it.
- * @param sources Every source that was merged, in order, as the caller wrote
- * them. One or none writes no merge block at all.
+ * @param merge Where the tokens came from: every source in merge order, and
+ * every value-changing redefinition. One source or none writes no merge block.
  * @returns The complete stylesheet text, ending in exactly one newline.
  */
 export function emitStylesheet(
   doc: TokenDoc,
   skipped: readonly SkippedToken[],
   source: string,
-  sources: readonly string[] = [],
+  merge: MergeReport = { sources: [], redefinitions: [] },
 ): string {
   const reference = (path: readonly string[]): string => `var(${customPropertyName(path, source)})`
 
@@ -97,5 +126,5 @@ export function emitStylesheet(
     return `${INDENT}${property}: ${value};`
   })
 
-  return [...mergeComment(sources), ...skipComment(skipped), ':root {', ...declarations, '}', ''].join('\n')
+  return [...mergeComment(merge), ...skipComment(skipped), ':root {', ...declarations, '}', ''].join('\n')
 }

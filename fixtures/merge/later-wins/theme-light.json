@@ -1,0 +1,6 @@
+{
+  "surface": {
+    "page": { "$value": "{color.white}" },
+    "text": { "$value": "{color.ink}" }
+  }
+}

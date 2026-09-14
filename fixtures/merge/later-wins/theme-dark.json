@@ -1,0 +1,7 @@
+{
+  "$description": "Takes over both semantic tokens. Neither is a new token, so both keep the position theme-light.json gave them.",
+  "surface": {
+    "page": { "$value": "{color.ink}" },
+    "text": { "$value": "{color.white}" }
+  }
+}

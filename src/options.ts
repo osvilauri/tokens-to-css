@@ -20,6 +20,23 @@ export interface HttpOptions {
   readonly maxRedirects?: number
 }
 
+/**
+ * One token that more than one source defined, with different values (FR-27).
+ *
+ * Only value-*changing* redefinitions are reported. A later source that repeats
+ * a token verbatim — or a source listed twice, which published resolver
+ * manifests do — changed nothing, and reporting it would bury the redefinitions
+ * that matter under the ones that do not.
+ */
+export interface Redefinition {
+  /** Dotted path of the token, spelled as the document wrote it. */
+  readonly path: string
+  /** The source whose value was replaced, as the caller wrote it. */
+  readonly from: string
+  /** The source that won, as the caller wrote it. */
+  readonly to: string
+}
+
 /** Everything a caller can adjust about a conversion. */
 export interface GenerateCssOptions {
   /** Directory the stylesheet is written to. Defaults to `assets/css`. */
@@ -46,6 +63,16 @@ export interface GenerateCssResult {
    * caller never has to branch on whether a merge happened.
    */
   readonly sources: readonly string[]
+  /**
+   * Tokens that more than one source defined with different values (FR-27).
+   *
+   * Empty for a conversion from one source, and for a merge in which no source
+   * took a token over from another — which, measured across seven published
+   * design systems, is all of them. It exists for the case that is not in that
+   * corpus and is the obvious way to get a stylesheet quietly wrong: a file
+   * added to the list that shadows a token nobody meant it to shadow.
+   */
+  readonly redefinitions: readonly Redefinition[]
   /**
    * Tokens the document contained that the stylesheet could not (FR-24).
    *

@@ -1,0 +1,10 @@
+/* 3 sources merged, in order:
+ *   base.json
+ *   agrees.json
+ *   base.json
+ */
+:root {
+  --color-brand: #5A4FCF;
+  --size-md: 16px;
+  --size-lg: 24px;
+}

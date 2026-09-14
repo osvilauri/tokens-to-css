@@ -11,7 +11,12 @@
  */
 import { emitStylesheet } from './emit/css.js'
 import { FailureCode, TokenCssError, type SkippedToken } from './errors.js'
-import { DEFAULTS, type GenerateCssOptions, type GenerateCssResult } from './options.js'
+import {
+  DEFAULTS,
+  type GenerateCssOptions,
+  type GenerateCssResult,
+  type Redefinition,
+} from './options.js'
 import { mergeDocuments } from './merge/documents.js'
 import { normalizeDocument } from './dialects/registry.js'
 import { parseTokenJson, readTokenFile } from './source/file.js'
@@ -25,6 +30,7 @@ import { writeStylesheet } from './write/atomic.js'
 export interface Converted {
   readonly css: string
   readonly tokenCount: number
+  readonly redefinitions: readonly Redefinition[]
   readonly skipped: readonly SkippedToken[]
 }
 
@@ -67,7 +73,9 @@ export function convertDocuments(inputs: readonly RawDocument[]): Converted {
   // system mix dialects: detection is a question about a document, and by the
   // time the merge runs there are no dialects left to disagree (FR-27).
   const read = inputs.map((input) => normalizeDocument(input.raw, input.source))
-  const doc = mergeDocuments(read.map((r) => r.doc))
+  const { doc, redefinitions } = mergeDocuments(
+    read.map((r, i) => ({ doc: r.doc, source: inputs[i]!.source })),
+  )
   const skipped = read.flatMap((r) => r.skipped)
   const display = displayOf(inputs)
 
@@ -94,8 +102,12 @@ export function convertDocuments(inputs: readonly RawDocument[]): Converted {
   validateNoCollisions(doc, display)
 
   return {
-    css: emitStylesheet(doc, skipped, display, inputs.map((input) => input.source)),
+    css: emitStylesheet(doc, skipped, display, {
+      sources: inputs.map((input) => input.source),
+      redefinitions,
+    }),
     tokenCount: doc.tokens.length,
+    redefinitions,
     skipped,
   }
 }
@@ -141,7 +153,7 @@ export async function runConversion(
   }
 
   // 2-6. detect, normalize, merge, validate, emit — the complete stylesheet, in memory
-  const { css, tokenCount, skipped } = convertDocuments(inputs)
+  const { css, tokenCount, redefinitions, skipped } = convertDocuments(inputs)
 
   // 7. write — the first and only time the output path is opened
   const outputPath = resolveOutputPath(
@@ -151,5 +163,5 @@ export async function runConversion(
   )
   await writeStylesheet(outputPath, css, displayOf(inputs))
 
-  return { outputPath, tokenCount, skipped, sources: resolved }
+  return { outputPath, tokenCount, sources: resolved, redefinitions, skipped }
 }
