@@ -561,6 +561,127 @@ Property-level references (spec §7.3.3), which the expansion makes addressable
 for the first time. Skipping anything that is not a single unrepresentable
 token — dangling references stay fatal.
 
+## 12.7 Revision — Multi-File Merge (2026-09-12)
+
+The capability deferred since v1 and named by §12.6 as the dominant blocker.
+Input and merge design in `merge-2026-09-12.md`; measurement in
+`survey-2026-09-12/`.
+
+**The finding.** Of the 58 corpus files still failing after Epic 4, 53 failed on
+a reference to a token defined in a sibling file. Asked the other way round —
+what happens when a design system's files are merged the way the system itself
+says to merge them — the corpus answers twice over.
+
+First: **every one of the seven design systems ships a DTCG Resolver 2025.10
+manifest**, and the corpus lists it as the import for that system. Merge order is
+declared by the people who wrote the tokens; this library does not have to invent
+a convention for it. 93 of the 98 files are named by a manifest.
+
+Second: merging on that order and converting with 1.1.0 unchanged, **four of the
+seven systems convert whole**, with zero dangling references. The 53 were exactly
+what they looked like.
+
+**This also retires "40 of 98 files" as the scoreboard.** After a merge the unit
+that converts is the system, not the file. `button.tokens.json` on its own is 40
+references into files it does not contain; nobody ever wanted it converted alone.
+
+**The decision, in four parts.**
+
+*A Token Source may be a **list**.* Documents are merged in order and a later
+source wins. The list is the primitive; everything else is built on it.
+
+*A **resolver manifest** is a Token Source.* It is detected by content —
+`resolutionOrder` at the root — never by filename, and it expands to a list,
+which is then merged. The accepted subset, the refusals, and the rule that `$ref`
+resolves against the manifest rather than against `baseDir` are normative in
+`merge-2026-09-12.md`.
+
+*A modifier resolves to **one** context* — the caller's choice, else the
+manifest's `default`, else a clear failure naming the modifier and its contexts.
+Three of the seven manifests declare no default, and choosing one for them would
+be this library picking a team's theme and writing it into a file that ships.
+Several contexts as several selectors is theming, and is not in this revision.
+
+*The skippable boundary widens by one code.* FR-24 made an unwritable token a
+skip and drew the line at `COMPOSITE_VALUE`. A token measured in a non-CSS unit
+sat outside it and stayed fatal — and in Adobe Spectrum that is **one** token
+costing **1,578** properties. Same argument, same answer.
+
+**FR-27 (new): a Token Source may be a list of sources, merged in order.** Each
+source is loaded, detected and normalized on its own — so a system may mix
+dialects — and the merge happens on the internal representation, keyed by token
+path. First appearance decides position in the stylesheet; a redefinition updates
+the value in place. The alias graph and the collision pass run once, over the
+merged document, which is what makes a cross-file reference resolve. An empty
+list is refused.
+
+**FR-28 (new): a DTCG Resolver manifest is an accepted Token Source**, in the
+subset `merge-2026-09-12.md` fixes, with `options.contexts` selecting one context
+per modifier and `CONTEXT_REQUIRED` when a modifier has neither a choice nor a
+default. A set a manifest declares and never orders is applied to nothing — as
+the spec says — and named in the result and in the stylesheet.
+
+**FR-29 (new): a token measured in a non-CSS unit is skipped, not fatal**, under
+a new code `UNSUPPORTED_UNIT`. The skippable boundary becomes a set of codes
+rather than one. Malformed object-form scalars stay fatal: a `{value, unit}`
+missing its `unit` is a broken document rather than an unsupported one, and the
+corpus contains none.
+
+**Redefinition is not collision.** The vocabulary splits the way C2 split
+*Alias Graph Validation* from *Reference Emission*. A **redefinition** is the
+same token path defined by more than one source: later wins, announced in the
+result and in the comment block **only when the value changes**. A **name
+collision** (FR-21) is two different paths emitting the same custom-property
+name: still fatal, still detected on emitted names, now over the merged document.
+The measured reason for the "only when the value changes" clause: GitHub Primer's
+manifest lists one file twice, producing 98 identical redefinitions and zero
+value-changing ones across the whole corpus.
+
+**What it moves.** 0 of 7 systems → **4 of 7** on the merge alone; **5 of 7**
+with FR-29, which is also the largest system in the corpus. Two systems need one
+line of `contexts` because their manifests decline to default. Projected
+structurally on 2026-09-12 against the published library; to be confirmed against
+the implementation before this section is final, the way §12.6 was.
+
+**One qualification on that measurement, found 2026-09-14.** Figma SDS writes a
+group's own value under the key `$root`, which `dialects/dtcg.ts` drops as
+metadata — silently, `skipped` empty. Twenty-eight tokens per theme file, and
+they are the base colour of each group. "figma-sds converts whole" therefore
+means *of what the reader saw*. It reproduces on 1.1.0 against the single file,
+so it is not a merge failure and not this revision's to fix; it is also a
+contradiction of the sentence FR-20 and FR-24 both rest on, so it is tracked
+ahead of Epic 5 rather than inside it. Details in `survey-2026-09-12/`.
+
+**What this amends elsewhere in this document.**
+
+| Where | Was | Now |
+| --- | --- | --- |
+| §4.1 FR-1 | Token Source is a single URL or local path | a single source, or a list, or a resolver manifest (FR-27, FR-28). Directory and glob stay refused |
+| §4.2.0 rejection triggers | "DTCG Resolver / multi-file constructs (`$ref`, resolver manifests)" | a resolver **manifest** is a Token Source (FR-28); `$ref` **inside a token document** is still refused, unchanged |
+| §4.2 DTCG subset | "single-file documents" | single-document; several documents reach the subset one at a time and are merged after normalization |
+| §4.4 | failure classes as of v1 | plus `CONTEXT_REQUIRED`; `UNSUPPORTED_UNIT` is a skip reason, not a failure |
+| §5 Non-Goals | multi-file merge out | in, as of this revision. Theme selectors and multi-file CSS **splits** stay out |
+| §6.2 Out of Scope for MVP | multi-file/directory/glob merge Token Sources | list and manifest in; directory and glob still out, and now with a measured reason |
+| §8 Public Surface | `generateCss(source: string \| URL, …)`; result carries `outputPath`, `tokenCount`, `skipped` | `source` widens to accept an array; `options.contexts`; result gains `sources` and `redefinitions`; two new codes. All additive — a minor |
+| §9 Reliability | one document per conversion | several; nothing is written until the merged stylesheet exists whole (AD-6, unchanged) |
+| §12 Assumptions | "V1 primary outcome is a single Styles File; multi-file theme/layer splits not required" | the *input* stops being single-file; the *output* stays one Styles File, deliberately |
+
+**A single-source conversion is byte-identical**, and that is a fixture rather
+than an intention: no merge header, an empty `redefinitions`, a one-element
+`sources`.
+
+**Fixtures land in the same change**, per SM-C3, in a fourth corpus category —
+`merge/` — because `accept/`, `reject/` and `partial/` each describe one input
+document.
+
+**Not done here.** Themes: one context per modifier, one `:root`. Embedded
+references — three of them hold GitHub Primer's 1,458 properties, which makes
+them the next measured blocker and a bad passenger in this epic, since AD-20 is
+what would have to change. Directory and glob sources, now refused with a
+measurement behind the refusal: Primer's directory holds 61 files in which `dark`
+and `light` define the same paths. Nested manifests. Caching across sources —
+Primer's 51 files parse in 5 ms.
+
 ## 13. Review Disposition (2026-08-07 reviews → 2026-08-27)
 
 Reviews: `review-rubric.md`, `review-adversarial-general.md`. PM disposition: recommended package accepted.
