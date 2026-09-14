@@ -43,7 +43,7 @@ const EXPECTED = {
    * category describes a single input document, so none of them can express
    * merge order, a reference that crosses a file, or two dialects in one system.
    */
-  merge: 4,
+  merge: 6,
 } as const
 
 /**

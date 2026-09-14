@@ -14,7 +14,12 @@ import type { GenerateCssOptions, GenerateCssResult } from './options.js'
 export { FailureCode, TokenCssError } from './errors.js'
 export type { SkippedToken, TokenCssErrorInit } from './errors.js'
 export { DEFAULTS } from './options.js'
-export type { GenerateCssOptions, GenerateCssResult, HttpOptions } from './options.js'
+export type {
+  GenerateCssOptions,
+  GenerateCssResult,
+  HttpOptions,
+  Redefinition,
+} from './options.js'
 
 /**
  * Convert a design-token document into a CSS custom-properties stylesheet.
@@ -33,9 +38,12 @@ export type { GenerateCssOptions, GenerateCssResult, HttpOptions } from './optio
  * document is read on its own — so one system may mix dialects — and then
  * merged in list order, where a later source wins. A reference from one
  * document to a token defined in another is an ordinary reference: the alias
- * graph is validated once, over the merged document. The stylesheet names the
- * sources it was built from in a comment above `:root`; a conversion from a
- * single source is byte-identical to what it has always produced.
+ * graph is validated once, over the merged document. Where two sources define
+ * the same token differently the later one wins, and that is reported — in
+ * `redefinitions` and in the comment above `:root`, which is where somebody
+ * reading the next pull request will see it. Two sources that agree, or one
+ * source listed twice, change nothing and are reported as nothing. A conversion
+ * from a single source is byte-identical to what it has always produced.
  *
  * @param source Path to a local file, a URL, or a list of either. A list is
  * merged in the order it is written; an empty list is refused.

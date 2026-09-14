@@ -17,32 +17,77 @@ import { FailureCode, TokenCssError, generateCss } from '../src/index.js'
  */
 
 const doc = (...tokens: TokenDoc['tokens']): TokenDoc => ({ tokens })
+/** One input to the merge: a document and the source it came from. */
+const from = (source: string, ...tokens: TokenDoc['tokens']) => ({ doc: doc(...tokens), source })
 
 describe('mergeDocuments', () => {
   it('concatenates documents that share no paths, in order', () => {
-    const merged = mergeDocuments([
-      doc(token(['color', 'brand'], literal('#5A4FCF'))),
-      doc(token(['size', 'md'], literal('16px'))),
+    const { doc: merged } = mergeDocuments([
+      from('a.json', token(['color', 'brand'], literal('#5A4FCF'))),
+      from('b.json', token(['size', 'md'], literal('16px'))),
     ])
     expect(merged.tokens.map((t) => t.path)).toEqual([['color', 'brand'], ['size', 'md']])
   })
 
-  it('lets a later document win', () => {
-    const merged = mergeDocuments([
-      doc(token(['color', 'brand'], literal('#5A4FCF'))),
-      doc(token(['color', 'brand'], literal('#000000'))),
+  it('lets a later document win, and says who won over whom', () => {
+    const { doc: merged, redefinitions } = mergeDocuments([
+      from('light.json', token(['color', 'brand'], literal('#5A4FCF'))),
+      from('dark.json', token(['color', 'brand'], literal('#000000'))),
     ])
     expect(merged.tokens).toHaveLength(1)
     expect(merged.tokens[0]!.value).toEqual(literal('#000000'))
+    expect(redefinitions).toEqual([{ path: 'color.brand', from: 'light.json', to: 'dark.json' }])
+  })
+
+  it('says nothing when the later document repeats the value it found', () => {
+    // The measured case: a published manifest that lists one of its own files
+    // twice, redefining 98 tokens with the values they already had.
+    const { redefinitions } = mergeDocuments([
+      from('base.json', token(['color', 'brand'], literal('#5A4FCF'))),
+      from('agrees.json', token(['color', 'brand'], literal('#5A4FCF'))),
+      from('base.json', token(['color', 'brand'], literal('#5A4FCF'))),
+    ])
+    expect(redefinitions).toEqual([])
+  })
+
+  it('compares references and composites structurally, not by identity', () => {
+    const { redefinitions } = mergeDocuments([
+      from('a.json', token(['alias'], ref(['color', 'brand']))),
+      from('b.json', token(['alias'], ref(['color', 'brand']))),
+    ])
+    expect(redefinitions).toEqual([])
+  })
+
+  it('reports a chain of redefinitions step by step, in merge order', () => {
+    const { redefinitions } = mergeDocuments([
+      from('a.json', token(['x'], literal('1'))),
+      from('b.json', token(['x'], literal('2'))),
+      from('c.json', token(['x'], literal('3'))),
+    ])
+    expect(redefinitions).toEqual([
+      { path: 'x', from: 'a.json', to: 'b.json' },
+      { path: 'x', from: 'b.json', to: 'c.json' },
+    ])
+  })
+
+  it('names the source whose value was replaced, not merely the one before it', () => {
+    // `b.json` agreed with `a.json`, so when `c.json` changes the value it is
+    // taking over from `b.json` — the source that last *defined* what is there.
+    const { redefinitions } = mergeDocuments([
+      from('a.json', token(['x'], literal('1'))),
+      from('b.json', token(['x'], literal('1'))),
+      from('c.json', token(['x'], literal('2'))),
+    ])
+    expect(redefinitions).toEqual([{ path: 'x', from: 'b.json', to: 'c.json' }])
   })
 
   it('keeps a redefined token where it first appeared', () => {
     // Appending it would move a custom property to the bottom of the stylesheet
     // the first time a theme layer touched it, and the diff of a generated file
     // is a thing this product protects (AD-10).
-    const merged = mergeDocuments([
-      doc(token(['a'], literal('1')), token(['b'], literal('2')), token(['c'], literal('3'))),
-      doc(token(['a'], literal('9'))),
+    const { doc: merged } = mergeDocuments([
+      from('a.json', token(['a'], literal('1')), token(['b'], literal('2')), token(['c'], literal('3'))),
+      from('b.json', token(['a'], literal('9'))),
     ])
     expect(merged.tokens.map((t) => [t.path[0], (t.value as { value: string }).value])).toEqual([
       ['a', '9'],
@@ -55,16 +100,17 @@ describe('mergeDocuments', () => {
     // JSON lets a single key contain a dot, so `['color.brand']` and
     // `['color', 'brand']` are different tokens that both read as `color.brand`.
     // Keying the merge on the dotted form would silently make them one.
-    const merged = mergeDocuments([
-      doc(token(['color.brand'], literal('#5A4FCF'))),
-      doc(token(['color', 'brand'], literal('#000000'))),
+    const { doc: merged, redefinitions } = mergeDocuments([
+      from('a.json', token(['color.brand'], literal('#5A4FCF'))),
+      from('b.json', token(['color', 'brand'], literal('#000000'))),
     ])
     expect(merged.tokens).toHaveLength(2)
+    expect(redefinitions).toEqual([])
   })
 
   it('returns a single document untouched', () => {
-    const only = doc(token(['color', 'brand'], literal('#5A4FCF')))
-    expect(mergeDocuments([only])).toBe(only)
+    const only = from('only.json', token(['color', 'brand'], literal('#5A4FCF')))
+    expect(mergeDocuments([only]).doc).toBe(only.doc)
   })
 })
 
@@ -223,6 +269,37 @@ describe('generateCss over a list of sources', () => {
 
     expect(err.code).toBe(FailureCode.ALIAS_DANGLING)
     expect(() => readFileSync(join(base, 'tokens.css'), 'utf8')).toThrow()
+  })
+
+  it('reports a redefinition on the result and in the stylesheet', async () => {
+    const light = write('light.json', { surface: { page: { $value: '#FFFFFF' } } })
+    const dark = write('dark.json', { surface: { page: { $value: '#191627' } } })
+
+    const result = await generateCss([light, dark], { outDir: base })
+
+    expect(result.redefinitions).toEqual([{ path: 'surface.page', from: light, to: dark }])
+    const css = readFileSync(result.outputPath, 'utf8')
+    expect(css).toContain('1 token was redefined:')
+    expect(css).toContain(`surface.page: ${dark} wins over ${light}`)
+    expect(css).toContain('--surface-page: #191627;')
+  })
+
+  it('reports nothing when a source is listed twice', async () => {
+    // What a published resolver manifest does: the same file in a set and again
+    // in a context. Applying it twice changes nothing, so nothing is announced.
+    const base_ = write('base.json', { color: { brand: { $value: '#5A4FCF' } } })
+    const other = write('other.json', { size: { md: { $value: '16px' } } })
+
+    const result = await generateCss([base_, other, base_], { outDir: base })
+
+    expect(result.redefinitions).toEqual([])
+    expect(readFileSync(result.outputPath, 'utf8')).not.toContain('redefined')
+  })
+
+  it('reports no redefinitions for a single source', async () => {
+    const only = write('tokens.json', { color: { brand: { $value: '#5A4FCF' } } })
+    const result = await generateCss(only, { outDir: base })
+    expect(result.redefinitions).toEqual([])
   })
 
   it('refuses an empty list before it opens anything', async () => {

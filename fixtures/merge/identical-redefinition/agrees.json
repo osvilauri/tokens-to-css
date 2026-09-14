@@ -1,0 +1,5 @@
+{
+  "$description": "Redefines a token with the value it already had. Nothing changed, so nothing is announced.",
+  "color": { "brand": { "$value": "#5A4FCF", "$type": "color" } },
+  "size": { "lg": { "$value": "24px", "$type": "dimension" } }
+}

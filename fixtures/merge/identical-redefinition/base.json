@@ -1,0 +1,5 @@
+{
+  "$description": "Listed twice, the way a published resolver manifest lists a file in a set and again in a context.",
+  "color": { "brand": { "$value": "#5A4FCF", "$type": "color" } },
+  "size": { "md": { "$value": "16px", "$type": "dimension" } }
+}

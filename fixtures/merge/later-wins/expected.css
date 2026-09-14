@@ -1,0 +1,14 @@
+/* 3 sources merged, in order:
+ *   base.json
+ *   theme-light.json
+ *   theme-dark.json
+ * 2 tokens were redefined:
+ *   surface.page: theme-dark.json wins over theme-light.json
+ *   surface.text: theme-dark.json wins over theme-light.json
+ */
+:root {
+  --color-white: #FFFFFF;
+  --color-ink: #191627;
+  --surface-page: var(--color-ink);
+  --surface-text: var(--color-white);
+}
