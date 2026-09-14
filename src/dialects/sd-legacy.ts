@@ -12,7 +12,7 @@
  * is an input shape, never a mode.
  */
 import type { Normalized } from './registry.js'
-import { isPlainObject, walkTokenTree, type JsonObject, type TokenReader } from './walk.js'
+import { CHILD_KEY, METADATA_KEY, isPlainObject, walkTokenTree, type JsonObject, type TokenReader } from './walk.js'
 
 /**
  * A node holding `value` is a token.
@@ -27,7 +27,7 @@ const reader: TokenReader = {
   read: (node) => ('value' in node ? { found: true, raw: node['value'] } : { found: false, raw: undefined }),
   // No `$` convention here, so group-level keys are groups. `$schema` and
   // friends still appear in hybrid files, so they stay ignorable.
-  isMetadataKey: (key) => key.startsWith('$'),
+  classifyKey: (key) => (key.startsWith('$') ? METADATA_KEY : CHILD_KEY),
 }
 
 /** True when any node in the document carries a `value`. */

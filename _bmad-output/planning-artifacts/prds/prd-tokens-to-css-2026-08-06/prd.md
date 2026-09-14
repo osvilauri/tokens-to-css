@@ -135,7 +135,7 @@ Token *hierarchy* (3-tier primitive→semantic→component, CTI, EightShapes-lik
 
 The developer can convert DTCG Token JSON restricted to the v1 subset. Realizes UJ-1.
 
-**V1 DTCG subset:** single-file documents using `$value`, `$type`, `$description`, group nesting, and `{path.to.token}` aliases. `$description` is parsed and **ignored** (not emitted as CSS comments in v1). Out of subset → FR-14 or FR-20: composites and object-form colors (FR-20); DTCG Resolver / multi-file manifests (deferred, `addendum.md`); `$extensions` content beyond being ignored.
+**V1 DTCG subset:** single-file documents using `$value`, `$type`, `$description`, group nesting, `$root` (the reserved name for a group's own token, spec §6.2 — kept in the token path, elided when the path becomes a custom-property name; see `root-tokens-2026-09-14.md`), and `{path.to.token}` aliases. `$description` is parsed and **ignored** (not emitted as CSS comments in v1). Out of subset → FR-14 or FR-20: composites and object-form colors (FR-20); DTCG Resolver / multi-file manifests (deferred, `addendum.md`); `$extensions` content beyond being ignored.
 
 **Consequences (testable):**
 - Valid DTCG-subset Token JSON is accepted as Conversion input.
