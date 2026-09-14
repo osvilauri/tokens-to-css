@@ -30,12 +30,36 @@ const WHOLE_REFERENCE = /^\{([^{}]+)\}$/
 /** Any brace at all, used to catch references embedded in a larger string. */
 const ANY_BRACE = /[{}]/
 
+/**
+ * What a dialect makes of one key sitting inside a group.
+ *
+ * Three outcomes rather than two. `metadata` and `child` are the original
+ * split; `refused` exists because a key can be neither — a shape this version
+ * does not accept, which has to be named rather than walked or ignored. Without
+ * it a dialect's only way to decline a key is to call it metadata, and
+ * metadata is dropped in silence (FR-20, FR-24).
+ */
+export type KeyClass =
+  | { readonly kind: 'metadata' }
+  | { readonly kind: 'child' }
+  | { readonly kind: 'refused'; readonly reason: string }
+
+/** Shared singletons, so classifying a key allocates nothing. */
+export const METADATA_KEY: KeyClass = Object.freeze({ kind: 'metadata' })
+export const CHILD_KEY: KeyClass = Object.freeze({ kind: 'child' })
+
 /** How a dialect recognizes and reads one token node. */
 export interface TokenReader {
   /** Returns the raw value when this object is a token node in this dialect. */
   readonly read: (node: JsonObject) => { readonly found: boolean; readonly raw: unknown }
-  /** Keys inside a token node that carry metadata and are read then ignored. */
-  readonly isMetadataKey: (key: string) => boolean
+  /**
+   * Decides what one key inside a group is.
+   *
+   * The child is passed because the answer is not always a property of the key
+   * alone: DTCG reserves `$root` as a token name, so a `$`-prefixed key can be
+   * metadata or a token depending on what hangs off it.
+   */
+  readonly classifyKey: (key: string, child: unknown) => KeyClass
 }
 
 const fail = (message: string, source: string, path: readonly string[]): never => {
@@ -192,9 +216,13 @@ export function walkTokenTree(root: JsonObject, source: string, reader: TokenRea
           childPath,
         )
       }
-      if (reader.isMetadataKey(key)) continue
-
       const child = node[key]
+      const classified = reader.classifyKey(key, child)
+      if (classified.kind === 'metadata') continue
+      // The dialect supplies the predicate; the path is prefixed here so a
+      // refusal reads like every other message the walk produces.
+      if (classified.kind === 'refused') fail(`"${formatPath(childPath)}" ${classified.reason}`, source, childPath)
+
       if (isPlainObject(child)) {
         visit(child, childPath)
       } else {

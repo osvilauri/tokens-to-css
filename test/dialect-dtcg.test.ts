@@ -188,3 +188,64 @@ describe('a multi-file document is named as such, not as unrecognized', () => {
     expect(err.message).toMatch(/single self-contained file/)
   })
 })
+
+describe("a group's own token, written `$root` (DTCG §6.2)", () => {
+  it('reads it as a token instead of dropping it as metadata', () => {
+    // The regression this suite exists for. Every `$`-prefixed key used to be
+    // metadata, so this token was discarded before anything could count it —
+    // not emitted, and not reported as skipped either.
+    const doc = read(`{ "color": { "brand": {
+      "$root": { "$value": "#ff0000" },
+      "hover": { "$value": "#cc0000" }
+    } } }`)
+    expect(doc.tokens).toEqual([
+      token(['color', 'brand', '$root'], literal('#ff0000')),
+      token(['color', 'brand', 'hover'], literal('#cc0000')),
+    ])
+  })
+
+  it('keeps `$root` in the token path, so an alias against it resolves', () => {
+    // §6.7.2: the segment stays in the path precisely so `{color.brand.$root}`
+    // and `{color.brand}` cannot be confused. Eliding it here would make this
+    // reference dangle; it is elided when the path becomes a name, not before.
+    const doc = read(`{ "color": {
+      "brand": { "$root": { "$value": "#ff0000" } },
+      "accent": { "$value": "{color.brand.$root}" }
+    } }`)
+    expect(doc.tokens[1]).toEqual(token(['color', 'accent'], ref(['color', 'brand', '$root'])))
+  })
+
+  it('refuses a `$root` that is a group rather than a token', () => {
+    const err = failure(`{ "color": { "$root": { "nested": { "$value": "#ff0000" } } } }`)
+    expect(err.code).toBe(FailureCode.FORMAT_NOT_ALLOWED)
+    expect(err.tokenPaths).toEqual(['color.$root'])
+  })
+})
+
+describe('a `$`-prefixed key that is not `$root`', () => {
+  it('refuses it by name when it carries a value, rather than dropping it', () => {
+    const err = failure(`{ "color": { "$custom": { "$value": "#ff0000" } } }`)
+    expect(err.code).toBe(FailureCode.FORMAT_NOT_ALLOWED)
+    expect(err.message).toMatch(/reserves "\$"-prefixed names/)
+    expect(err.tokenPaths).toEqual(['color.$custom'])
+  })
+
+  it('leaves `$extensions` alone even when its payload contains a `$value`', () => {
+    // The reason the metadata keys are listed rather than inferred. Vendor data
+    // is arbitrary JSON the spec says tools MUST preserve, so a `$value` buried
+    // inside it is not a token and must not trip the refusal above.
+    const doc = read(`{ "color": {
+      "$extensions": { "com.example.tooling": { "$value": "not a token", "seed": 3 } },
+      "brand": { "$value": "#0066cc" }
+    } }`)
+    expect(doc.tokens).toEqual([token(['color', 'brand'], literal('#0066cc'))])
+  })
+
+  it('still ignores the ordinary group metadata keys', () => {
+    const doc = read(`{ "color": {
+      "$type": "color", "$description": "roles", "$deprecated": true,
+      "brand": { "$value": "#0066cc" }
+    } }`)
+    expect(doc.tokens).toEqual([token(['color', 'brand'], literal('#0066cc'))])
+  })
+})

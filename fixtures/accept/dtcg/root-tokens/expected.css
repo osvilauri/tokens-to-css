@@ -1,0 +1,8 @@
+:root {
+  --color-brand: #0066cc;
+  --color-brand-hover: #3388dd;
+  --color-brand-subtle: #e6f0fa;
+  --color-brand-subtle-hover: #cce0f5;
+  --color-accent: var(--color-brand);
+  --color-accent-subtle: var(--color-brand-subtle);
+}

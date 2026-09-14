@@ -35,9 +35,26 @@ function normalizeSegment(segment: string): string {
 }
 
 /**
+ * The DTCG segment that names a group's own token, and no part of a CSS name.
+ *
+ * `$root` exists in a token path because the spec puts it there (§6.7.2): it is
+ * what keeps `{color.brand.$root}` — the group's own value — distinguishable
+ * from `{color.brand}`, which names a group and resolves to nothing. CSS has no
+ * groups, so the name for a group's own value is simply the group's name, and
+ * the segment drops out here.
+ *
+ * This adds names rather than changing them. No path reaching this function
+ * could previously contain `$root`: the reader discarded those tokens before
+ * they were ever named. Two paths landing on one name is not handled here
+ * either — it is what the collision pass already exists to catch (FR-21).
+ */
+const GROUP_ROOT_SEGMENT = '$root'
+
+/**
  * Builds the custom-property name for a token path.
  *
- * `['color', 'brand', 'primary']` becomes `--color-brand-primary`.
+ * `['color', 'brand', 'primary']` becomes `--color-brand-primary`, and
+ * `['color', 'brand', '$root']` becomes `--color-brand`.
  *
  * @param path Path segments from the document root.
  * @param source The Token Source, carried only so a failure can name it.
@@ -45,7 +62,20 @@ function normalizeSegment(segment: string): string {
  * after normalization. Dropping it would silently rename the token.
  */
 export function customPropertyName(path: readonly string[], source: string): string {
-  const segments = path.map((segment) => {
+  const named = path.filter((segment) => segment !== GROUP_ROOT_SEGMENT)
+
+  // A `$root` at the document root has no group to borrow a name from, so
+  // there is nothing left to call it. Refused rather than folded into the
+  // empty-path message below, which would say "a token" and name nothing.
+  if (named.length === 0 && path.length > 0) {
+    throw new TokenCssError(
+      `token "${formatPath(path)}" is a group's own token, but it sits at the document root, ` +
+        `so there is no group name for it to take`,
+      { code: FailureCode.FORMAT_NOT_ALLOWED, source, tokenPaths: [formatPath(path)] },
+    )
+  }
+
+  const segments = named.map((segment) => {
     const normalized = normalizeSegment(segment)
     if (normalized === '') {
       throw new TokenCssError(

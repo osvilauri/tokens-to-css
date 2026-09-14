@@ -26,10 +26,12 @@ const check = process.argv.includes('--check')
  *
  * `object-values` writes colours and dimensions the way the current DTCG spec
  * does, and `array-values` writes font families and easing curves the same way.
+ * `root-tokens` uses `$root`, which is a reserved *token name* in DTCG and
+ * nothing at all in a dialect that has no `$` convention.
  * Style Dictionary legacy has no such notation, and rendering it there would
  * invent a dialect nobody publishes.
  */
-const DTCG_ONLY = new Set(['object-values', 'array-values', 'composites'])
+const DTCG_ONLY = new Set(['object-values', 'array-values', 'composites', 'root-tokens'])
 
 /** DTCG to Style Dictionary legacy: the same tree with the dollars taken off. */
 function toLegacy(node) {

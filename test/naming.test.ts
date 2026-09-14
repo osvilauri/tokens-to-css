@@ -125,3 +125,22 @@ describe('the rule is deterministic', () => {
     expect(path).toEqual(['Color', 'Brand'])
   })
 })
+
+describe("the `$root` segment (a group's own token)", () => {
+  it('takes the name of the group it belongs to', () => {
+    expect(customPropertyName(['color', 'background', 'brand', '$root'], SOURCE)).toBe('--color-background-brand')
+  })
+
+  it('drops out wherever it sits, including under a composite suffix', () => {
+    expect(customPropertyName(['type', 'heading', '$root', 'font-size'], SOURCE)).toBe('--type-heading-font-size')
+  })
+
+  it('does not touch a segment that merely looks like it', () => {
+    expect(customPropertyName(['color', 'brand', 'root'], SOURCE)).toBe('--color-brand-root')
+    expect(customPropertyName(['color', 'brand', '$rooted'], SOURCE)).toBe('--color-brand-rooted')
+  })
+
+  it('refuses a `$root` at the document root, which has no group to name it', () => {
+    expect(() => customPropertyName(['$root'], SOURCE)).toThrow(/no group name for it to take/)
+  })
+})

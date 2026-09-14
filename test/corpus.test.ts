@@ -18,9 +18,10 @@ const EXPECTED = {
   /**
    * 9 at the Epic 2 freeze: 3 dialects × 3 hierarchies (AD-16). Plus the
    * fixtures outside it, which no other dialect can express: `object-values`
-   * (FR-23), `array-values` (FR-26) and `composites` (FR-25).
+   * (FR-23), `array-values` (FR-26), `composites` (FR-25) and `root-tokens`
+   * (`$root`, the reserved name for a group's own token).
    */
-  accept: 12,
+  accept: 13,
   /**
    * One per document-shaped rejection trigger and failure class (SM-4).
    *
@@ -28,7 +29,7 @@ const EXPECTED = {
    * invalid JSON and a failed write are proved end to end, and the network
    * classes against the scenario harness (AD-23). SM-4's claim is the union.
    */
-  reject: 17,
+  reject: 20,
   /**
    * Partial conversions (FR-24): a document that converts while leaving tokens
    * out. Neither an accept nor a reject fixture can express one — the first
@@ -45,7 +46,7 @@ const EXPECTED = {
  * Studio counterpart and cannot take part in the byte-identical comparison the
  * matrix rests on.
  */
-const OUTSIDE_MATRIX = ['dtcg/object-values', 'dtcg/array-values', 'dtcg/composites']
+const OUTSIDE_MATRIX = ['dtcg/object-values', 'dtcg/array-values', 'dtcg/composites', 'dtcg/root-tokens']
 
 describe('the fixture corpus', () => {
   const corpus = discover()

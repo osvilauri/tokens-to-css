@@ -1,0 +1,16 @@
+{
+  "$description": "A group's own token, written with the reserved name the spec gives it (DTCG 2025.10 §6.2).",
+  "color": {
+    "$type": "color",
+    "brand": {
+      "$root": { "$value": "#0066cc", "$description": "The group's own value." },
+      "hover": { "$value": "#3388dd" },
+      "subtle": {
+        "$root": { "$value": "#e6f0fa" },
+        "hover": { "$value": "#cce0f5" }
+      }
+    },
+    "accent": { "$value": "{color.brand.$root}" },
+    "accent-subtle": { "$value": "{color.brand.subtle.$root}" }
+  }
+}

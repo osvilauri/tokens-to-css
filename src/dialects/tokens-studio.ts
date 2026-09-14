@@ -14,7 +14,7 @@
 import { FailureCode, TokenCssError } from '../errors.js'
 import { formatPath, type TokenDoc, type TokenNode } from '../model/index.js'
 import type { Normalized } from './registry.js'
-import { isPlainObject, walkTokenTree, type JsonObject, type TokenReader } from './walk.js'
+import { CHILD_KEY, METADATA_KEY, isPlainObject, walkTokenTree, type JsonObject, type TokenReader } from './walk.js'
 
 /** The plugin's own keys, read and ignored. */
 const BOOKKEEPING = new Set(['$themes', '$metadata'])
@@ -26,7 +26,7 @@ const reader: TokenReader = {
     if ('value' in node) return { found: true, raw: node['value'] }
     return { found: false, raw: undefined }
   },
-  isMetadataKey: (key) => key.startsWith('$'),
+  classifyKey: (key) => (key.startsWith('$') ? METADATA_KEY : CHILD_KEY),
 }
 
 /** True when the document carries the plugin's bookkeeping. */

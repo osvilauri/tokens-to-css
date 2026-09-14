@@ -1,0 +1,1 @@
+{ "color": { "$root": { "nested": { "$value": "#ff0000" } } } }
