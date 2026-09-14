@@ -85,6 +85,38 @@ set is included — which this library will not do on its own, because
 instead. The system is the one honest failure in the corpus: a manifest that does
 not name all of its own tokens.
 
+## What this measurement does not count
+
+Found on 2026-09-14 while building a worked example out of Figma SDS, and
+recorded here because it qualifies a number above rather than because it belongs
+to this epic.
+
+Figma SDS writes a group's own value under the key `$root`:
+
+```json
+"brand": {
+  "$root": { "$type": "color", "$value": "{color.brand.800}" },
+  "hover": { "$type": "color", "$value": "{color.brand.900}" }
+}
+```
+
+`dialects/dtcg.ts` treats every `$`-prefixed key as metadata, so that node is
+dropped — **and dropped in silence**: a two-token document of this shape returns
+`tokenCount: 1, skipped: []`. In the corpus it is **28 tokens per theme file**,
+and they are the base colour of each group: the emitted stylesheet has
+`--color-background-brand-hover` and no `--color-background-brand`.
+
+So "figma-sds converts whole, 346 properties" means *of what the reader saw*. It
+is not a merge failure — it reproduces on 1.1.0 against the single file — and it
+is not what this epic is about, but it does contradict the sentence FR-20 and
+FR-24 both rest on: **no silent drop on a success path.**
+
+Two things it needs that this survey does not supply: a decision (is `$root` the
+group's own value, emitted as the group's name — or an out-of-subset key that is
+skipped out loud?) and a count across the whole corpus. `$root` is not in the v1
+DTCG subset the PRD fixes, and in these 98 files only Figma SDS uses it. Tracked
+separately, ahead of Epic 5.
+
 ## Redefinitions: measured at zero, and the reason the rule exists anyway
 
 | System | Sources applied | Same source twice | Identical redefinitions | **Value-changing** |

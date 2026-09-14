@@ -643,6 +643,15 @@ line of `contexts` because their manifests decline to default. Projected
 structurally on 2026-09-12 against the published library; to be confirmed against
 the implementation before this section is final, the way §12.6 was.
 
+**One qualification on that measurement, found 2026-09-14.** Figma SDS writes a
+group's own value under the key `$root`, which `dialects/dtcg.ts` drops as
+metadata — silently, `skipped` empty. Twenty-eight tokens per theme file, and
+they are the base colour of each group. "figma-sds converts whole" therefore
+means *of what the reader saw*. It reproduces on 1.1.0 against the single file,
+so it is not a merge failure and not this revision's to fix; it is also a
+contradiction of the sentence FR-20 and FR-24 both rest on, so it is tracked
+ahead of Epic 5 rather than inside it. Details in `survey-2026-09-12/`.
+
 **What this amends elsewhere in this document.**
 
 | Where | Was | Now |
