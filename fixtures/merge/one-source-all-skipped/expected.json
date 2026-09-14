@@ -1,0 +1,5 @@
+{
+  "skipped": [
+    { "path": "type.body", "code": "COMPOSITE_VALUE" }
+  ]
+}

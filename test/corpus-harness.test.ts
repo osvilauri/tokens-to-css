@@ -26,6 +26,14 @@ const accept = (id: string, input: string, css: string): void => {
   writeFileSync(join(dir, 'expected.css'), css)
 }
 
+const merge = (id: string, sources: string[], files: Record<string, string>, css: string): void => {
+  const dir = join(root, 'merge', id)
+  mkdirSync(dir, { recursive: true })
+  writeFileSync(join(dir, 'sources.json'), JSON.stringify(sources))
+  for (const [name, contents] of Object.entries(files)) writeFileSync(join(dir, name), contents)
+  writeFileSync(join(dir, 'expected.css'), css)
+}
+
 const reject = (id: string, input: string, expected: string): void => {
   const dir = join(root, 'reject', id)
   mkdirSync(dir, { recursive: true })
@@ -64,13 +72,42 @@ describe('discovery', () => {
   })
 
   it('returns an empty corpus rather than throwing when nothing exists yet', () => {
-    expect(discover(root)).toEqual({ accept: [], reject: [], partial: [] })
+    expect(discover(root)).toEqual({ accept: [], reject: [], partial: [], merge: [] })
   })
 
   it('is deterministic in order, so failures are reproducible', () => {
     accept('b/x', '{}', '')
     accept('a/y', '{}', '')
     expect(discover(root).accept.map((f) => f.id)).toEqual(['a/y', 'b/x'])
+  })
+})
+
+describe('merge fixtures, whose input is a list', () => {
+  it('reads the inputs in the order sources.json names them', () => {
+    merge(
+      'cross-file',
+      ['a.json', 'b.json'],
+      { 'a.json': '{"color":{"red":{"$value":"#f00"}}}', 'b.json': '{"alias":{"$value":"{color.red}"}}' },
+      ':root {\n}\n',
+    )
+    const f = discover(root).merge[0]!
+    expect(f.inputs.map((i) => i.source)).toEqual(['a.json', 'b.json'])
+    expect(f.inputs[0]!.raw).toEqual({ color: { red: { $value: '#f00' } } })
+  })
+
+  it('refuses a merge fixture with fewer than two sources — that is an accept fixture', () => {
+    merge('lonely', ['only.json'], { 'only.json': '{}' }, '')
+    expect(() => discover(root)).toThrow(CorpusError)
+  })
+
+  it('names the directory when a listed input is missing', () => {
+    merge('incomplete', ['a.json', 'gone.json'], { 'a.json': '{}' }, '')
+    expect(() => discover(root)).toThrow(/gone\.json/)
+  })
+
+  it('treats a merge that loses nothing as declaring no skips, with no expected.json', () => {
+    merge('clean', ['a.json', 'b.json'], { 'a.json': '{}', 'b.json': '{}' }, '')
+    expect(discover(root).merge[0]!.expectedSkipped).toEqual([])
   })
 })
 

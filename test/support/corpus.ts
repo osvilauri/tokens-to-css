@@ -12,12 +12,19 @@
  *   fixtures/accept/<dialect>/<hierarchy>/{input.json,expected.css}
  *   fixtures/reject/<trigger>/{input.json,expected.json}
  *   fixtures/partial/<case>/{input.json,expected.css,expected.json}
+ *   fixtures/merge/<case>/{sources.json,<the inputs it names>,expected.css[,expected.json]}
  *
  * The third category exists because partial conversion (FR-24) is neither of
  * the other two: the document converts, so it is not a rejection, and the
  * stylesheet is deliberately missing tokens, so an accept fixture would assert
  * only half of what happened. A partial fixture pins both halves — the bytes,
  * comment block included, and the skip report.
+ *
+ * The fourth exists because every one of the others describes **one** input
+ * document (FR-27). A merge fixture names its inputs in `sources.json`, in the
+ * order they are merged, and they are read from the case directory — so what
+ * the golden proves includes the order, which is the half of merging that a
+ * single-document fixture cannot express.
  */
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
@@ -63,10 +70,25 @@ export interface PartialFixture {
   readonly expectedSkipped: readonly ExpectedSkip[]
 }
 
+/** Several inputs that must merge into one stylesheet, and that stylesheet. */
+export interface MergeFixture {
+  /** Path-derived name, e.g. `cross-file-reference`. */
+  readonly id: string
+  readonly dir: string
+  /** The inputs, parsed, in merge order. */
+  readonly inputs: readonly { readonly raw: unknown; readonly source: string }[]
+  /** The golden, compared byte for byte — merge block, comment block and all. */
+  readonly expectedCss: string
+  readonly goldenPath: string
+  /** Tokens the merged conversion must report as skipped, in order. Empty for most. */
+  readonly expectedSkipped: readonly ExpectedSkip[]
+}
+
 export interface Corpus {
   readonly accept: readonly AcceptFixture[]
   readonly reject: readonly RejectFixture[]
   readonly partial: readonly PartialFixture[]
+  readonly merge: readonly MergeFixture[]
 }
 
 /** Thrown when the corpus itself is malformed. Never swallowed, never skipped. */
@@ -91,8 +113,8 @@ function readJson(dir: string, file: string): unknown {
   }
 }
 
-/** Directories that contain a fixture, i.e. leaves holding an `input.json`. */
-function leafDirs(root: string): string[] {
+/** Directories that contain a fixture, i.e. leaves holding the named file. */
+function leafDirsHolding(root: string, marker: string): string[] {
   const out: string[] = []
   const walk = (dir: string): void => {
     let entries
@@ -101,7 +123,7 @@ function leafDirs(root: string): string[] {
     } catch {
       return // the corpus root does not exist yet
     }
-    if (entries.some((e) => e.isFile() && e.name === 'input.json')) {
+    if (entries.some((e) => e.isFile() && e.name === marker)) {
       out.push(dir)
       return
     }
@@ -110,6 +132,9 @@ function leafDirs(root: string): string[] {
   walk(root)
   return out.sort()
 }
+
+/** Directories holding a single-document fixture. */
+const leafDirs = (root: string): string[] => leafDirsHolding(root, 'input.json')
 
 /**
  * Reads the whole corpus from disk.
@@ -160,7 +185,32 @@ export function discover(root: string = CORPUS_ROOT): Corpus {
     }
   })
 
-  return { accept, reject, partial }
+  const merge = leafDirsHolding(join(root, 'merge'), 'sources.json').map((dir): MergeFixture => {
+    const listed = readJson(dir, 'sources.json')
+    if (!Array.isArray(listed) || listed.length < 2 || listed.some((n) => typeof n !== 'string')) {
+      throw new CorpusError(
+        `fixture "${dir}" needs a "sources.json" naming at least two input files, in merge order — ` +
+          `a merge fixture with one source is an accept fixture`,
+      )
+    }
+    const expected = (() => {
+      try {
+        return readJson(dir, 'expected.json') as { skipped?: readonly ExpectedSkip[] }
+      } catch {
+        return {} // a merge that loses nothing has nothing to declare
+      }
+    })()
+    return {
+      id: idOf(dir, 'merge'),
+      dir,
+      inputs: (listed as string[]).map((name) => ({ raw: readJson(dir, name), source: name })),
+      expectedCss: read(dir, 'expected.css'),
+      goldenPath: join(dir, 'expected.css'),
+      expectedSkipped: expected.skipped ?? [],
+    }
+  })
+
+  return { accept, reject, partial, merge }
 }
 
 export interface GoldenMismatch {

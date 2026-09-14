@@ -36,6 +36,22 @@ function skipComment(skipped: readonly SkippedToken[]): readonly string[] {
 }
 
 /**
+ * The block that announces what was merged (FR-27).
+ *
+ * Written only when there is more than one source, which is what keeps every
+ * single-source conversion byte-identical to what it produced before merging
+ * existed — the same guarantee, and the same reason, as the skip block above.
+ *
+ * The sources are named as the caller wrote them, not as they resolved. An
+ * absolute path would make the stylesheet depend on the machine that generated
+ * it, and this file is checked into a repository.
+ */
+function mergeComment(sources: readonly string[]): readonly string[] {
+  if (sources.length < 2) return []
+  return [`/* ${sources.length} sources merged, in order:`, ...sources.map((s) => ` *   ${s}`), ' */']
+}
+
+/**
  * Renders a normalized document as a stylesheet.
  *
  * A token whose value points at another token is written as `var(--target)`,
@@ -48,17 +64,24 @@ function skipComment(skipped: readonly SkippedToken[]): readonly string[] {
  * A document carrying skipped tokens is preceded by a comment naming them, so
  * the stylesheet says what it is missing rather than quietly being short.
  *
+ * A stylesheet merged from several sources is preceded by a comment naming
+ * them in order, so the file says where it came from — which is what somebody
+ * reading the next pull request needs and what a return value cannot give them.
+ *
  * @param doc The normalized document, in document order.
  * @param skipped Tokens the document held that the stylesheet cannot, announced
  * in a comment above the rule. Empty for a document that lost nothing, and then
  * no comment is written at all.
  * @param source The Token Source, carried only so a naming failure can name it.
+ * @param sources Every source that was merged, in order, as the caller wrote
+ * them. One or none writes no merge block at all.
  * @returns The complete stylesheet text, ending in exactly one newline.
  */
 export function emitStylesheet(
   doc: TokenDoc,
   skipped: readonly SkippedToken[],
   source: string,
+  sources: readonly string[] = [],
 ): string {
   const reference = (path: readonly string[]): string => `var(${customPropertyName(path, source)})`
 
@@ -74,5 +97,5 @@ export function emitStylesheet(
     return `${INDENT}${property}: ${value};`
   })
 
-  return [...skipComment(skipped), ':root {', ...declarations, '}', ''].join('\n')
+  return [...mergeComment(sources), ...skipComment(skipped), ':root {', ...declarations, '}', ''].join('\n')
 }

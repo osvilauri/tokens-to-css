@@ -1,0 +1,11 @@
+/* 2 sources merged, in order:
+ *   primitives.json
+ *   semantic.json
+ */
+:root {
+  --primitive-purple-500: #5A4FCF;
+  --primitive-grey-050: #FBFAFD;
+  --semantic-color-brand: var(--primitive-purple-500);
+  --semantic-color-surface: var(--primitive-grey-050);
+  --component-button-background: var(--semantic-color-brand);
+}

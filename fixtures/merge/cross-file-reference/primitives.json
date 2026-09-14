@@ -1,0 +1,6 @@
+{
+  "primitive": {
+    "purple": { "500": { "$value": "#5A4FCF", "$type": "color" } },
+    "grey": { "050": { "$value": "#FBFAFD", "$type": "color" } }
+  }
+}

@@ -1,0 +1,10 @@
+/* 2 sources merged, in order:
+ *   color.json
+ *   size.json
+ */
+:root {
+  --color-purple: #5A4FCF;
+  --color-grey: #191627;
+  --size-md: 16px;
+  --size-lg: 24px;
+}

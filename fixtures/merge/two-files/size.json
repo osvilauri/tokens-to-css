@@ -1,0 +1,6 @@
+{
+  "size": {
+    "md": { "$value": "16px", "$type": "dimension" },
+    "lg": { "$value": "24px", "$type": "dimension" }
+  }
+}

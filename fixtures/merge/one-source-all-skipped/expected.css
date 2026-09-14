@@ -1,0 +1,10 @@
+/* 2 sources merged, in order:
+ *   color.json
+ *   type.json
+ */
+/* 1 token was skipped:
+ *   token "type.body" is a composite, but its typography is missing "fontFamily", "fontWeight", "letterSpacing", "lineHeight"
+ */
+:root {
+  --color-brand: #5A4FCF;
+}

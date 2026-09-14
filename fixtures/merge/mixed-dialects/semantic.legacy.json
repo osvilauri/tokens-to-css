@@ -1,0 +1,7 @@
+{
+  "$description": "Style Dictionary legacy: value/type without the dollar, referencing a DTCG document it was never merged with before.",
+  "semantic": {
+    "color": { "brand": { "value": "{primitive.purple.500}", "type": "color" } },
+    "space": { "md": { "value": "{primitive.size.4}", "type": "dimension" } }
+  }
+}

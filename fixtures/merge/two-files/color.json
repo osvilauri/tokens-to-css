@@ -1,0 +1,7 @@
+{
+  "$description": "Half of a catalogue. The other half is in size.json.",
+  "color": {
+    "purple": { "$value": "#5A4FCF", "$type": "color" },
+    "grey": { "$value": "#191627", "$type": "color" }
+  }
+}

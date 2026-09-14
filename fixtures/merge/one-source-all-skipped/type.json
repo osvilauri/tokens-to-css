@@ -1,0 +1,4 @@
+{
+  "$description": "Alone this document fails with NOTHING_EMITTED. As one of several it contributes its skips and nothing else.",
+  "type": { "body": { "$value": { "fontSize": "16px" }, "$type": "typography" } }
+}

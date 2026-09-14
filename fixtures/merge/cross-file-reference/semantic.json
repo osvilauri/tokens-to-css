@@ -1,0 +1,12 @@
+{
+  "$description": "Every value here points at a token defined in primitives.json. Alone, this document is 3 dangling references.",
+  "semantic": {
+    "color": {
+      "brand": { "$value": "{primitive.purple.500}" },
+      "surface": { "$value": "{primitive.grey.050}" }
+    }
+  },
+  "component": {
+    "button": { "background": { "$value": "{semantic.color.brand}" } }
+  }
+}
